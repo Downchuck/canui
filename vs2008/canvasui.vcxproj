@@ -63,6 +63,7 @@
     <None Include="..\doc\readme" />
     <None Include="..\doc\todo" />
     <None Include="..\examples\index.html" />
+    <None Include="..\libs\jquery.mousewheel.min.js" />
     <None Include="..\src\button.js" />
     <None Include="..\src\container.js" />
     <None Include="..\src\control.js" />

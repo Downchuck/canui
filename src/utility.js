@@ -403,6 +403,16 @@ function pad_left(v, s, c)
   return v;
 }
 
+// freezes the given object; this is to wrap browsers that don't
+// support it
+//
+function make_const(o)
+{
+  if (Object.freeze)
+    return Object.freeze(o);
+  return o;
+}
+
 // 'values' is an array of strings corresponding to the names in the
 // enum; this returns a frozen object with the strings as indices and
 // increasing numbers from 0
@@ -418,7 +428,7 @@ function make_enum(values)
     ++i;
   }
 
-  return Object.freeze(r);
+  return make_const(r);
 }
 
 // returns 'v' as an integer, assumes base 10
