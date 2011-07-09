@@ -1,0 +1,131 @@
+<!-- $Id$ -->
+
+<html>
+<head>
+  <title>canui: example</title>
+  <script type="text/javascript" src="../libs/jquery-1.5.1.min.js"></script>
+  <script type="text/javascript" src="../libs/jquery.mousewheel.min.js"></script>
+  <script type="text/javascript" src="../libs/namespace.js"></script>
+  <script type="text/javascript" src="../src/geo.js"></script>
+  <script type="text/javascript" src="../src/graphics.js"></script>
+  <script type="text/javascript" src="../src/utility.js"></script>
+  <script type="text/javascript" src="../src/control.js"></script>
+  <script type="text/javascript" src="../src/container.js"></script>
+  <script type="text/javascript" src="../src/root_panel.js"></script>
+  <script type="text/javascript" src="../src/button.js"></script>
+  <script type="text/javascript" src="../src/list.js"></script>
+  <script type="text/javascript" src="../src/label.js"></script>
+  <script type="text/javascript" src="../src/textbox.js"></script>
+  <script type="text/javascript" src="../src/controls.js"></script>
+  <script type="text/javascript" src="../src/tiles_panel.js"></script>
+  <script type="text/javascript" src="../src/slider.js"></script>
+  <script type="text/javascript" src="../src/scroller.js"></script>
+  <script type="text/javascript" src="../src/layout.js"></script>
+</head>
+
+<script type="text/javascript">
+var g_rp = undefined;
+
+function init(image)
+{
+  set_image_dir("../src/images");
+  
+  // root panel: this is the top level container that will take care
+  // of handling all events and redrawing when needed
+  g_rp = new ui.root_panel(
+    $("#canvas"), new dimension(400, 300),
+    new ui.horizontal_layout());
+
+  var left_panel = new ui.panel(new ui.vertical_layout(
+    {halign: "center", margin: 5, expand: true}));
+  
+  // adding some controls
+  left_panel.add(new ui.image(image));
+  left_panel.add(new ui.textbox("this is a textbox"));
+  left_panel.add(new ui.label("this is a label"));
+  
+  var b = new ui.button("this is a button", function()
+    {
+      alert("hello!");
+      return true;
+    });
+  left_panel.add(b);
+
+  left_panel.add(new ui.line());
+
+  var p = new ui.panel();
+  p.layout().option("margin", 4);
+  p.borders({"all": 1});
+  p.add(new ui.label("this is a label in a panel"));
+  left_panel.add(p);
+
+  var tt = new ui.tooltip("this is a tooltip");
+  var lb = new ui.label("this is a label with a tooltip");
+  lb.tooltip(tt);
+  left_panel.add(lb);
+
+  var sl_l = new ui.label("");
+  
+  var sl = new ui.slider();
+  sl.changed.add(function(v)
+    {
+      sl_l.caption("slider value: " + to_int(v));
+    });
+  
+  sl.value(40);
+  left_panel.add(sl);
+  left_panel.add(sl_l);
+    
+  var right_panel = new ui.panel(new ui.vertical_layout(
+    {halign: "center", margin: 4, expand: true}));
+   
+  var list = new ui.list({expand_header: true, item_scroll: false, column_resize: "auto"});
+  
+  list.add_column("column 1");
+  list.add_column("column 2");
+
+  list.frozen(true);
+  for (var i=1; i<=30; ++i)
+    list.add_item(["item " + i, "col " + i]);
+  list.frozen(false);
+
+  right_panel.add(list);
+  
+  g_rp.add(left_panel);
+  g_rp.add(right_panel);
+}
+
+function dump()
+{
+  var w = window.open("");   
+  w.document.write("<html><head></head><body><pre>");
+  w.document.write(g_rp.dump());
+  w.document.write("</pre></body></html>");
+}
+
+$(function()
+{
+  var image = new Image();
+  image.src = "example.png";
+
+  // make sure 'image' is finished loading
+
+  require_loaded(image, bind(init, image));
+});
+
+</script>
+
+<body>
+<h2>canui</h2>
+<p><a href="../index.html">home</a><br>
+<a href="https://sourceforge.net/projects/canui/">sourceforge project page</a></p>
+
+<p>This is a &lt;canvas&gt; element on which several controls are
+created. Note that the list control doesn't do much yet (and is somewhat
+buggy)<br>
+<canvas id="canvas" tabindex="1"></canvas><br>
+</p>
+<p>This will show the structure of the controls: <input type="button" value="dump" onclick="dump()" /></p>
+
+</div>
+</html>
