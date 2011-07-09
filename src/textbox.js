@@ -242,6 +242,13 @@ textbox: function(t, opts)
     return text_;
   }
 
+  // forwards to text()
+  //
+  self.caption = function(s)
+  {
+    return self.text(s);
+  }
+
   // appends the given text
   //
   self.append = function(s)

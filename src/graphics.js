@@ -36,6 +36,19 @@ function require_loaded(image, f)
     };
 }
 
+// creates an Image element, sets the source to the given path and
+// calls require_loaded with the given function (if any)
+//
+function load_image(src, f)
+{
+  var i = new Image();
+  i.src = src;
+
+  if (f != undefined)
+    require_loaded(i, f);
+
+  return i;
+}
 
 // rgba color, all between 0.0 and 1.0. Predefined colors can used
 // like this: new color().black().

@@ -34,7 +34,6 @@ Bugs: none
 Todo: none
 Bugs:
  . tooltip stays stuck when mouse leaves (cancel timer on leave?)
- . root panel stopped repositioning tooltips to fit screen
 
 
 2.5 line
@@ -43,7 +42,7 @@ Bugs: none
 
 
 2.6 image
-Todo: none
+Todo: load the image on the fly
 Bugs: none
 
 
@@ -81,13 +80,13 @@ Todo: more testing, cannibalized into scrollbar, not sure what still
 
 3.2 menu
 Todo: separators, keybindings?, icons, disabled, customize, close on
-      click elsewhere, timers
+      click elsewhere, timers, checkboxes/radios
 
 
 3.2 list
 Todo: column resize/move, item drag/drop, keyboard nav, other views
       (icon, etc.), icon in column, allow any control (editable list),
-      sort, tooltips, horizontal scroll
+      sort, tooltips, horizontal scroll, always draws all items
 
 Bugs: none
 

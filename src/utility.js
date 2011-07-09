@@ -657,12 +657,20 @@ function adjacent_word(s, from, forward, opts)
 }
 
 
+// todo
+var g_context = undefined;
+
+function set_global_context(c)
+{
+  g_context = c;
+}
+
 // returns the canvas context object (todo: this is needed by graphics
 // when measuring text, can't it be avoided?)
 //
 function get_context()
 {
-  return document.getElementById("canvas").getContext("2d");
+  return g_context;
 }
 
 

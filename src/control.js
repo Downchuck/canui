@@ -18,6 +18,9 @@ inherit_control: function(self, opts, pos, dim)
   
   // todo: merge pos_ and dim_ into bounds_
 
+  // id of this control in the hierarchy
+  var id_ = "";
+
   // x,y position
   var pos_ = new point(0, 0);
 
@@ -90,6 +93,25 @@ inherit_control: function(self, opts, pos, dim)
 
     self.bounds(b);
   };
+
+  // if i is not undefined, sets this control's id; in any case
+  // returns the current id
+  //
+  self.id = function(i)
+  {
+    if (i != undefined)
+      id_ = i;
+    return id_;
+  };
+
+  // returns this control if the ids match
+  //
+  self.control__find_id = function(i)
+  {
+    if (id_ == i)
+      return self;
+    return undefined;
+  }
 
   // sets this control's cursor when hovered if 'c' is not undefined;
   // in any case, returns the current cursor
@@ -788,7 +810,12 @@ inherit_control: function(self, opts, pos, dim)
       s += "   ";
     
     s += 
-      self.typename() + " " +
+      self.typename() + " ";
+
+    if (id_ != "")
+      s += "id:" + id_ + " ";
+
+    s +=
       "(" + pos_.x + "x," + pos_.y + "y)-" +
       "(" + dim_.w + "w," + dim_.h + "h)";
     
@@ -796,6 +823,7 @@ inherit_control: function(self, opts, pos, dim)
   };
 
   // vtable
+  self.find_id              = self.control__find_id;
   self.is_dirty             = self.control__is_dirty;
   self.relayout             = self.control__relayout;
   self.do_layout            = self.control__do_layout;

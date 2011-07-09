@@ -9,6 +9,8 @@ namespace("ui", {
 //
 root_panel: function(canvas, dim, layout)
 {
+  this.internal_is_a_root_panel = true;
+
   ui.inherit_container(this,
     (layout == undefined ? new ui.vertical_layout() : layout));
   var self = this;
@@ -53,6 +55,9 @@ root_panel: function(canvas, dim, layout)
 
   var init = function(d)
   {
+    // todo
+    set_global_context(canvas_[0].getContext("2d"));
+
     canvas_.attr({width: d.w, height: d.h});
     self.bounds(new rectangle(1, 1, d.w-2, d.h-2));
   
@@ -74,6 +79,13 @@ root_panel: function(canvas, dim, layout)
 
     draw_timer_ = setInterval(on_draw_timer, 50);
   };
+
+  // returns the canvas on which this root panel is working
+  //
+  self.canvas = function()
+  {
+    return canvas_;
+  }
 
   // returns the state of the control keys
   //
@@ -649,7 +661,7 @@ root_panel: function(canvas, dim, layout)
     if (cursor === "")
       cursor = "default";
     
-    $("#canvas").css("cursor", cursor);
+    canvas_.css("cursor", cursor);
   };
   
   // debug: returns this root panel's name

@@ -30,16 +30,8 @@ scroll_button: function(image, caption)
   var init = function(image, caption)
   {
     // todo: path is hardcoded
-    image_ = new Image();
-    image_.src = image_dir() + "/" + image;
-
     // once the image is loaded, set it on the button
-    require_loaded(image_, function()
-      {
-        var i = new ui.image(image_);
-        self.label(i);
-      });
-
+    self.label(new ui.image(load_image(image_dir() + "/" + image)));
     self.clicked.add(on_tick);
   };
 

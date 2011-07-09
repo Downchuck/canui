@@ -166,8 +166,7 @@ line: function(height, opts)
 
 // a simple image with a possible overlay
 //
-// the images must be Image objects. The image may not be undefined,
-// but the overlay may.
+// the images must be Image objects
 //
 // todo: this assumes the image is already loaded, load it on the fly
 // and redraw
@@ -202,10 +201,10 @@ image: function(i, overlay, opts)
   ui.inherit_control(this, opts);
   var self = this;
 
-  var image_ = i;
-  var overlay_ = overlay;
+  var image_ = undefined;
+  var overlay_ = undefined;
 
-  var init = function()
+  var init = function(i, o)
   {
     self.set_default_options({
       margin: 0,
@@ -216,8 +215,6 @@ image: function(i, overlay, opts)
       overlay_grayed: true,
       alpha: 1.0});
 
-    assert(image_ != undefined);
-
     assert(one_of(self.option("halign"), ["left", "center", "right"]));
     assert(one_of(self.option("valign"), ["top", "center", "bottom"]));
     assert(one_of(self.option("overlay_halign"), ["left", "center", "right"]));
@@ -225,22 +222,58 @@ image: function(i, overlay, opts)
     assert(one_of(self.option("overlay_grayed"), [true, false]));
     assert(self.option("alpha") >= 0.0 && self.option("alpha") <= 1.0);
 
+    self.image(i);
+    self.overlay(o);
+  };
+
+  // if i is not undefined, sets the image; in any case returns the
+  // current image
+  //
+  self.image = function(i)
+  {
     // todo: disabled image is always generated, might be better to
     // create it on the fly when needed
-    var disabled_image = create_grayscale(image_);
-    require_loaded(disabled_image, mem_fun('relayout', self));
 
-    if (overlay_ != undefined)
+    if (i != undefined)
     {
-      var disabled_overlay = create_grayscale(overlay_);
-      require_loaded(disabled_overlay, mem_fun('relayout', self));
+      image_ = i;
+
+      require_loaded(image_, function()
+        {
+          var d = create_grayscale(image_);
+          require_loaded(d, mem_fun('relayout', self));
+        });
     }
+
+    return image_;
+  }
+
+  // if i is not undefined, sets the overlay; in any case returns the
+  // current image
+  //
+  self.overlay = function(i)
+  {
+    if (i != undefined)
+    {
+      overlay_ = i;
+
+      require_loaded(overlay_, function()
+        {
+          var d = create_grayscale(overlay_);
+          require_loaded(d, mem_fun('relayout', self));
+        });
+    }
+
+    return overlay_;
   };
 
   // margins + largest image
   //
   self.best_dimension = function()
   {
+    if (image_ == undefined || !image_.complete)
+      return new dimension(0, 0);
+
     var d = new dimension(image_.width, image_.height);
 
     if (overlay_ != undefined)
@@ -299,6 +332,9 @@ image: function(i, overlay, opts)
   self.draw = function(context)
   {
     self.control__draw(context);
+
+    if (image_ == undefined || !image_.complete)
+      return;
     
     var r = make_image_bounds();
 
@@ -323,7 +359,7 @@ image: function(i, overlay, opts)
     return "image";
   }
   
-  init();
+  init(i, overlay);
 }
 
 });   // namespace ui

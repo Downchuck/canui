@@ -33,12 +33,21 @@ image
 
 label
   can take a caption and an image.
-  
+
+list
+  a scrollable list of items with columns
+
 line
   a simple horizontal line
   
+menu
+  list of buttons that displays menus and submenus on click
+
 panel
   a simple container with a background color
+
+scrollbar
+  a slider with up/down-left/right buttons
 
 scroller
   a panel that will always give its child its best dimension, but will
@@ -320,12 +329,33 @@ Example:
 
 3.6 list
 
-This is currently being worked on and is not of much use. It displays
-a scrollable list of items with column headers and supports single
-selection with the mouse. More to come.
+This is a list of items with columns. It only supports "details" view
+for now, with single and multiple selections.
 
 Options:
-  none
+  . item_height (positive integer), default: g_line_height + 4
+    height in pixels of an item; the text will be vertically
+    centered
+
+  . padding (positive integer), default: 5
+    space on the left side of the items
+
+  . column_resize (none, content, header, auto), default: auto
+    specifies how columns are resized: "content" uses the width of
+    the largest item and therefore might be slow for very long
+    lists; "header" uses the width of the column caption; "none"
+    requires the user to set the width manually; "auto" uses the
+    largest between content and header
+
+  . show_header (true/false), default: true
+    whether the column headers should be visible
+
+  . expand_header (true/false), default: false
+    whether the last column should be expanded to take the remaining
+    horizontal space
+
+  . item_scroll (true/false), default: false
+    whether scrolling is per-pixel or per-item
   
 Example:
   
@@ -397,12 +427,44 @@ Example:
   }
 
 
-3.8 scroller
+3.8 scrollbar
+
+This is a slider (3.10) with up/down or left/right buttons. A scroller
+(3.9) can be used to automatically manage scrolling a child control,
+but standalone scrollbars can also be used. The list control (3.6)
+uses them.
+
+  function f(rp)
+  {
+    f.layout(new ui.border_layout());
+
+    var sb = new ui.scrollbar();
+
+    // the value will be constrained within the limits; this also
+    // determines the size of the thumb (see 3.10)
+    sb.limits(0, 30);
+    sb.value(12);
+
+    // this determines the amount scrolled by clicking the empty
+    // space around the thumb
+    sb.page_size(5);
+
+    // fired when the value changes
+    sb.changed.add(function(v)
+      {
+        alert("value is " + v);
+      });
+
+    rp.add(sb, ui.sides.right);
+  }
+
+
+3.9 scroller
 
 This is a panel with scrollbars. Its only child will always have its
 preferred size and will be moved around when scrolling.
 
-A scroller uses sliders (3.8) and special buttons that support holding
+A scroller uses sliders (3.10) and special buttons that support holding
 them down to continuously scroll.
 
 Options:
@@ -426,7 +488,7 @@ Example:
   }
 
 
-3.9 slider
+3.10 slider
 
 This is a thin panel with a button that can be moved around,
 constrained to the panel. It also supports clicking in the empty
@@ -440,6 +502,13 @@ value.
 While dragging the thumb, it will reset to its original value if the
 mouse moves too far.
 
+The thumb will also resize itself proportionally depending on the
+limits and the size of the slider. In this mode, the slider uses the
+range within the limits (max minus min) to shrink the thumb: the
+range is the number of pixels to shrink the thumb by, up to the
+minimum size of the thumb. Therefore, a limit of 10,20 will leave
+10 pixels for the thumb to move around.
+
 Options:
   . orientation (horizontal, vertical), default: horizontal
     whether the slider is horizontal or vertical
@@ -448,9 +517,13 @@ Options:
     the amount of pixels the mouse can move away from the thumb
     before it resets
 
-  . tick (positive integer), default: 1
+  . page_size (positive integer), default: 1
     the value increment while the mouse is held down in the empty
     space
+
+  . proportional (true/false), default: false
+    whether the thumb size should be proportional to the limits
+    and slider size
 
 Example:
   
@@ -464,7 +537,7 @@ Example:
   }
 
 
-3.10 textbox
+3.11 textbox
 
 Textboxes are hard. There's even a long section from whatwg saying
 that "authors should avoid implementing text editing controls using
@@ -525,7 +598,7 @@ Example:
   }
   
 
-3.11 tooltip
+3.12 tooltip
 
 A tooltip is nothing special, except that it has a yellow background
 and borders. Every control can have a tooltip (set by calling
@@ -546,7 +619,7 @@ Example:
     rp.add(lb);
   }
 
-3.12 control and container base classes
+3.13 control and container base classes
 
 All controls inherit from the 'control' class, which has some member
 functions of its own. For example, it allows for changing the mouse
@@ -964,7 +1037,125 @@ There are several helper classes and functions used throughout canui.
     mimics the behaviour of enums in most other languages.
   
 
-6 Internals
+
+6 Custom controls
+======================================================================
+
+A custom control can either be derived from 'control' or 'container'
+depending on whether you need children or not.
+
+All the member functions in the control class can be overriden. Unless
+the default behaviour needs to be avoided, the base class versions
+should always be called. There are cases where it is pretty much
+mandatory, such as in draw() where control__draw() clears the dirty
+flag. Without it, the canvas would continually redraw itself.
+
+These are the member functions that are most often overriden. In the
+following, 'mp' is always the mouse coordinates relative to the
+control.
+
+  best_dimension()
+  returns the best dimension for this control. The container base
+  class will ask the layout manager for its best dimension, which is
+  based on the layout itself and the dimensions of the children.
+
+  a custom control should return the dimension it needs to display
+  itself properly.
+
+  on_mouse_move(mp)
+  called when the mouse moves over the control, or anywhere if the
+  control has captured the mouse
+
+  on_mouse_left_down(mp)
+  called when the mouse left button is pressed over the control, or
+  anywhere if the control has captured the mouse
+
+  on_mouse_left_up(mp)
+  called when the mouse left button is released over the control, or
+  anywhere if the control has captured the mouse
+
+  on_double_click(mp)
+  called when the mouse left button is double clicked over the
+  control, or anywhere if the control has captured the mouse.
+
+  on_mouse_enter(mp)
+  called when the mouse moves over the control, but was previously
+  over a different control
+
+  on_mouse_leave()
+  called when the mouse moves away from the control
+
+  on_focus()
+  called when the left mouse button is pressed for the first time
+  while over the control; this gives the focus to the control
+
+  on_blur()
+  called when the left mouse button is pressed on another control and
+  this control had the focus
+
+  on_keypress(c)
+  called when a key on the keyboard is pressed, or at regular
+  intervals when the key is kept pressed; 'c' is the key code. This
+  is not called for control keys, such as the arrow keys.
+
+  on_keydown(c)
+  called when a key on the keyboard is pressed, or at regular
+  intervals when the key is kept pressed; 'c' is the key code. This
+  is only called for control keys, such as the arrow keys.
+
+  on_keyup(c)
+  called when a key on the keyboard is released; 'c' is the key code.
+  This is called for all keys.
+
+  on_mouse_scroll(v)
+  called when the mouse wheel is turned over a control, or anywhere
+  if the control has captured the mouse; 'v' is a normalized value
+  where 1 is a full tick.
+
+  on_bounds_changed()
+  called when the bounds of the control (position or dimension)
+  changed
+
+  draw(c)
+  called when the control needs to redraw itself; 'c' is the canvas
+  context. Inside draw(), the context has been transformed so that
+  coordinates are relative to the parent and clipped to the parent's
+  bounds. Since bounds are always relative to the parent,
+  self.bounds() can be used directly as the rectangle in which to
+  draw.
+
+  typename()
+  debug, should return a meaningful name for this control; this is
+  used in dump() for example, to display the control hierarchy
+
+Example:
+
+  // a 20x20 control (when possible) that fills itself with blue
+  //
+  function c()
+  {
+    ui.inherit_control(this);
+
+    self.best_dimension = function()
+    {
+      return new dimension(20, 20);
+    };
+
+    self.draw = function(context)
+    {
+      self.control__draw(context);
+
+      fill_rect(context, new color().blue(), self.bounds();
+    };
+  }
+
+  function f(rp)
+  {
+    rp.add(new c());
+  }
+
+
+7 Internals
 ======================================================================
 
 canui uses some kind of inheritance where member functions are
@@ -1001,7 +1192,7 @@ end, so that these function may be overridden by derived classes.
   d.frob();
 
   
-7 References
+8 References
 ======================================================================
 
 [whatwg]

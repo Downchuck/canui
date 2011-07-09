@@ -253,6 +253,26 @@ inherit_container: function(self, layout, opts, pos, dim)
 
     return undefined;
   };
+
+  // returns the control with the given id or undefined
+  //
+  self.container__find_id = function(id)
+  {
+    assert(id != undefined);
+
+    var c = self.control__find_id(id);
+    if (c != undefined)
+      return c;
+
+    for (var i in children_)
+    {
+      c = children_[i].find_id(id);
+      if (c != undefined)
+        return c;
+    }
+
+    return undefined;
+  };
   
   // returns whether 'ct' is a child of this container; recursive
   //
@@ -306,6 +326,7 @@ inherit_container: function(self, layout, opts, pos, dim)
   self.remove_all         = self.container__remove_all;
   self.trigger_detached   = self.container__trigger_detached;
   self.children_count     = self.container__children_count;
+  self.find_id            = self.container__find_id;
   self.add                = self.container__add;
   self.find_control       = self.container__find_control;
   self.has_child          = self.container__has_child;
