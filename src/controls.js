@@ -24,7 +24,7 @@ status_bar: function()
   var init = function()
   {
     self.borders({bottom: 1});
-    self.background(ui.theme.panel_color());
+    self.option("background", ui.theme.panel_color());
   };
 
   self.typename = function()
@@ -61,7 +61,7 @@ tooltip: function(opts)
     self.caption(s);
     
     self.borders({all: 1});
-    self.background(ui.theme.tooltip_color());
+    self.option("background", ui.theme.tooltip_color());
   };
   
   // sets the text on the tooltip; this calls label() with a

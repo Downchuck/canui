@@ -346,14 +346,18 @@ inherit_basic_panel: function(self, opts)
 {
   ui.inherit_container(self, opts);
   
-  // background color
-  var background_ = new color().transparent();
-  
   var caption_ = "";
   var caption_margin_ = 6;
   var caption_padding_ = 2;
 
   
+  var init = function()
+  {
+    self.set_default_options({
+      background: ui.theme.panel_color()
+    });
+  }
+
   // sets the caption if s is not undefined; in any case returns the
   // current caption
   //
@@ -403,8 +407,8 @@ inherit_basic_panel: function(self, opts)
   {
     var r = self.bounds();
 
-    if (background_.a !== 0.0)
-      fill_rect(context, background_, r);
+    if (self.option("background").a !== 0.0)
+      fill_rect(context, self.option("background"), r);
 
     if (caption_ != "")
     {
@@ -447,22 +451,6 @@ inherit_basic_panel: function(self, opts)
 
     self.control__draw_borders(context, bs, r);
   }
-
-
-  // sets the background color if 'c' is not undefined; in any case
-  // returns the current background color
-  //
-  self.basic_panel__background = function(c)
-  {
-    if (c != undefined)
-    {
-      assert(c.internal_is_a_color);
-      background_ = c;
-    }
-
-    self.redraw();
-    return background_;
-  }
   
   // debug: returns this root panel's name
   //
@@ -471,9 +459,9 @@ inherit_basic_panel: function(self, opts)
     return "panel";
   };
 
+  init();
   
   self.draw = self.basic_panel__draw;
-  self.background = self.basic_panel__background;
 }
 
 });   // ui

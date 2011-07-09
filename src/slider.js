@@ -180,7 +180,7 @@ slider: function(opts)
     thumb_.dragged.add(on_thumb_dragged);
 
     self.borders({all: 1});
-    self.background(ui.theme.panel_color());
+    self.option("background", ui.theme.panel_color());
     self.add(thumb_);
   };
 

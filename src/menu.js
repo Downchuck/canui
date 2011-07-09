@@ -197,7 +197,7 @@ menu: function(opts)
       self.option("click").add(opts.click);
 
     self.borders({bottom: 1});
-    self.background(ui.theme.panel_color());
+    self.option("background", ui.theme.panel_color());
   }
 
   self.bar = function()

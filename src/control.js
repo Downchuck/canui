@@ -169,6 +169,15 @@ inherit_control: function(self, opts)
     return opts_[n];
   };
 
+  // sets all the options in 'opts' by calling "option(i, opts[i])"
+  // for each element
+  //
+  self.control__options = function(opts)
+  {
+    for (var i in opts)
+      self.option(i, opts[i]);
+  };
+
   // sets the default options; this should be called in the layout
   // constructors
   //
@@ -835,6 +844,7 @@ inherit_control: function(self, opts)
   self.cursor               = self.control__cursor;
   self.set_default_options  = self.control__set_default_options;
   self.option               = self.control__option;
+  self.options              = self.control__options;
   self.tooltip              = self.control__tooltip;
   self.font                 = self.control__font;
   self.strictly_enabled     = self.control__strictly_enabled;

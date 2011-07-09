@@ -64,12 +64,9 @@ create_specific_ui: function(e, type)
   }
 },
 
-create_layout: function(type)
+create_layout: function(c)
 {
-  if (ui[type] == undefined)
-    throw "unrecognized layout '" + type + "'";
-   
-  var ly = new ui[type];
+  var ly = eval(c);
   if (!ly.internal_is_a_layout)
     throw "'" + type + "' is not a layout";
   
@@ -130,6 +127,10 @@ create_ui: function(e)
     
     u.changed.add(eval(onchange));
   }
+
+  var options = ui.get_data(e, "options");
+  if (options != undefined)
+    u.options(eval("(" + options + ")"));
   
   return u;
 },
