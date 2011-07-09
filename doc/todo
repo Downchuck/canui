@@ -1,0 +1,118 @@
+// $Id$
+
+1 Introduction
+======================================================================
+This document is about listing the controls that are, or will be part
+of canui, as well as their status.
+
+
+2 Working controls
+======================================================================
+These control have enough basic functionality so that they may be
+used. They may lack in options, callbacks or in ways to obtain
+information.
+
+
+2.1 button
+Todo: none
+Bugs: none
+
+
+2.2 panel
+Todo: none
+Bugs: none
+
+
+2.3 status_bar
+Todo: this is currently just a panel. It will either be
+      removed or reworked completely.
+
+Bugs: none
+
+
+2.4 tooltip
+Todo: none
+Bugs:
+ . tooltip stays stuck when mouse leaves (cancel timer on leave?)
+ . root panel stopped repositioning tooltips to fit screen
+
+
+2.5 line
+Todo: only vertical for now
+Bugs: none
+
+
+2.6 image
+Todo: none
+Bugs: none
+
+
+2.7 label
+Todo: none
+Bugs: none
+
+
+2.8 scrollbar
+Todo: horizontal needs testing, mouse wheel
+Bugs: none
+
+
+2.9 slider
+Todo: none
+Bugs: none
+
+
+2.10 textbox
+Todo: dnd, multiline, undo/redo
+Bugs: double-click select and moving sometimes unselect original word
+
+
+
+3 Controls in progress
+======================================================================
+These controls are currently mostly unusable because of lack of
+testing or features, or bugs.
+
+
+3.1 scroller
+Todo: more testing, cannibalized into scrollbar, not sure what still
+      works
+
+
+3.2 menu
+Todo: separators, keybindings?, icons, disabled, customize, close on
+      click elsewhere, timers
+
+
+3.2 list
+Todo: column resize/move, item drag/drop, keyboard nav, other views
+      (icon, etc.), icon in column, allow any control (editable list),
+      sort, tooltips, horizontal scroll
+
+Bugs: none
+
+
+
+4 Controls to do
+======================================================================
+
+  . tree
+  . combobox
+  . date/time
+  . progress bar/spinner
+  . toolbar
+  . link
+  . notebook
+  . up-down
+  . checkbox
+  . radio
+  . color
+  . file picker?
+  . collapsible panel
+  . windows/dialogs
+
+
+5 Others
+======================================================================
+. rename the internal_is_a_something to something else
+. html elements for layout

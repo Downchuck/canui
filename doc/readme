@@ -1,0 +1,1016 @@
+// $Id$
+
+canui (canvas UI) is a generic user interface library with several
+predefined widgets and layout managers.
+
+
+1 Summary
+======================================================================
+It started as a ui framework for a game I am working on, but it
+grew to a point where I think it might be useful to others. It is
+developed on firefox 5, but I regularly have a look at chrome.
+
+This is a list of the available base classes:
+
+control
+  this is the base class for all the widgets. User-defined controls
+  also can be created.
+
+container
+  this is the base class for all the controls that can have children.
+  User-defined containers can also be created.
+
+
+This is a list of the available controls:
+
+button
+  this is a regular button that fires a signal when clicked
+
+image
+  takes an Image object and draws it. It can also take a second image
+  as an overlay. It handles grayscale images automatically when
+  disabled.
+
+label
+  can take a caption and an image.
+  
+line
+  a simple horizontal line
+  
+panel
+  a simple container with a background color
+
+scroller
+  a panel that will always give its child its best dimension, but will
+  clip it and allows scrolling with scrollbars
+  
+slider
+  a panel with a thumb that can be moved horizontally or vertically
+  
+textbox
+  allows entering a single line of text. Supports selection and the
+  usual caret movement.
+
+tooltip
+  can be attacked to any control, will be displayed when the mouse
+  stays still for a short time hover the control.
+
+
+The top level control will always be a root_panel. It handles all the
+mouse and keyboard events and will redraw itself when needed
+
+These are the available layout managers. They are based on the layout
+managers in the java swing library.
+
+absolute_layout
+  no management, uses the positions given by the user
+
+border_layout
+  has 4 sides (left, top, right and bottom), plus a center. The sides
+  will use the preferred size of the controls while the center control
+  will take all the remaining space.
+  
+grid_layout
+  lays out the controls in rows of X controls, where X is specified by
+  the user.
+  
+horizontal_layout
+  lays out the controls in a horizontal line one after the other,
+  respecting the preferred sizes
+  
+vertical_layout
+  lays out the controls in a vertical line one after the other,
+  respecting the preferred sizes
+
+
+2 Usage
+======================================================================
+
+2.1 The root panel
+
+The root panel is where it all starts. It needs the canvas element to
+work on and its dimension.
+
+Everything (todo: no, only the controls) is in the 'ui' namespace.
+
+  <script type="text/javascript">
+  $(function()
+  {
+    var rp = new ui.root_panel($("#canvas"), new dimension(200, 200));
+  });
+  </script>
+  
+  <canvas id="canvas" tabindex="1"></canvas>
+  
+The <canvas> needs a tabindex attribute for the focus to work
+correctly.
+
+The root panel will register mouse, keyboard and focus events on the
+canvas and window. It will also start a timer (50ms) that will check
+whether it needs to redraw or not. Each control will mark itself as
+dirty when it changes.
+
+Everything is currently redrawn any time a control is dirty. There is
+no way to only redraw the offending widgets, although this may come
+in a future version. Even for complex interfaces the redraw time is
+usually under 40ms.
+
+Some of the events are registered on the window so that capturing the
+mouse is possible. For example, pressing a button and holding down the
+left mouse button captures the mouse. Moving away from the button or
+the browser window will still register the left mouse button release.
+
+
+2.2 Layouts
+
+canui manages the position of controls automatically with layouts.
+Their name and behaviour somewhat resemble those in the java swing
+library (although I did it from memory, it's been a while.)
+
+Layouts can be set when containers are created:
+
+  var p = new ui.panel(new ui.border_layout());
+
+or afterwards:
+
+  p.layout(new ui.border_layout());
+
+The default layout for all containers is vertical_layout. The layout
+cannot be changed while the container has children. This is because
+some layouts may need additional information about the children (such
+as the sides for border_layout.)
+
+
+3 Controls
+======================================================================
+
+In the following examples, 'rp' is a always a root_panel.
+
+3.1 button
+
+The button can either manage its label (with caption()) or use any
+kind of control as its child (with label().) It supports the usual
+interactions:
+
+  . hovering it changes its color
+  . pressing the left mouse button will show it as being pressed,
+    unless the mouse is not hovering anymore
+  . releasing the left mouse button while hovering will fire a
+    'clicked' signal
+
+Options:
+    
+Example:
+
+  function on_click()
+  {
+  }
+  
+  function f(rp)
+  {
+    // regular button, calls on_click
+    rp.add(new ui.button("foo", on_click));
+    
+    // button, also calls on_click
+    var b = new ui.button("bar", undefined);
+    b.clicked.add(on_click);
+    rp.add(b);
+    
+    // changes the caption
+    b.caption("frob");
+  }
+
+3.2 image
+
+This is a simple control that displays an Image object. It can also
+have a second image that will be overlaid on the first, with a
+possibly different alpha value.
+
+This control currently assumes the given Image has already been
+loaded. It will fail catastrophically if it hasn't. todo: fix that.
+The require_loaded() helper can be used to create the control only
+when image has been loaded.
+
+It will automatically create grayscale versions of the images that
+will be used when the control is disabled. Whether the overlay is
+also grayed depends on the options.
+
+Options:
+  . margin (positive integer), default: 5
+    space around the image
+
+  . halign (left, center, right), default: center
+    horizontal alignement of the image
+
+  . valign (top, center, bottom), default: center
+    vertical alignment of the image
+
+  . overlay_halign (left, center, right), default: center
+    horizontal alignment of the overlay (if present) over the main
+    image (not the available space, ignored if both images have the
+    same size)
+
+  . overlay_valign (top, center, bottom), default: center
+    vertical alignment of the overlay (if present) over the main
+    image (not the available space, ignored if both images have the
+    same size)
+
+  . overlay_grayed (true/false), default: true
+    when the control is disabled, also gray out the overlay
+
+  . alpha ([0.0, 1.0]), default: 1.0
+    transparency of the overlay
+
+
+Example:
+
+  // an image control with image.png on it
+  //
+  function f(rp)
+  {
+    var i = new Image();
+    i.src = "image.png";
+    
+    require_loaded(i, function()
+      {
+        rp.add(new ui.image(i));
+      });
+  }
+
+  // an image control with image.png and overlay.png on it; this
+  // assumes 'i' and 'o' are two already loaded images
+  //
+  function g(rp, i, o)
+  {
+    // the image will be aligned to the left side of the control (if
+    // the control is bigger than the image); disabling the control
+    // will show a grayed image 'i', but a full color 'o'; the overlay
+    // will be drawn at 0.5 alpha
+    
+    rp.add(new ui.image(i, o,
+      {halign: left, overlay_grayed: false, alpha: 0.5}));
+  }
+
+3.4 label
+
+Contains both a caption and an image. The image can be either at the
+left or right side of the caption. Either or both can be omitted.
+
+The label will automatically wait for the Image to be loaded before
+showing it. (todo: no, the grayscale generation will fail)
+
+Options:
+  . image_align (right, left), default: right
+    the position of the image relative to the caption
+    note: ignored if there's no caption
+
+  . halign (left, center, right), default: left
+    horizontal position of the rectangle bounding both the image and
+    the caption
+
+  . valign (top, center, bottom), default: center
+    vertical position of the rectangle bounding both the image and
+    the caption
+
+  . padding (positive integer), default: 4
+    space between caption and image
+    note: ignored if either caption or image is missing
+
+  . color (color object), default: ui.theme.text_color()
+    text color
+
+Example:
+
+  function f(rp)
+  {
+    // label with a simple caption
+    rp.add(new ui.label("caption"));
+    
+    // label with an image on the left side of the caption and both
+    // aligned to the top of the control
+    var i = new Image;
+    i.src = "image.png";
+    
+    rp.add(new ui.label("caption", i,
+      {image_align: left, valign: top}));
+  }
+
+3.5 line
+
+This is just a horizontal line.
+
+Options:
+  . size (positive integer), default: 1
+    height in pixels of the line
+
+  . margin (positive integer), default: 5
+    space around the line
+
+  . color (color object), default: black
+    color of the line
+    
+Example:
+
+  function f(rp)
+  {
+    // two pixel high line, with 10 pixels of margin on each side
+    rp.add(new ui.line(2, {margin: 10}));
+  }
+  
+
+3.6 list
+
+This is currently being worked on and is not of much use. It displays
+a scrollable list of items with column headers and supports single
+selection with the mouse. More to come.
+
+Options:
+  none
+  
+Example:
+  
+  function f(rp)
+  {
+    var list = new ui.list();
+    list.add_column("col 1");
+    list.add_column("col 2");
+    
+    for (var i=0; i<10; ++i)
+      list.add_item(["item " + i, "subitem " + 1]);
+    
+    rp.add(list);
+  }
+
+
+3.7 panel
+
+This is a container with a background. It is mainly used when multiple
+layouts are needed.
+
+Options:
+  none
+  
+Example:
+  
+  function f(rp)
+  {
+    // a panel with a button in it
+    var p = new ui.panel();
+    p.add(new ui.button("foo"));
+    
+    // a panel within a panel with different layouts
+    //
+    // (spacing is exaggerated)
+    // +---root_panel-----------------------------------+
+    // |                                                |
+    // |  +---p1-(border_layout)---------------------+  |
+    // |  |                                          |  |
+    // |  |  +---p2-(horizontal_layout)-----------+  |  |
+    // |  |  |                                    |  |  |
+    // |  |  |  +button-+  +button-+              |  |  |
+    // |  |  |  |  foo  |  |  bar  |              |  |  |
+    // |  |  |  +-------+  +-------+              |  |  |
+    // |  |  |                                    |  |  |
+    // |  |  +------------------------------------+  |  |
+    // |  |                                          |  |
+    // |  |  +---button---------------------------+  |  |
+    // |  |  |                                    |  |  |
+    // |  |  |                                    |  |  |
+    // |  |  |                 frob               |  |  |
+    // |  |  |                                    |  |  |
+    // |  |  |                                    |  |  |
+    // |  |  +------------------------------------+  |  |
+    // |  |                                          |  |
+    // |  +------------------------------------------+  |
+    // |                                                |
+    // +------------------------------------------------+
+    var p1 = new ui.panel(new ui.border_layout());
+    var p2 = new ui.panel(new ui.horizontal_layout());
+    
+    p2.add(new ui.button("foo"));
+    p2.add(new ui.button("bar"));
+    
+    p1.add(p2, ui.sides.top);
+    p1.add(new ui.button("frob"), ui.sides.center);
+    
+    rp.add(p1);
+  }
+
+
+3.8 scroller
+
+This is a panel with scrollbars. Its only child will always have its
+preferred size and will be moved around when scrolling.
+
+A scroller uses sliders (3.8) and special buttons that support holding
+them down to continuously scroll.
+
+Options:
+  none
+  
+Example:
+  
+  function f(rp)
+  {
+    // assumes that the image is larger than the canvas
+    var i = new Image();
+    i.src = "large_image.png");
+    
+    require_loaded(i, function()
+      {
+        var s = new ui.scroller();
+        s.add(new ui.image(i));
+        
+        rp.add(s);
+      });
+  }
+
+
+3.9 slider
+
+This is a thin panel with a button that can be moved around,
+constrained to the panel. It also supports clicking in the empty
+spaces around the thumb to move it faster. It will fire the changed()
+signal when the value changes.
+
+A slider has a value that is between user-defined limits. The limits
+are unimportant from the slider's point of view, it only scales the
+value.
+
+While dragging the thumb, it will reset to its original value if the
+mouse moves too far.
+
+Options:
+  . orientation (horizontal, vertical), default: horizontal
+    whether the slider is horizontal or vertical
+
+  . outside_limit (positive integer), default: 130
+    the amount of pixels the mouse can move away from the thumb
+    before it resets
+
+  . tick (positive integer), default: 1
+    the value increment while the mouse is held down in the empty
+    space
+
+Example:
+  
+  function (rp)
+  {
+    // horizontal slider
+    var s = new ui.slider();
+    s.limits(10, 50);
+    
+    rp.add(s);
+  }
+
+
+3.10 textbox
+
+Textboxes are hard. There's even a long section from whatwg saying
+that "authors should avoid implementing text editing controls using
+the canvas element. Doing so has a large number of disadvantages."
+[whatwg2]
+
+However, most of the disadvantages are implemented, except for the
+native stuff:
+
+  . copy/paste: possible within the canvas, bespin uses flash to 
+    access the system clipboard
+  . spell-checking: I consider this to be candy, but it is a nice
+    thing to have
+  . native keyboard shortcuts: I don't consider this to be
+    particularly significant
+  
+Other things are not specific to textboxes:
+  . page-wide text search: nice to have, but that's a problem with
+    text on canvas in general, not only textboxes.
+    
+    whatwg says that "a future version of the 2D context API may
+    provide a way to render fragments of documents, rendered using
+    CSS, straight to the canvas." [whatwg2] This may perhaps allow the
+    browser to recognize the text, but I doubt it.
+    
+    This is also a problem with images in browsers, or more generally
+    any kind of application that doesn't use standard widgets (such
+    as games.)
+    
+  . text services and IMEs, bidirectional text, accessibility:
+    basically any kind of i18n or accessibility. That would indeed
+    be nice and, although parts of it may be implemented, _that_ would
+    be hard work.
+    
+I do not consider those to be show-stoppers, but merely limitations
+inherent to having a browser in a sandbox. Some are not implemented
+yet, but not for technical reasons; they will be available eventually:
+
+  . drag-and-drop
+  . multiline editing
+  . undo/redo: not system wide, but available within the textbox
+
+The rest works fine:
+
+  . mouse placement of the caret
+  . keyboard movement
+  . scrolling (todo)
+  . selection
+
+Options:
+  none
+  
+Example:
+  
+  function f(rp)
+  {
+    rp.add(new ui.textbox("initial text"));
+  }
+  
+
+3.11 tooltip
+
+A tooltip is nothing special, except that it has a yellow background
+and borders. Every control can have a tooltip (set by calling
+tooltip() on it), but the control given can be anything. It will be
+shown at the mouse position after a short delay if the the mouse
+stands still.
+
+Options:
+  none
+  
+Example:
+
+  function f(rp)
+  {
+    var lb = new ui.label("a label");
+    lb.tooltip(new ui.tooltip("text"));
+    
+    rp.add(lb);
+  }
+
+3.12 control and container base classes
+
+All controls inherit from the 'control' class, which has some member
+functions of its own. For example, it allows for changing the mouse
+cursor while hovering the control, changing the font, setting options,
+disabling, etc. It also has hooks for derived classes, such as
+on_keyup() or on_focus().
+
+All containers (such as panels) inherit from the 'container' class.
+A container has a layout manager and can add or remove children.
+
+Every control has what is called its 'best dimension' which is
+respected as much as possible by the layout managers. It is sometimes
+not possible (such as when a control would overflow its container) or
+not used (such as the center part of a border_layout.)
+
+The best dimension of a control depends on its content: a label will
+return the size of the string plus its margins and an image will
+return the size of the image plus its margins.
+
+
+4 Layouts
+======================================================================
+
+There are several layout managers that will position and resize
+children in different ways.
+
+Layouts usually ask all their children for their best dimension,
+fiddles with them and returns the dimension needed to accommodate all
+the children.
+
+4.1 absolute_layout
+
+This layout won't touch its children at all. They must be positioned
+and dimensioned manually with bounds() or some equivalent member
+function.
+
+Because this layout doesn't move or resize children, its preferred
+size must be set manually with set_best_dimension().
+
+Options:
+  none
+  
+Example:
+
+  function f(rp)
+  {
+    var p = new ui.panel(new ui.absolute_layout());
+    
+    // without this, 'p' would report that its best dimension is 0x0
+    p.layout().set_best_dimension(new dimension(50, 50));
+    
+    var b = new ui.button();
+    b.bounds(new rectangle(20, 20, 42, 19));
+    
+    p.add(b);
+  }
+
+4.2 border_layout
+
+This layout has four sides plus the center. The sides will give their
+child their best dimension and the center control will take the
+remaining space.
+
+It tries to be somewhat smart with the center control: if it exceeds
+its maximum dimension, the excess will be redistributed to the sides
+(in which case they won't have their best dimension anymore.) However,
+the combination of the size of the container and the control's best
+dimension might give unexpected results if the controls need strict
+dimensions.
+
+Options:
+  . margin (positive integer), default: 0
+    space between the borders of the container and the controls
+
+  . padding (positive integer), default: 5
+    space between an area in which there is a control and the center
+    
+Example:
+
+  function f(rp)
+  {
+    var p = new ui.panel(new ui.border_layout());
+
+    
+    // +--------------------------------------------+
+    // |                 +-----+                    |
+    // |                 | top |                    |
+    // |                 +-----+                    |
+    // |        +-------------------------+         |
+    // |+------+|                         |+-------+|
+    // || left ||         center          || right ||
+    // |+------+|                         |+-------+|
+    // |        +-------------------------+         |
+    // |                +--------+                  |
+    // |                | bottom |                  |
+    // |                +--------+                  |
+    // +--------------------------------------------+
+    
+    p.add(new ui.label("top"), ui.sides.top);
+    p.add(new ui.label("left"), ui.sides.left);
+    p.add(new ui.label("bottom"), ui.sides.bottom);
+    p.add(new ui.label("right"), ui.sides.right);
+    p.add(new ui.center("center"), ui.sides.center);
+    
+    rp.add(p);
+  }
+
+  
+4.3 grid_layout
+
+This layout arranges its children in rows of X controls with padding
+between them. The height of a row is normally the height of its
+largest control, giving uneven rows. However, if the option
+'same_size' is given, all the rows have the height of the largest
+control among all the children. In any case, all the children have the
+same width, which is the container's width (minus the margin and
+padding) divided by the number of controls on a line.
+
+Options:
+  . same_size (true/false), default: false
+    use the height of the highest control for every control
+
+  . margin (positive integer), default: 0
+    space between the borders of the container and the controls
+
+  . hpadding (positive integer), default: 0
+    horizontal space between two children
+   
+  . vpadding (positive integer), default: 0
+    vertical space between two children
+ 
+  . padding (positive integer), default: none
+    sets both hpadding and vpadding to the given value
+
+Example:
+  
+  function make_panel(opts)
+  {
+    // two child per row
+    var p = new ui.panel(new ui.grid_layout(2, opts));
+    
+    p.add(new label("single line"));
+    p.add(new button("button"));
+    p.add(new label("on\nthree\nlines"));
+    p.add(new button("button"));
+    
+    return p;
+  }
+  
+  function f(rp)
+  {
+    // +---------------------------------+
+    // | +-------------+ +-------------+ |
+    // | | single line | |    button   | |
+    // | +-------------+ +-------------+ |
+    // | +-------------+ +-------------+ |
+    // | |     on      | |             | |
+    // | |    three    | |    button   | |
+    // | |    lines    | |             | |
+    // | +-------------+ +-------------+ |
+    // +---------------------------------+
+    rp.add(make_panel({}));
+    
+    // +---------------------------------+
+    // | +-------------+ +-------------+ |
+    // | |             | |             | |
+    // | | single line | |    button   | |
+    // | |             | |             | |
+    // | +-------------+ +-------------+ |
+    // | +-------------+ +-------------+ |
+    // | |     on      | |             | |
+    // | |    three    | |    button   | |
+    // | |    lines    | |             | |
+    // | +-------------+ +-------------+ |
+    // +---------------------------------+
+    rp.add(make_panel({same_size: true}));
+  }
+
+  
+4.4 horizontal_layout
+
+Lays out its children one next to the other, always respecting their
+best width. This may overflow the container (todo: and probably
+break in the process)
+
+There are several alignment options and two ways of deciding the
+height of the controls.
+
+The control's height is normally its preferred height. However, if
+'same_size' is given, the height will be that of the largest control.
+If 'expand' is given instead, the height will be that of the container
+(minus the margin, etc.) Obviously, 'same_size' is ignored with
+'expand'.
+
+The controls may be aligned horizontally on the left side, center or
+right side:
+
+  left:
+  +-------------------------------------+
+  | +--------+ +--------+               |
+  | | label1 | | label2 |               |
+  | +--------+ +--------+               |
+  +-------------------------------------+
+
+  center:
+  +-------------------------------------+
+  |        +--------+ +--------+        |
+  |        | label1 | | label2 |        |
+  |        +--------+ +--------+        |
+  +-------------------------------------+
+
+  right:
+  +-------------------------------------+
+  |                +--------+ +--------+|
+  |                | label1 | | label2 ||
+  |                +--------+ +--------+|
+  +-------------------------------------+
+
+The valign option has the same behaviour, but vertically:
+
+  top:
+  +-------------------------------------+
+  | +--------+ +--------+               |
+  | | label1 | | label2 |               |
+  | +--------+ +--------+               |
+  |                                     |
+  |                                     |
+  |                                     |
+  |                                     |
+  +-------------------------------------+
+
+  center:
+  +-------------------------------------+
+  |                                     |
+  |                                     |
+  | +--------+ +--------+               |
+  | | label1 | | label2 |               |
+  | +--------+ +--------+               |
+  |                                     |
+  |                                     |
+  +-------------------------------------+
+  
+  bottom:
+  +-------------------------------------+
+  |                                     |
+  |                                     |
+  |                                     |
+  |                                     |
+  | +--------+ +--------+               |
+  | | label1 | | label2 |               |
+  | +--------+ +--------+               |
+  +-------------------------------------+
+
+The valign option is ignored when 'expand' is given, since the
+controls take all the available height.
+
+  
+Options:
+  . expand (true, false), default: false
+    controls will expand to the height of the container instead of
+    using their preferred height
+
+  . same_size (true, false), default: false
+    controls will have the height of the highest instead of their
+    preferred height
+    note: ignored with expand
+
+  . halign (left, center, right), default: left
+    the rectangle bounding all the controls will be aligned to the
+    left, center or right of the container
+
+  . valign (top, center, bottom), default: top
+    all controls will be aligned to the top, center or bottom of the
+    container
+    note: ignored with expand
+
+  . margin (positive integer), default: 0
+    space between the borders of the container and the controls
+
+  . padding (positive integer), default: 5
+    space between each control
+
+Example:
+
+  function f(rp)
+  {
+    var p = new ui.panel(new ui.horizontal_layout({halign: "center"));
+    
+    p.add(new ui.label("label1"));
+    p.add(new ui.label("label2"));
+    
+    rp.add(p);
+  }
+
+  
+4.5 vertical_layout
+
+See 4.4, but with 'width' and 'height' reversed.
+
+
+
+5 Utilities
+======================================================================
+
+5.1 geometry
+
+There are several classes that are used throughout canui:
+
+  . point (x, y)
+  . dimension (w, h)
+  . rectangle (x, y, w, h)
+
+These are self-explanatory.
+
+
+5.2 graphics
+
+The 'color' class has r, g, b and a values between 0.0 and 1.0. There
+is also several helper functions that wrap common graphical
+operations, such as outline_rect() or fill_rect().
+
+Playing with text is somewhat hard, since there is no reliable way
+of getting the bounding rectangle of a particular string and font.
+measureText() returns the width, but the text may "spill out of the
+[...] width returned by measureText()"[whatwg]. There is no way to get
+any kind of height information.
+
+canui hardcodes a line height of 16 pixels and a spacing between two
+lines of 3 pixels. These seem to be correct for both firefox and
+chrome. ymmv.
+
+create_grayscale() takes an Image object, creates a temporary canvas,
+draws the image, gets the pixels, converts them to a light grayscale
+and returns a new Image with that data. It is used by the labels so
+that images are automatically grayed when the control is disabled.
+
+
+5.3 utility
+
+There are several helper classes and functions used throughout canui.
+
+  . font
+    This has the font family, size and some css attributes, such as
+    bold and italic.
+   
+  . theme
+    This is currently underused, but the plan is to put all the color
+    and size information in there. 
+
+    The controls currently have a classic Windows look, which was
+    the intention, as I mostly run Windows 7 with the classic look.
+    Most of the metrics and behaviour is based on Windows 7.
+  
+  . bind and mem_fun
+    The former can bind the arguments of a function and the latter
+    makes sure a particular member function is called on the right
+    object.
+    
+      function a()
+      {
+        this.frob = function()
+        {
+        }
+      }
+      
+      function b(a, b)
+      {
+        console.log(a + b);
+      }
+      
+      var o = new a();
+      var f = mem_fun('frob', o);
+      f();    // calls o.frob()
+  
+      f = bind(b, 3, 5);
+      f();    // logs 8
+
+    These are used heavily with signals.
+    
+  . assert
+    This will break in a debugger (if present) if the given value is
+    false. There are lots of assertions throughout canui, such as for
+    making sure things have the right type. I am not fond of weakly-
+    typed languages.
+    
+  . signal
+    A signal is a container of functions (slots) that are called when
+    the signal is fired. This is used for callbacks, such as when a
+    button is clicked:
+    
+      function f1(a)
+      {
+        console.log(a);
+      }
+      
+      function f2(a)
+      {
+        console.log(a);
+      }
+      
+      
+      var s = new signal();
+      s.add(f1);
+      s.add(f2);
+      
+      s.fire(42);  // logs 42 twice
+      
+    A slot can return a strict false to get detached automatically.
+    Returning anything else (or nothing) will keep the slot attached.
+      
+  . make_enum()
+    There are several 'enumerations' in canui that are created with
+    this function. It takes an array of strings and returns an object
+    with "string: n", where n is an increasing integer value. This
+    mimics the behaviour of enums in most other languages.
+  
+
+6 Internals
+======================================================================
+
+canui uses some kind of inheritance where member functions are
+prefixed when the class name. Each base class has a "vtable" at the
+end, so that these function may be overridden by derived classes.
+
+  function inherit_base(self)
+  {
+    self.base__frob = function()
+    {
+      console.log("base__frob");
+    };
+    
+    self.frob = self.base__frob;
+  }
+    
+  function derived()
+  {
+    inherit_base(this);
+    
+    this.derived__frob = function()
+    {
+      this.base__frob();
+      console.log("derived__frob");
+    }
+    
+    this.frob = this.derived__frob;
+  }
+  
+  var d = new derived();
+  
+  // base__frob
+  // derived__frob
+  d.frob();
+
+  
+7 References
+======================================================================
+
+[whatwg]
+http://www.whatwg.org/specs/web-apps/current-work/multipage/
+the-canvas-element.html
+         
+[whatwg2] 
+http://www.whatwg.org/specs/web-apps/current-work/multipage/
+the-canvas-element.html#best-practices
+
+
+eof
