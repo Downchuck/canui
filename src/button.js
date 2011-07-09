@@ -27,9 +27,13 @@ namespace("ui",
 //     if true, immediately changes the toggle state on left mouse
 //     button down; this does not capture the mouse
 //
-inherit_clickable: function(self, caption, opts)
+//   caption (string), default: ""
+//     initial caption on the button
+//
+inherit_clickable: function(self, opts)
 {
-  ui.inherit_container(self, new ui.border_layout({margin: 5}), opts);
+  ui.inherit_container(self,
+    merge(opts, {layout: new ui.border_layout({margin: 5})}));
 
 
   // called when the button is clicked
@@ -47,15 +51,16 @@ inherit_clickable: function(self, caption, opts)
   var pressed_ = false;
 
 
-  var init = function(caption, clicked)
+  var init = function(opts)
   {
     self.set_default_options({
+      caption: "",
       pressed_feedback: true,
       hover_feedback: true,
       flat: false,
       toggle: false});
 
-    self.caption(caption);
+    self.caption(self.option("caption"));
   };
 
   // if b is not undefined, sets the pressed state; this is ignored
@@ -101,7 +106,7 @@ inherit_clickable: function(self, caption, opts)
     if (s == undefined)
       s = "";
     
-    self.label(new ui.label(s, undefined, {halign: "center"}));
+    self.label(new ui.label({caption: s, halign: "center"}));
   };
   
   // sets 'lb' as the only control in the button if not undefined; in
@@ -303,24 +308,14 @@ inherit_clickable: function(self, caption, opts)
   self.on_dragging          = self.clickable__on_dragging;
   self.set_state            = self.clickable__set_state;
 
-  init(caption);
+  init(opts);
 },
 
 // see inherit_clickable
 //
-button: function(caption, clicked, opts)
+button: function(opts)
 {
-  ui.inherit_clickable(this, caption, opts);
-  var self = this;
-  
-
-  var init = function(caption, clicked)
-  {
-    if (clicked != undefined)
-      self.clicked.add(clicked);
-  };
-
-  init(caption, clicked);
+  ui.inherit_clickable(this, opts);
 }
 
 });   // namespace ui

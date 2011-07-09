@@ -17,7 +17,6 @@
   <script type="text/javascript" src="../src/label.js"></script>
   <script type="text/javascript" src="../src/textbox.js"></script>
   <script type="text/javascript" src="../src/controls.js"></script>
-  <script type="text/javascript" src="../src/tiles_panel.js"></script>
   <script type="text/javascript" src="../src/slider.js"></script>
   <script type="text/javascript" src="../src/scroller.js"></script>
   <script type="text/javascript" src="../src/layout.js"></script>
@@ -44,11 +43,11 @@ function init(image)
   left_panel.add(new ui.textbox("this is a textbox"));
   left_panel.add(new ui.label("this is a label"));
   
-  var b = new ui.button("this is a button", function()
+  var b = new ui.button({caption: "this is a button", clicked: function()
     {
       alert("hello!");
       return true;
-    });
+    }});
   left_panel.add(b);
 
   left_panel.add(new ui.line());

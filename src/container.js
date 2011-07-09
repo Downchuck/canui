@@ -4,9 +4,9 @@ namespace("ui", {
 
 // base class for all containers
 //
-inherit_container: function(self, layout, opts, pos, dim)
+inherit_container: function(self, opts)
 {
-  ui.inherit_control(self, opts, pos, dim);
+  ui.inherit_control(self, opts);
 
  
   // for sanity checks 
@@ -16,7 +16,7 @@ inherit_container: function(self, layout, opts, pos, dim)
   var children_ = new Array();
 
   // layout manager
-  var layout_ = (layout ? layout : new ui.vertical_layout());
+  var layout_ = undefined;
 
   // this is something of a hack: it is mostly used by buttons to
   // offset the children when pressed. There's no easy way to do this
@@ -30,6 +30,10 @@ inherit_container: function(self, layout, opts, pos, dim)
   //
   var init = function()
   {
+    self.set_default_options({
+      layout: new ui.vertical_layout()});
+
+    layout_ = self.option("layout");
     assert(layout_ != undefined);
     assert(layout_.internal_is_a_layout);
     
@@ -338,9 +342,9 @@ inherit_container: function(self, layout, opts, pos, dim)
 // the panel and the top border (if any) is moved down in the middle
 // of the caption.
 //
-inherit_basic_panel: function(self, layout, opts)
+inherit_basic_panel: function(self, opts)
 {
-  ui.inherit_container(self, layout, opts);
+  ui.inherit_container(self, opts);
   
   // background color
   var background_ = new color().transparent();

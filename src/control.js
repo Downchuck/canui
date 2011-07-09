@@ -4,7 +4,7 @@ namespace("ui", {
 
 // base class for all controls
 //
-inherit_control: function(self, opts, pos, dim)
+inherit_control: function(self, opts)
 {
   // for sanity checks
   self.internal_is_a_control = true;
@@ -70,25 +70,27 @@ inherit_control: function(self, opts, pos, dim)
   var font_ = ui.theme.default_font();
 
   // control-dependent options
-  var opts_ = (opts == undefined ? [] : opts);
+  var opts_ = (opts == undefined ? {} : opts);
 
 
   // constructor
   //
-  var init = function(pos, dim)
+  var init = function()
   {
+    assert(typeof(opts_) == "object");
+
     var b = new rectangle(0, 0, 0, 0);
 
-    if (pos != undefined)
+    if (opts_.position != undefined)
     {
-      b.x = pos.x;
-      b.y = pos.y;
+      b.x = opts_.position.x;
+      b.y = opts_.position.y;
     }
 
-    if (dim != undefined)
+    if (opts_.dimension != undefined)
     {
-      b.w = dim.w;
-      b.h = dim.h;
+      b.w = opts_.dimension.w;
+      b.h = opts_.dimension.h;
     }
 
     self.bounds(b);
@@ -156,7 +158,7 @@ inherit_control: function(self, opts, pos, dim)
   //
   self.control__option = function(n, v)
   {
-    assert(opts_[n] != undefined);
+    assert(opts_.hasOwnProperty(n));
 
     if (v != undefined)
     {
@@ -872,7 +874,7 @@ inherit_control: function(self, opts, pos, dim)
   self.get_root_panel       = self.control__get_root_panel;
   self.dump                 = self.control__dump;
   
-  init(pos, dim);
+  init();
 }
 
 });   // namespace ui

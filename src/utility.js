@@ -789,3 +789,13 @@ function set_image_dir(d)
 {
   g_image_dir = d;
 }
+
+function merge(o, m)
+{
+  if (o == undefined)
+    o = {};
+
+  for (var i in m)
+    o[i] = m[i];
+  return o;
+}

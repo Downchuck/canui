@@ -9,7 +9,8 @@ namespace("ui", {
 //
 slider_thumb: function(parent)
 {
-  ui.inherit_clickable(this, "", {hover_feedback: false, pressed_feedback: false});
+  ui.inherit_clickable(this,
+    {caption: "", hover_feedback: false, pressed_feedback: false});
   var self = this;
 
   // mouse is moving while the left button is down
@@ -119,7 +120,8 @@ slider_thumb: function(parent)
 //
 slider: function(opts)
 {
-  ui.inherit_basic_panel(this, new ui.absolute_layout(), opts);
+  ui.inherit_basic_panel(this,
+    merge(opts, {layout: new ui.absolute_layout()}));
   var self = this;
 
   // fired when the thumb has moved

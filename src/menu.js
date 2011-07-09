@@ -167,26 +167,34 @@ menu_button: function(parent, caption)
   init();
 },
 
-menu: function(caption, click)
+menu: function(opts)
 {
   ui.inherit_basic_panel(this, 
-    new ui.horizontal_layout({margin: 1}));
+    merge(opts, {layout: new ui.horizontal_layout({margin: 1})}));
   var self = this;
 
   self.clicked = new signal();
 
   self.internal_is_a_menu = true;
 
-  var caption_ = caption;
+  var caption_ = "";
   var parent_ = undefined;
   var menus_ = [];
   var opened_ = undefined;
 
 
-  var init = function(click)
+  var init = function()
   {
-    if (click != undefined)
-      self.clicked.add(click);
+    self.set_default_options({
+      caption: "",
+      click: undefined
+    });
+
+    if (self.option("caption") != "")
+      caption_ = self.option("caption");
+
+    if (self.option("click") != undefined)
+      self.option("click").add(opts.click);
 
     self.borders({bottom: 1});
     self.background(ui.theme.panel_color());
@@ -378,7 +386,7 @@ menu: function(caption, click)
       return "menu";
   };
 
-  init(click);
+  init();
 }
 
 

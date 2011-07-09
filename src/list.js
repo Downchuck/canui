@@ -85,7 +85,7 @@ list_column: function(caption, width)
 //
 list_header: function(parent)
 {
-  ui.inherit_container(this, new ui.absolute_layout());
+  ui.inherit_container(this, {layout: new ui.absolute_layout()});
   var self = this;
 
   // list object
@@ -143,7 +143,7 @@ list_header: function(parent)
     {
       var c = cols_[i];
 
-      var b = new ui.button(c.caption());
+      var b = new ui.button({caption: c.caption()});
       b.label().option("halign", "left");
 
       headers_.push(b);
@@ -315,7 +315,8 @@ dragger: function(c)
 //
 list: function(opts)
 {
-  ui.inherit_container(this, new ui.absolute_layout(), opts);
+  ui.inherit_container(this,
+    merge(opts, {layout: new ui.absolute_layout()}));
   var self = this;
 
 

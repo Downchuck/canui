@@ -178,10 +178,10 @@ Example:
   function f(rp)
   {
     // regular button, calls on_click
-    rp.add(new ui.button("foo", on_click));
+    rp.add(new ui.button({caption: "foo", clicked: on_click}));
     
     // button, also calls on_click
-    var b = new ui.button("bar", undefined);
+    var b = new ui.button({caption: "bar"});
     b.clicked.add(on_click);
     rp.add(b);
     
@@ -386,7 +386,7 @@ Example:
   {
     // a panel with a button in it
     var p = new ui.panel();
-    p.add(new ui.button("foo"));
+    p.add(new ui.button({caption: "foo"}));
     
     // a panel within a panel with different layouts
     //
@@ -417,11 +417,11 @@ Example:
     var p1 = new ui.panel(new ui.border_layout());
     var p2 = new ui.panel(new ui.horizontal_layout());
     
-    p2.add(new ui.button("foo"));
-    p2.add(new ui.button("bar"));
+    p2.add(new ui.button({caption: "foo"}));
+    p2.add(new ui.button({caption: "bar"}));
     
     p1.add(p2, ui.sides.top);
-    p1.add(new ui.button("frob"), ui.sides.center);
+    p1.add(new ui.button({caption: "frob"}), ui.sides.center);
     
     rp.add(p1);
   }

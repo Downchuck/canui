@@ -8,7 +8,11 @@ namespace("ui",
 // this emulates double clicks because it acts on the second left
 // button down, not up (so word selection can take place)
 //
-textbox: function(t, opts)
+// options:
+// text (string), default: ""
+//   initial value
+//
+textbox: function(opts)
 {
   ui.inherit_control(this, opts);
   var self = this;
@@ -57,20 +61,21 @@ textbox: function(t, opts)
   var text_ = "";
 
 
-  var init = function(t)
+  var init = function()
   {
     self.set_default_options({
-      "margin": 2,
-      "text_color": ui.theme.text_color(),
-      "selected_text_color": ui.theme.selected_text_color(),
-      "selected_text_background": ui.theme.selected_text_background(),
-      "background": new color().white()
+      text: "",
+      margin: 2,
+      text_color: ui.theme.text_color(),
+      selected_text_color: ui.theme.selected_text_color(),
+      selected_text_background: ui.theme.selected_text_background(),
+      background: new color().white()
       });
 
     self.cursor("text");
 
-    if (t != undefined)
-      self.text(t);
+    if (self.option("text") != undefined)
+      self.text(self.option("text"));
   };
 
   // todo
@@ -763,7 +768,7 @@ textbox: function(t, opts)
     return "textbox";
   }
 
-  init(t);
+  init();
 }
 
 });   // namespace ui

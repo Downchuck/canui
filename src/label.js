@@ -7,6 +7,12 @@ namespace("ui",
 // grayed when the label is disabled.
 //
 // options:
+// caption (string), default: ""
+//   initial caption
+//
+// image (Image object), default: undefined
+//   initial icon
+//
 // image_align (right, left), default: right
 //   the position of the image relative to the caption
 //   note: ignored if there's no caption
@@ -26,7 +32,7 @@ namespace("ui",
 // color (color object), default: ui.theme.text_color()
 //   text color
 //
-label: function(caption, image, opts)
+label: function(opts)
 {
   ui.inherit_control(this, opts);
   var self = this;
@@ -43,9 +49,11 @@ label: function(caption, image, opts)
 
   // constructor
   //
-  var init = function(caption, image)
+  var init = function()
   {
     self.set_default_options({
+      caption: "",
+      image: undefined,
       image_align: "right",
       halign: "left",
       valign: "center",
@@ -54,8 +62,11 @@ label: function(caption, image, opts)
     
     assert(one_of(self.option("image_align"), ["left", "right"]));
   
-    self.caption(caption);
-    self.set_image(image);
+    if (self.option("caption") != undefined)
+      self.caption(self.option("caption"));
+
+    if (self.option("image") != undefined)
+      self.set_image(self.option("image"));
   };
 
   // sets the text on the label
@@ -305,7 +316,7 @@ label: function(caption, image, opts)
     return "label (" + caption_ + ")";
   };
   
-  init(caption, image);
+  init();
 }
 
 });   // namespace ui

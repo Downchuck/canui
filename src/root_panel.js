@@ -7,12 +7,18 @@ namespace("ui", {
 // todo: merge the handle_something, they were used when the framework
 // wasn't registering the handlers itself
 //
-root_panel: function(canvas, dim, layout)
+// options:
+// canvas (canvas object), mandatory
+//   canvas on which this root panel operates
+//
+// dimension (dimension object), mandatory
+//   width and height of the canvas
+//
+root_panel: function(opts)
 {
   this.internal_is_a_root_panel = true;
 
-  ui.inherit_container(this,
-    (layout == undefined ? new ui.vertical_layout() : layout));
+  ui.inherit_container(this, opts);
   var self = this;
    
 
@@ -22,7 +28,7 @@ root_panel: function(canvas, dim, layout)
 
   
   // canvas for this root panel
-  var canvas_ = canvas;
+  var canvas_ = undefined;
 
   // control on which the mouse currently is
   var hovered_ = undefined;
@@ -53,13 +59,22 @@ root_panel: function(canvas, dim, layout)
   var key_states_ = {shift: false, ctrl: false, alt: false};
   
 
-  var init = function(d)
+  var init = function()
   {
+    assert(self.option("canvas") != undefined);
+    canvas_ = self.option("canvas");
+
     // todo
     set_global_context(canvas_[0].getContext("2d"));
 
-    canvas_.attr({width: d.w, height: d.h});
-    self.bounds(new rectangle(1, 1, d.w-2, d.h-2));
+    canvas_.attr({
+      width: self.option("dimension").w,
+      height: self.option("dimension").h});
+
+    self.bounds(new rectangle(
+      1, 1,
+      self.option("dimension").w-2,
+      self.option("dimension").h-2));
   
     // note that mouse move, leave and up are registered on the
     // window, not on the canvas. This is so the mouse can be
@@ -684,7 +699,7 @@ root_panel: function(canvas, dim, layout)
   };
 
 
-  init(dim);
+  init();
 }
 
 });   // namespace ui

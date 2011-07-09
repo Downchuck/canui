@@ -8,9 +8,9 @@ namespace("ui", {
 // the user clicks the button or continuously at intervals if the
 // button is held down
 //
-scroll_button: function(image, caption)
+scroll_button: function(opts)
 {
-  ui.inherit_clickable(this, caption);
+  ui.inherit_clickable(this, opts);
   var self = this;
 
   // fired then the button is clicked or held down
@@ -27,11 +27,14 @@ scroll_button: function(image, caption)
 
   // constructor; loads the image
   //
-  var init = function(image, caption)
+  var init = function()
   {
+    assert(self.option("image") != undefined);
+    
     // todo: path is hardcoded
     // once the image is loaded, set it on the button
-    self.label(new ui.image(load_image(image_dir() + "/" + image)));
+    self.label(new ui.image(
+      {image: load_image(image_dir() + "/" + self.option("image"))}));
     self.clicked.add(on_tick);
   };
 
@@ -85,7 +88,7 @@ scroll_button: function(image, caption)
     return "scroll_button";
   }
 
-  init(image, caption);
+  init();
 },
 
 // contains two buttons for up/down-left/right and a slider control
@@ -94,7 +97,8 @@ scroll_button: function(image, caption)
 //
 scrollbar: function(opts)
 {
-  ui.inherit_container(this, new ui.border_layout(), opts);
+  ui.inherit_container(this,
+    merge(opts, {layout: new ui.border_layout()}));
   var self = this;
 
   // fired when the scroll position changed; receives the current
@@ -103,10 +107,10 @@ scrollbar: function(opts)
 
   
   // up/left button
-  var up_ = new ui.scroll_button("up.png", "^", undefined);
+  var up_ = new ui.scroll_button({image: "up.png"});
 
   // down/right button
-  var down_ = new ui.scroll_button("down.png", "v", undefined);
+  var down_ = new ui.scroll_button({image: "down.png"});
 
   // slider
   var thumb_ = new ui.slider({orientation: "vertical", proportional: true});
@@ -212,7 +216,8 @@ scrollbar: function(opts)
 //
 scroller: function(opts)
 {
-  ui.inherit_container(this, new ui.absolute_layout(), opts);
+  ui.inherit_container(this,
+    merge(opts, {layout: new ui.absolute_layout()}));
   var self = this;
 
   // this will contain the full size child

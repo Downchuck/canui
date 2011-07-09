@@ -5,9 +5,9 @@ namespace("ui",
 
 // simple panel
 //
-panel: function(layout)
+panel: function(opts)
 {
-  ui.inherit_basic_panel(this, layout);
+  ui.inherit_basic_panel(this, opts);
 },
 
 
@@ -15,8 +15,10 @@ panel: function(layout)
 //
 status_bar: function()
 {
-  ui.inherit_basic_panel(this, new ui.horizontal_layout(
-      {padding: 16, margin: 3, valign: "center"}));
+  ui.inherit_basic_panel(this, 
+    {layout: new ui.horizontal_layout(
+      {padding: 16, margin: 3, valign: "center"})});
+
   var self = this;
   
   var init = function()
@@ -37,22 +39,24 @@ status_bar: function()
 // floating panel with yellow background, meant to be used with
 // root panel
 //
-tooltip: function(s)
+tooltip: function(opts)
 {
-  ui.inherit_basic_panel(this, new ui.border_layout({margin: 2}));
+  ui.inherit_basic_panel(this, 
+    merge(opts, {layout: new ui.border_layout({margin: 2})}));
   var self = this;
 
 
   // constructor
   //
-  var init = function(s)
+  var init = function()
   {
-    if (s == undefined)
-      s = "";
-
     // unless the user sets the position manually, the tooltip will
     // be positioned automatically (on the mouse cursor)
     self.position(new point(-1, -1));
+
+    var s = "";    
+    if (self.option("caption") != undefined)
+      s = self.option("caption");
     
     self.caption(s);
     
@@ -68,7 +72,7 @@ tooltip: function(s)
     if (s == undefined)
       s = "";
     
-    self.label(new ui.label(s));
+    self.label(new ui.label({caption: s}));
   };
   
   // sets the content of the tooltip to any kind of control
@@ -95,7 +99,7 @@ tooltip: function(s)
     self.do_layout();
   };
   
-  init(s);
+  init();
 },
 
 
@@ -111,7 +115,7 @@ tooltip: function(s)
 //  color (color object), default: black
 //    color of the line
 //
-line: function(height, opts)
+line: function(opts)
 {
   ui.inherit_control(this, opts);
   var self = this;
@@ -171,6 +175,12 @@ line: function(height, opts)
 // todo: this assumes the image is already loaded, load it on the fly
 // and redraw
 //
+//  image (Image object), default: undefined
+//    initial image
+//
+//  overlay (Image object), default: undefined
+//    initial overlay
+//
 //  margin (positive integer), default: 5
 //    space around the image
 //
@@ -196,7 +206,7 @@ line: function(height, opts)
 //  alpha ([0.0, 1.0]), default: 1.0
 //    transparency of the overlay
 //
-image: function(i, overlay, opts)
+image: function(opts)
 {
   ui.inherit_control(this, opts);
   var self = this;
@@ -204,9 +214,11 @@ image: function(i, overlay, opts)
   var image_ = undefined;
   var overlay_ = undefined;
 
-  var init = function(i, o)
+  var init = function()
   {
     self.set_default_options({
+      image: undefined,
+      overlay: undefined,
       margin: 0,
       halign: "center",
       valign: "center",
@@ -222,8 +234,11 @@ image: function(i, overlay, opts)
     assert(one_of(self.option("overlay_grayed"), [true, false]));
     assert(self.option("alpha") >= 0.0 && self.option("alpha") <= 1.0);
 
-    self.image(i);
-    self.overlay(o);
+    if (self.option("image") != undefined)
+      self.image(self.option("image"));
+
+    if (self.option("overlay") != undefined)
+      self.overlay(self.option("overlay"));
   };
 
   // if i is not undefined, sets the image; in any case returns the
@@ -359,7 +374,7 @@ image: function(i, overlay, opts)
     return "image";
   }
   
-  init(i, overlay);
+  init();
 }
 
 });   // namespace ui
