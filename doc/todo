@@ -115,3 +115,4 @@ Bugs: none
 ======================================================================
 . rename the internal_is_a_something to something else
 . html elements for layout
+. images should have alt in case they can't be loaded
