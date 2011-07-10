@@ -55,8 +55,16 @@ $(function()
   
   var r = document.getElementById("ui");
   g_rp = ui.create_root_panel(r);
-  
-  g_rp.layout().option("expand", true);
+
+  var im = new ui.image({image: load_image("https://developer.mozilla.org/skins/mdn/Transitional/img/mdn-logo-compact.png", "alt"), overlay: load_image("overlay.png")});
+  g_rp.add(im);
+
+  var b = new ui.button({caption: "e"});
+  b.clicked.add(function()
+    {
+      im.enabled(!im.enabled());
+    });
+  g_rp.add(b);
 });
 </script>
 
@@ -70,11 +78,6 @@ created.
 
 <div id="ui">
   <div data-type="root_panel" data-layout="new ui.horizontal_layout()" width="400" height="300">
-
-    <div data-type="label" data-options="{halign: 'right', valign: 'bottom'}">test</div>
-    <div data-type="separator" data-options="{orientation: 'vertical'}"></div>
-    <div data-type="label">test</div>
-
   </div>
 </div>
 

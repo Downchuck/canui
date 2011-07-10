@@ -1,5 +1,6 @@
-<!-- $Id$ -->
+<!DOCTYPE html>
 
+<!-- $Id$ -->
 <html>
 <head>
   <title>canui: example</title>
@@ -19,80 +20,13 @@
   <script type="text/javascript" src="../src/controls.js"></script>
   <script type="text/javascript" src="../src/slider.js"></script>
   <script type="text/javascript" src="../src/scroller.js"></script>
+  <script type="text/javascript" src="../src/menu.js"></script>
+  <script type="text/javascript" src="../src/html.js"></script>
   <script type="text/javascript" src="../src/layout.js"></script>
 </head>
 
 <script type="text/javascript">
 var g_rp = undefined;
-
-function init(image)
-{
-  set_image_dir("../src/images");
-  
-  // root panel: this is the top level container that will take care
-  // of handling all events and redrawing when needed
-  g_rp = new ui.root_panel(
-    $("#canvas"), new dimension(400, 300),
-    new ui.horizontal_layout());
-
-  var left_panel = new ui.panel(new ui.vertical_layout(
-    {halign: "center", margin: 5, expand: true}));
-  
-  // adding some controls
-  left_panel.add(new ui.image(image));
-  left_panel.add(new ui.textbox("this is a textbox"));
-  left_panel.add(new ui.label("this is a label"));
-  
-  var b = new ui.button({caption: "this is a button", clicked: function()
-    {
-      alert("hello!");
-      return true;
-    }});
-  left_panel.add(b);
-
-  left_panel.add(new ui.separator());
-
-  var p = new ui.panel();
-  p.layout().option("margin", 4);
-  p.borders({"all": 1});
-  p.add(new ui.label("this is a label in a panel"));
-  left_panel.add(p);
-
-  var tt = new ui.tooltip("this is a tooltip");
-  var lb = new ui.label("this is a label with a tooltip");
-  lb.tooltip(tt);
-  left_panel.add(lb);
-
-  var sl_l = new ui.label("");
-  
-  var sl = new ui.slider();
-  sl.changed.add(function(v)
-    {
-      sl_l.caption("slider value: " + to_int(v));
-    });
-  
-  sl.value(40);
-  left_panel.add(sl);
-  left_panel.add(sl_l);
-    
-  var right_panel = new ui.panel(new ui.vertical_layout(
-    {halign: "center", margin: 4, expand: true}));
-   
-  var list = new ui.list({expand_header: true, item_scroll: false, column_resize: "auto"});
-  
-  list.add_column("column 1");
-  list.add_column("column 2");
-
-  list.frozen(true);
-  for (var i=1; i<=30; ++i)
-    list.add_item(["item " + i, "col " + i]);
-  list.frozen(false);
-
-  right_panel.add(list);
-  
-  g_rp.add(left_panel);
-  g_rp.add(right_panel);
-}
 
 function dump()
 {
@@ -102,16 +36,49 @@ function dump()
   w.document.write("</pre></body></html>");
 }
 
+function test()
+{
+  alert("hello");
+}
+
+function slider_changed(v)
+{
+  assert(g_rp != undefined);
+  g_rp.find_id("slider-value").caption(
+    "slider value: " + to_int(v));
+}
+
 $(function()
 {
-  var image = new Image();
-  image.src = "example.png";
+  set_image_dir("../src/images");
+  
+  var r = document.getElementById("ui");
+  g_rp = ui.create_root_panel(r);
+  
+  g_rp.find_id("tooltip-label").tooltip(new ui.tooltip({caption: "this is a tooltip"}));
+  
+  g_rp.find_id("captioned-panel").borders({all: 1});
+  g_rp.find_id("captioned-panel").layout().option("margin", 4);
 
-  // make sure 'image' is finished loading
+  g_rp.find_id("image").image(load_image("example.png", "alt: this is an image"));
+  g_rp.find_id("slider").value(40);
 
-  require_loaded(image, bind(init, image));
+
+  var list = g_rp.find_id("list");
+  
+  list.add_column("column 1");
+  list.add_column("column 2");
+
+  // avoids resizing the column for each item
+  list.frozen(true);
+  
+  // adding a bunch of items
+  for (var i=1; i<=230; ++i)
+    list.add_item(["item " + i, "col " + i]);
+    
+  // resize the columns
+  list.frozen(false);
 });
-
 </script>
 
 <body>
@@ -120,9 +87,78 @@ $(function()
 <a href="https://sourceforge.net/projects/canui/">sourceforge project page</a></p>
 
 <p>This is a &lt;canvas&gt; element on which several controls are
-created. Note that the list control doesn't do much yet (and is somewhat
-buggy)<br>
-<canvas id="canvas" tabindex="1"></canvas><br>
+created.
+
+<div id="ui">
+  <div data-type="root_panel" data-layout="new ui.border_layout()" width="400" height="300">
+    <div data-type="menu" data-layout-info="ui.sides.top">
+    
+      <div data-type="menu">
+        File
+        <div data-type="menu">New</div>
+        <div data-type="menu">Open...</div>
+        <div data-type="menu">Quit</div>
+      </div>
+      
+      <div data-type="menu">
+        Edit
+        <div data-type="menu" onclick="test">Cut</div>
+        <div data-type="menu">Copy</div>
+        <div data-type="menu">Paste</div>
+      </div>
+      
+      <div data-type="menu">
+        Test
+        <div data-type="menu">Item1</div>
+        <div data-type="menu">Item2</div>
+        <div data-type="menu">
+          Submenu
+          <div data-type="menu" onclick="test">Subitem1</div>
+          <div data-type="menu">Subitem2</div>
+          <div data-type="menu">Subitem3</div>
+          <div data-type="menu">
+            Submenu2
+            <div data-type="menu">Subsubitem1</div>
+            <div data-type="menu">Subsubitem2</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="panel"
+         data-type="panel"
+         data-layout="new ui.horizontal_layout({margin: 2, expand: true})"
+         data-layout-info="ui.sides.center"
+         data-options="{background: ui.theme.panel_color()}">
+         
+      <div id="left-panel"
+           data-type="panel"
+           data-layout="new ui.vertical_layout({margin: 2, expand: true})">
+        <div id="image" data-type="image"></div>
+        <div data-type="textbox">this is a textbox</div>
+        <div data-type="label">this is a label</div>
+        <div data-type="button" onclick="test">this is a button</div>
+        <div data-type="separator"></div>
+        <div id="captioned-panel" data-type="panel">
+          panel caption
+          <div data-type="label">this is a label in a panel</div>
+        </div>
+        <div id="tooltip-label" data-type="label">this is a label with a tooltip</div>
+        <div id="slider" data-type="slider" onchange="slider_changed"></div>
+        <div id="slider-value" data-type="label"></div>
+      </div>
+      
+      <div id="right-panel"
+           data-type="panel">
+        <div id="list"
+             data-type="list"
+             data-options="{expand_header: true, item_scroll: false, column_resize: 'auto'}">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </p>
 <p>This will show the structure of the controls: <input type="button" value="dump" onclick="dump()" /></p>
 

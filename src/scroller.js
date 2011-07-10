@@ -29,12 +29,17 @@ scroll_button: function(opts)
   //
   var init = function()
   {
+    self.set_default_options({
+      caption: "",
+      image: undefined
+    });
+
     assert(self.option("image") != undefined);
     
     // todo: path is hardcoded
     // once the image is loaded, set it on the button
     self.label(new ui.image(
-      {image: load_image(image_dir() + "/" + self.option("image"))}));
+      {image: load_image(image_dir() + "/" + self.option("image"), self.option("caption"))}));
     self.clicked.add(on_tick);
   };
 
@@ -107,10 +112,10 @@ scrollbar: function(opts)
 
   
   // up/left button
-  var up_ = new ui.scroll_button({image: "up.png"});
+  var up_ = new ui.scroll_button({image: "up.png", caption: "^"});
 
   // down/right button
-  var down_ = new ui.scroll_button({image: "down.png"});
+  var down_ = new ui.scroll_button({image: "down.png", caption: "v"});
 
   // slider
   var thumb_ = new ui.slider({orientation: "vertical", proportional: true});

@@ -190,17 +190,15 @@ separator: function(opts)
 
 
 // a simple image with a possible overlay; both can be grayed when the
-// control is disabled.
+// control is disabled. If an image is unavailable (not loaded, bad
+// uri, etc.), its alt text will be displayed.
 //
 // the images must be Image objects
 //
-// todo: this assumes the image is already loaded, load it on the fly
-// and redraw
-//
-//  image (Image object), default: undefined
+//  image (image_holder object), default: undefined
 //    initial image
 //
-//  overlay (Image object), default: undefined
+//  overlay (image_holder object), default: undefined
 //    initial overlay
 //
 //  margin (positive integer), default: 5
@@ -233,8 +231,8 @@ image: function(opts)
   ui.inherit_control(this, opts);
   var self = this;
 
-  var image_ = undefined;
-  var overlay_ = undefined;
+  var image_ = {normal: undefined, disabled: undefined};
+  var overlay_ = {normal: undefined, disabled: undefined};
 
   var init = function()
   {
@@ -268,21 +266,21 @@ image: function(opts)
   //
   self.image = function(i)
   {
-    // todo: disabled image is always generated, might be better to
-    // create it on the fly when needed
-
     if (i != undefined)
     {
-      image_ = i;
+      assert(i.internal_is_a_image_holder);
 
-      require_loaded(image_, function()
+      image_.normal = i;
+      i.on_load.add(function()
         {
-          var d = create_grayscale(image_);
-          require_loaded(d, mem_fun('relayout', self));
+          self.relayout();
+          return false;
         });
+
+      self.relayout();
     }
 
-    return image_;
+    return image_.normal;
   }
 
   // if i is not undefined, sets the overlay; in any case returns the
@@ -292,31 +290,38 @@ image: function(opts)
   {
     if (i != undefined)
     {
-      overlay_ = i;
+      assert(i.internal_is_a_image_holder);
 
-      require_loaded(overlay_, function()
+      overlay_.normal = i;
+      i.on_load.add(function()
         {
-          var d = create_grayscale(overlay_);
-          require_loaded(d, mem_fun('relayout', self));
+          self.relayout();
+          return false;
         });
+
+      self.relayout();
     }
 
-    return overlay_;
+    return overlay_.normal;
   };
 
   // margins + largest image
   //
   self.best_dimension = function()
   {
-    if (image_ == undefined || !image_.complete)
+    if (image_.normal == undefined)
       return new dimension(0, 0);
+      
+    if (!image_.normal.working())
+      return text_dimension(image_.normal.alt(), self.font());
 
-    var d = new dimension(image_.width, image_.height);
+    var d = new dimension(
+      image_.normal.width(), image_.normal.height());
 
-    if (overlay_ != undefined)
+    if (overlay_.normal != undefined)
     {
-      d.w = Math.max(d.w, overlay_.width);
-      d.h = Math.max(d.h, overlay_.height);
+      d.w = Math.max(d.w, overlay_.normal.width());
+      d.h = Math.max(d.h, overlay_.normal.height());
     }
 
     d.w += self.option("margin")*2;
@@ -326,74 +331,135 @@ image: function(opts)
     return d;
   };
 
-  var make_image_bounds = function()
+  var make_image_bounds = function(i)
   {
     var r = self.bounds();
 
-    if (self.option("halign") == "center")
-      r.x = r.x + r.w/2 - image_.width/2;
-    else if (self.option("halign") == "right")
-      r.x = r.x + r.w - image_.width - self.option("margin");
+    if (i.working())
+    {
+      if (self.option("halign") == "center")
+        r.x = r.x + r.w/2 - i.width()/2;
+      else if (self.option("halign") == "right")
+        r.x = r.x + r.w - i.width() - self.option("margin");
     
-    if (self.option("valign") == "center")
-      r.y = r.y + r.h/2 - image_.height/2;
-    else if (self.option("valign") == "bottom")
-      r.y = r.y + r.h - image_.height - self.option("margin");
+      if (self.option("valign") == "center")
+        r.y = r.y + r.h/2 - i.height()/2;
+      else if (self.option("valign") == "bottom")
+        r.y = r.y + r.h - i.height() - self.option("margin");
 
-    var b = new rectangle(r.x, r.y, image_.width, image_.height);
-    assert(valid_bounds(b));
+      r = new rectangle(r.x, r.y, i.width(), i.height());
+      assert(valid_bounds(r));
+    }
 
-    return b;
+    return r;
   }
 
-  var make_overlay_bounds = function(r)
+  var make_overlay_bounds = function(r, i)
   {
     if (self.option("overlay_halign") == "center")
-      r.x = r.x + r.w/2 - overlay_.width/2;
+      r.x = r.x + r.w/2 - i.width()/2;
     else if (self.option("overlay_halign") == "right")
-      r.x = r.x + r.w - overlay_.width;
+      r.x = r.x + r.w - i.width();
 
     if (self.option("overlay_valign") == "center")
-      r.y = r.y + r.h/2 - overlay_.height/2;
+      r.y = r.y + r.h/2 - i.height()/2;
     else if (self.option("overlay_valign") == "bottom")
-      r.y = r.y + r.h - overlay_.height;
+      r.y = r.y + r.h - i.height();
 
-    var b = new rectangle(r.x, r.y, overlay_.width, overlay_.height);
+    var b = new rectangle(r.x, r.y, i.width(), i.height());
     assert(valid_bounds(b));
 
     return b;
   }
-  
+
+  // returns the normal image if loaded; this will load the grayscale
+  // on the fly (but may still return undefined if it is not finished
+  // loading)
+  //
+  var current_image_impl = function(i, is_normal)
+  {
+    if (is_normal)
+    {
+      return i.normal;
+    }
+    else
+    {
+      // disabled image is ready, return it
+      if (i.disabled != undefined)
+        return i.disabled;
+
+      // if there is no main image, there can't be any disabled image
+      if (i.normal == undefined)
+        return undefined;
+
+      // if the main image isn't working, creating a grayscale is
+      // impossible; return the main image so its alt text can be
+      // displayed
+      if (!i.normal.working())
+        return i.normal;
+
+      // if there is a main image but no disabled image, create it on
+      // the fly and return undefined; relayout() will be called in
+      // time
+      i.disabled = create_grayscale(i.normal, function()
+        {
+          self.relayout();
+          return false;
+          });
+
+      return i.disabled;
+    }
+  }
+
+  // returns the normal main image if displayable, or undefined
+  //
+  var current_image = function()
+  {
+    return current_image_impl(image_, self.enabled());
+  };
+
+  // returns the normal overlay image if displayable, or undefined
+  //
+  var current_overlay = function()
+  {
+    return current_image_impl(
+      overlay_, self.enabled() || !self.option("overlay_grayed"));
+  };
+
   // draws the image
   //
   self.draw = function(context)
   {
     self.control__draw(context);
 
-    if (image_ == undefined || !image_.complete)
+    var i = current_image();
+    var o = current_overlay();
+
+    if (i == undefined)
       return;
-    
-    var r = make_image_bounds();
+      
+    // drawing main image
+    var r = make_image_bounds(i);
+    draw_image(context, i, r);
 
-    if (!self.enabled())
-      draw_image(context, create_grayscale(image_), r);
-    else
-      draw_image(context, image_, r);
-
-    if (overlay_ != undefined)
+    if (o != undefined)
     {
-      r = make_overlay_bounds(r);
-
-      if (!self.enabled() && self.option("overlay_grayed"))
-        draw_image(context, create_grayscale(overlay_), r, self.option("alpha"));
-      else
-        draw_image(context, overlay_, r, self.option("alpha"));
+      r = make_overlay_bounds(r, o);
+      draw_image(context, o, r, self.option("alpha"));
     }
   };
 
   self.typename = function()
   {
-    return "image";
+    var s = "image ";
+
+    if (image_.normal != undefined)
+      s += "src:" + image_.normal.image().src + " ";
+
+    if (overlay_.normal != undefined)
+      s += "ov:" + overlay_.normal.image().src;
+
+    return s;
   }
   
   init();

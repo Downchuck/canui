@@ -799,3 +799,13 @@ function merge(o, m)
     o[i] = m[i];
   return o;
 }
+
+function log_message(s)
+{
+  console.log(s);
+}
+
+function error_message(s)
+{
+  console.err(s);
+}

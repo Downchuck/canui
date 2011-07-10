@@ -9,45 +9,182 @@ var g_line_height = 16;
 // less crap)
 var g_line_spacing = 3;
 
-// calls f() when the given image object has finished loading. If the
-// image is already loaded, f() is called directly.
+
+function pretty_image_src(image)
+{
+  if (image.src.indexOf("data:image/png") != -1)
+    return "(data)";
+  return image.src;
+}
+
+// calls f(b) when the given image object has finished loading, where
+// 'b' is either true or false, whether the image was loaded
+// correctly. If the image is already loaded, f(true) is called
+// directly.
 //
 function require_loaded(image, f)
 {
+  assert(f != undefined);
+
   if (image == undefined)
     return;
+
+  var cb = function()
+    {
+      var p = "width";
+      if (image.naturalWidth != undefined)
+        p = "naturalWidth";
+
+      if (image[p] != 0)
+      {
+        log_message(pretty_image_src(image) + " is working");
+        f(true);
+      }
+      else
+      {
+        log_message(pretty_image_src(image) + " is broken");
+        f(false);
+      }
+    };
+
   
   // already loaded
-  if (image.complete)
+  if (image.src != undefined && image.src != "" && image.complete)
   {
-    f();
-    return;
+    log_message(pretty_image_src(image) + " is already complete");
+    cb();
   }
 
   image.onload = function()
     {
-      f();
+      log_message(pretty_image_src(image) + " onload");
+      cb();
     };
   
   image.onerror = function()
     {
-      // todo
-      assert(false);
+      log_message(pretty_image_src(image) + " onerror");
+      cb();
     };
 }
 
-// creates an Image element, sets the source to the given path and
-// calls require_loaded with the given function (if any)
-//
-function load_image(src, f)
+var g_image_cache = {};
+
+function image_holder(i, f)
 {
-  var i = new Image();
-  i.src = src;
+  this.internal_is_a_image_holder = true;
+  var self = this;
 
-  if (f != undefined)
-    require_loaded(i, f);
+  self.on_load = new signal();
 
-  return i;
+  var image_ = undefined;
+  
+  var notified_ = false;
+  var loaded_ = false;
+  var working_ = false;
+
+  var init = function(i, f)
+  {
+    image_ = i;
+
+    if (f != undefined)
+      self.on_load.add(f);
+
+    require_loaded(image_, on_load);
+  };
+
+  self.loaded = function()
+  {
+    return loaded_;
+  }
+
+  self.working = function()
+  {
+    return working_;
+  }
+
+  self.image = function()
+  {
+    return image_;
+  }
+
+  self.alt = function()
+  {
+    if (image_.alt != undefined)
+      return image_.alt;
+    return "";
+  }
+
+  self.width = function()
+  { 
+    if (working_)
+      return image_.width;
+    return 0;
+  }
+
+  self.height = function()
+  {
+    if (working_)
+      return image_.height;
+    return 0;
+  }
+
+  self.notify = function()
+  {
+    if (notified_)
+      self.on_load.fire(working_);
+  }
+
+  var on_load = function(b)
+  {
+    loaded_ = true;
+    working_ = b;
+
+    notified_ = true;
+    self.notify();
+  }
+
+  init(i, f);
+}
+
+// creates an Image element, sets the source to the given path and
+// calls require_loaded with the given function (if any).
+//
+// this will also cache the image internally; the cached version will
+// be returned if present.
+//
+function load_image(src, alt, f)
+{
+  var h = undefined;
+
+  if (g_image_cache.hasOwnProperty(src))
+  {
+    if (g_image_cache[src].hasOwnProperty("normal"))
+    {
+      log_message("using cached image");
+      h = g_image_cache[src].normal;
+      h.notify();
+    }
+  }
+
+  if (h == undefined)
+  {
+    log_message("loading new image");
+    var i = new Image();
+
+    if (alt != undefined)
+      i.alt = alt;
+
+    h = new image_holder(i);
+    i.src = src;
+
+    if (!g_image_cache.hasOwnProperty(src))
+      g_image_cache[src] = {};
+
+    g_image_cache[src].normal = h;
+  }
+
+  return h;
 }
 
 // rgba color, all between 0.0 and 1.0. Predefined colors can used
@@ -414,27 +551,59 @@ function fill_rounded_rect(context, c, r)
 }
 
 // draws the given image on the context. The width and height of 'r'
-// are currently ignore (not clipped). 'i' must be an Image object.
-// 'alpha' is the transparency to apply when drawing the image.
+// are currently ignore (not clipped). 'alpha' is the transparency to
+// apply when drawing the image.
 //
-function draw_image(context, i, r, alpha)
+// if 'i' is an Image object, it is drawn if the 'complete' flag is
+// true. Note that this might not be a good indicator of whether the
+// image is ready to be drawn or not, see image_holder.
+//
+// if 'i' is an image holder, it is drawn if working() returns true.
+//
+// in any case, if the image is not ready to be drawn, its alt text
+// (if any) is displayed in the given rectangle instad.
+//
+function draw_image(context, h, r, alpha)
 {
   assert(valid_bounds(r));
+
+  var ready = false;
+  var i = undefined;
+
+  if (h.internal_is_a_image_holder)
+  {
+    i = h.image();
+    ready = h.working();
+  }
+  else
+  {
+    i = h;
+    ready = i.complete;
+  }
+
   assert(i.src != undefined);
 
-  if (alpha == undefined)
-    alpha = 1.0;
-  
-  if (alpha != 1.0)
+  if (ready)
   {
-    context.save();
-    context.globalAlpha = alpha;
+    if (alpha == undefined)
+      alpha = 1.0;
+  
+    if (alpha != 1.0)
+    {
+      context.save();
+      context.globalAlpha = alpha;
+    }
+  
+    context.drawImage(i, r.x, r.y);
+  
+    if (alpha != 1.0)
+      context.restore();
   }
-  
-  context.drawImage(i, r.x, r.y);
-  
-  if (alpha != 1.0)
-    context.restore();
+  else
+  {
+    if (i.alt != undefined && i.alt != "")
+      draw_text(context, i.alt, ui.theme.text_color(), r, ui.theme.default_font());
+  }
 }
 
 // draws the given text 's' in the given rectangle 'r' with the color
@@ -514,50 +683,100 @@ function text_dimension(s, font)
 // mostly used by disabled labels (such as on buttons). Note that this
 // uses a temporary canvas object and does not modify the game canvas.
 //
-function create_grayscale(image)
+// this will also cache the image internally if image.src is
+// meaningful; the cached version will be returned if present.
+//
+// returns 'image' if the creation fails (such as when 'image' is
+// cross origin or is not loaded properly)
+//
+function create_grayscale(image, f)
 {
-  var canvas = document.createElement('canvas');
-  var context = canvas.getContext('2d');
+  assert(image.internal_is_a_image_holder);
 
-  var w = image.width;
-  var h = image.height;
-
-  canvas.width = w;
-  canvas.height = h;
-  
-  context.drawImage(image, 0, 0);
-
-  // p is an array of r, g, b and a values
-  var p = context.getImageData(0, 0, w, h);
-
-  // r, g and b are scaled to 30%, 59% and 11% respectively, added
-  // and scaled to [0.5, 1.0] so that it is rather light.
-  for(var y=0; y<p.height; ++y)
+  if (image.src != undefined && image.src != "")
   {
-    for(var x=0; x<p.width; ++x)
+    if (g_image_cache.hasOwnProperty(image.src))
     {
-      // each pixel is split in 4 elements: r, g, b and a
-      var i = y * 4 * p.width + x * 4;
-
-      var r = p.data[i];
-      var g = p.data[i];
-      var b = p.data[i];
-
-      var gray = (r*0.30 + g*0.59 + b*0.11);
-      gray = (gray / 2) + 128;
-
-      p.data[i] = gray;
-      p.data[i + 1] = gray;
-      p.data[i + 2] = gray;
+      if (g_image_cache[image.src].hasOwnProperty("disabled"))
+      {
+        log_message("using cached grayscale for " + pretty_image_src(image.image()));
+        return g_image_cache[image.src].disabled;
+      }
     }
   }
+
+  if (!image.working())
+  {
+    log_message("can't create grayscale for " + pretty_image_src(image.image()) + ", returning original");
+    return image;
+  }
+
+  try
+  {
+    var canvas = document.createElement('canvas');
+    var context = canvas.getContext('2d');
+
+    var w = image.width();
+    var h = image.height();
+
+    canvas.width = w;
+    canvas.height = h;
   
-  // drawing back the grayscale image
-  context.putImageData(p, 0, 0, 0, 0, p.width, p.height);  
+    context.drawImage(image.image(), 0, 0);
+
+    // p is an array of r, g, b and a values
+    var p = context.getImageData(0, 0, w, h);
+
+    // r, g and b are scaled to 30%, 59% and 11% respectively, added
+    // and scaled to [0.5, 1.0] so that it is rather light.
+    for(var y=0; y<p.height; ++y)
+    {
+      for(var x=0; x<p.width; ++x)
+      {
+        // each pixel is split in 4 elements: r, g, b and a
+        var i = y * 4 * p.width + x * 4;
+
+        var r = p.data[i];
+        var g = p.data[i];
+        var b = p.data[i];
+
+        var gray = (r*0.30 + g*0.59 + b*0.11);
+        gray = (gray / 2) + 128;
+
+        p.data[i] = gray;
+        p.data[i + 1] = gray;
+        p.data[i + 2] = gray;
+      }
+    }
   
-  // creating image from the data
-  var img = document.createElement("img");
-  img.src = canvas.toDataURL();
+    // drawing back the grayscale image
+    context.putImageData(p, 0, 0, 0, 0, p.width, p.height);  
   
-  return img;
+    // creating image from the data
+    var img = new Image();
+    img.alt = image.alt();
+
+    var h = new image_holder(img, f);
+    img.src = canvas.toDataURL();
+  
+    if (!g_image_cache.hasOwnProperty(image.image().src))
+      g_image_cache[image.image().src] = {};
+
+    g_image_cache[image.image().src].disabled = h;
+
+    log_message("created new grayscale for " + pretty_image_src(image.image()));
+    return h;
+  }
+  catch(e)
+  {
+    // SECURITY_ERR is 1000, but it doesn't seem to be defined
+    // anywhere
+    if (e.code == 1000)
+    {
+      log_message("error while creating grayscale for " + pretty_image_src(image.image()) + ", returning original");
+      return image;
+    }
+
+    throw e;
+  }
 }

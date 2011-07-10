@@ -42,7 +42,7 @@ Bugs: none
 
 
 2.6 image
-Todo: load the image on the fly
+Todo: none
 Bugs: none
 
 
@@ -114,5 +114,3 @@ Bugs: none
 5 Others
 ======================================================================
 . rename the internal_is_a_something to something else
-. html elements for layout
-. images should have alt in case they can't be loaded

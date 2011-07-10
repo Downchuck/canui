@@ -32,7 +32,7 @@ image
   disabled.
 
 label
-  can take a caption and an image.
+  draws a caption with various alignments
 
 list
   a scrollable list of items with columns
@@ -343,14 +343,17 @@ This is a simple control that displays an Image object. It can also
 have a second image that will be overlaid on the first, with a
 possibly different alpha value.
 
-This control currently assumes the given Image has already been
-loaded. It will fail catastrophically if it hasn't. todo: fix that.
-The require_loaded() helper can be used to create the control only
-when image has been loaded.
+Both the main and overlay images will be drawn when loaded.
 
 It will automatically create grayscale versions of the images that
 will be used when the control is disabled. Whether the overlay is
 also grayed depends on the options.
+
+The control tries to be smart about images failing to load. See
+[5.2.1].
+
+Note that disabled images cannot be created if the image comes from
+another origin [w3c-origin]. See [5.2.2].
 
 Options:
   . margin (positive integer), default: 5
@@ -410,17 +413,9 @@ Example:
 
 3.4 label
 
-Contains both a caption and an image. The image can be either at the
-left or right side of the caption. Either or both can be omitted.
-
-The label will automatically wait for the Image to be loaded before
-showing it. (todo: no, the grayscale generation will fail)
+Draws a simple text caption.
 
 Options:
-  . image_align (right, left), default: right
-    the position of the image relative to the caption
-    note: ignored if there's no caption
-
   . halign (left, center, right), default: left
     horizontal position of the rectangle bounding both the image and
     the caption
@@ -428,10 +423,6 @@ Options:
   . valign (top, center, bottom), default: center
     vertical position of the rectangle bounding both the image and
     the caption
-
-  . padding (positive integer), default: 4
-    space between caption and image
-    note: ignored if either caption or image is missing
 
   . color (color object), default: ui.theme.text_color()
     text color
@@ -442,17 +433,9 @@ Example:
   {
     // label with a simple caption
     rp.add(new ui.label("caption"));
-    
-    // label with an image on the left side of the caption and both
-    // aligned to the top of the control
-    var i = new Image;
-    i.src = "image.png";
-    
-    rp.add(new ui.label("caption", i,
-      {image_align: left, valign: top}));
   }
 
-3.5 sepatarot
+3.5 sepatator
 
 This is just a horizontal or vertical line.
 
@@ -1099,10 +1082,65 @@ canui hardcodes a line height of 16 pixels and a spacing between two
 lines of 3 pixels. These seem to be correct for both firefox and
 chrome. ymmv.
 
-create_grayscale() takes an Image object, creates a temporary canvas,
+5.2.1 images
+
+All the controls in canui that expect images (such as the image
+control) need image_holder objects instead of the dom Image element.
+This is because determining whether an image is loaded and ready to
+be drawn is difficult and is browser-dependent.
+
+For example, firefox will set the 'complete' flag to true for 404
+images that are cached (how's that for an oxymoron) without firing
+either onload() or onerror().
+
+Therefore, image_holder tries to be smart about whether the image is
+loaded or not, but it cannot be fullproof. Relying on width and height
+being 0 will give a false-positive for empty images (which may not be
+too bad), but will also fail on browsers that report the dimension of
+the alt-text there.
+
+Using a combination of the complete flag, the onload and onerror
+events and the naturalWidth and naturalHeight properties (available in
+some browsers), image_holder gets rather close to determining the real
+status of the image.
+
+load_image() takes filename and an alt string and returns an
+image_holder. This is the safest way of creating image_holders. It
+will also cache the image in an internal array so that multiple calls
+to load_image() with the same filename will return the same
+image_holder.
+
+
+5.2.2 grayscale images
+
+create_grayscale() takes an image_holder, creates a temporary canvas,
 draws the image, gets the pixels, converts them to a light grayscale
-and returns a new Image with that data. It is used by the labels so
-that images are automatically grayed when the control is disabled.
+and returns a new Image with that data. It is used by the image
+control so images are automatically grayed when the control is
+disabled.
+
+The grayscale image is cached so that future calls to
+create_grayscale() with the same image_holder won't have to recreate
+it.
+
+Note that this will fail if the image comes from a different origin
+than the script. To quote w3c [w3c-sec]:
+
+  "Information leakage can occur if scripts from one origin can
+  access information (e.g. read pixels) from images from
+  another origin (one that isn't the same).
+
+  To mitigate this, canvas elements are defined to have a flag
+  indicating whether they are origin-clean."
+
+One of the circumstances where the flag is set is:
+
+  "The element's 2D context's drawImage() method is called
+  with an HTMLImageElement or an HTMLVideoElement whose origin
+  is not the same as that of the Document object that owns
+  the canvas element."
+
+In this case, create_grayscale() will return the given image.
 
 
 5.3 utility
@@ -1355,5 +1393,8 @@ the-canvas-element.html#best-practices
 [w3c-data]
 http://www.w3.org/TR/html5/elements.html#
 embedding-custom-non-visible-data-with-the-data-attributes
+
+[w3c-origin]
+http://dev.w3.org/html5/spec/origin-0.html#same-origin
 
 eof
