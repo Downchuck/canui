@@ -37,8 +37,8 @@ label
 list
   a scrollable list of items with columns
 
-line
-  a simple horizontal line
+separator
+  a simple horizontal or vertical line
   
 menu
   list of buttons that displays menus and submenus on click
@@ -148,6 +148,154 @@ The default layout for all containers is vertical_layout. The layout
 cannot be changed while the container has children. This is because
 some layouts may need additional information about the children (such
 as the sides for border_layout.)
+
+
+2.3 Creating an interface
+
+There are two ways to create an interface: using javascript to create
+the dom or using html tags that are parsed by canui. As with most
+things, the former is more explicit, complicated and ugly, but is
+more flexible; the latter is simpler and (arguably) more elegant, but
+will need to be complemented by javascript.
+
+The following creates the root panel with a label and a textbox,
+using javascript:
+
+  function f()
+  {
+    var rp = new ui.root_panel({
+      canvas: $("#canvas-id"),
+      dimension: new dimension(200, 200),
+      layout: new ui.horizontal_layout()
+    });
+
+    rp.add(new ui.label({caption: "Name:"}));
+    rp.add(new ui.textbox({text: "here"}));
+  }
+
+This assumes there's a canvas tag somewhere:
+
+  <canvas id="canvas-id"></canvas>
+
+The following creates the same structure, but with html tags
+
+  <div id="ui">
+    <div data-type="root_panel"
+         data-layout="new ui.horizontal_layout()"
+         width="200" height="200">
+      
+      <div data-type="label">Name:</div>
+      <div data-type="textbox">here</div>
+    </div>
+  </div>
+
+The canvas element itself is not needed, but the following javascript
+code is:
+
+  function f()
+  {
+    var rp = ui.create_root_panel(document.getElementById("ui"));
+  }
+
+
+2.3.1 Html
+
+canui uses the html5 'data' attribute [w3c-data] where custom
+attributes are allowed as long as they start with "data-", such as
+"data-type".
+
+Browsers are supposed to implement a 'dataset' property for element
+objects, but most do not at the moment. Therefore, canui uses the
+simple getAttribute() when 'dataset' is undefined.
+
+The tag name of the element matters not, as long as it can have
+children. <div> is used in this document and examples because it is
+short.
+
+Using html tags, the structure of the interface (as well as a few
+cosmetic options) can be specified directly. However, for any kind
+of interaction, javascript is needed. It is comparable to glade xml
+files.
+
+Ids may be assigned to controls and used with root_panel.find_id():
+
+  <div id="ui">
+    <div data-type="root_panel" width="200" height="200">
+      <div id="label" data-type="label"></div>
+    </div>
+  </div>
+
+  // ...
+  function f()
+  {
+    var rp = ui.create_root_panel(document.getElementById("ui"));
+    rp.find_id("label").caption("this is a label");
+  }
+
+The root element, here named "ui", serves only as a top level. Its
+id is irrelevant; I called it "ui" as a visual cue. After creating the
+structure, canui will remove that element (and its children) from the
+dom and replace it with a canvas element.
+
+When errors are found in the structure (such as having a child element
+inside a control that is not a container), the top level element (here
+"ui") is replaced by a red string with the error message instead of a
+canvas.
+
+These are the recognized attributes:
+
+  data-type
+  The type of the control to create. For a data-type "x", canui will
+  try to do a "new ui.x()". Invalid if the type doesn't exist.
+
+  id
+  The id of the control in the structure. Can be empty.
+
+  data-layout
+  This string is eval'd and passed to container.layout(). Invalid if
+  the control is not a container.
+
+  data-layout-info
+  This string is eval'd and passed to container.add() when adding the
+  control to its parent. This is used when the parent's layout need
+  additional information, such as for a border layout:
+
+    <div data-type="panel" data-layout="new u.border_layout()">
+      <div data-type="button" data-layout-info="ui.sides.top">
+      </div>
+    </div>
+
+  data-options
+  This must be a JSON structure. It is eval'd and passed to
+  control.options().
+
+These are the recognized events.
+
+  onclick
+  This string is eval'd and added to the 'clicked' signal of the
+  control. Invalid if the control doesn't have that signal.
+
+  onchange
+  This string is eval'd and added to the 'changed' signal of the
+  control. Invalid if the control doesn't have that signal.
+
+Note that the string in an event is eval'd and must evaluate to a
+function that will be called from the signal. Therefore,
+
+  onclick="f()"
+
+will eval "f()" and add its return value to the signal. To call "f"
+when something is clicked, do
+
+  onclick="f"
+
+Finally, all the text between tags is trimmed and passed to the
+caption() member function of the control, if not empty. If there is
+a non-whitespace text as a child element of a control and that control
+has no caption() member function, the structure is ill-formed:
+
+  <div data-type="textbox">text in textbox</div>
+  <div data-type="image">invalid, image doesn't have caption()</div>
 
 
 3 Controls
@@ -304,13 +452,13 @@ Example:
       {image_align: left, valign: top}));
   }
 
-3.5 line
+3.5 sepatarot
 
-This is just a horizontal line.
+This is just a horizontal or vertical line.
 
 Options:
   . size (positive integer), default: 1
-    height in pixels of the line
+    width or height in pixels of the line
 
   . margin (positive integer), default: 5
     space around the line
@@ -323,7 +471,7 @@ Example:
   function f(rp)
   {
     // two pixel high line, with 10 pixels of margin on each side
-    rp.add(new ui.line(2, {margin: 10}));
+    rp.add(new ui.separator(2, {margin: 10}));
   }
   
 
@@ -1155,149 +1303,8 @@ Example:
   }
 
 
-7 Creating an interface
-======================================================================
 
-There are two ways to create an interface: using javascript to create
-the dom or using html tags that are parsed by canui. As with most
-things, the former is more explicit, complicated and ugly, but is
-more flexible; the latter is simpler and (arguably) more elegant, but
-will need to be complemented by javascript.
-
-The following creates the root panel with a label and a textbox,
-using javascript:
-
-  function f()
-  {
-    var rp = new ui.root_panel({
-      canvas: $("#canvas-id"),
-      dimension: new dimension(200, 200),
-      layout: new ui.horizontal_layout()
-    });
-
-    rp.add(new ui.label({caption: "Name:"}));
-    rp.add(new ui.textbox({text: "here"}));
-  }
-
-This assumes there's a canvas tag somewhere:
-
-  <canvas id="canvas-id"></canvas>
-
-The following creates the same structure, but with html tags
-
-  <div id="ui">
-    <div data-type="root_panel"
-         data-layout="new ui.horizontal_layout()"
-         width="200" height="200">
-      
-      <div data-type="label">Name:</div>
-      <div data-type="textbox">here</div>
-    </div>
-  </div>
-
-The canvas element itself is not needed, but the following javascript
-code is:
-
-  function f()
-  {
-    var rp = ui.create_root_panel(document.getElementById("ui"));
-  }
-
-
-7.1 Javascript
-
-todo
-
-
-7.2 Html
-
-canui uses the html5 'data' attribute [w3c-data] where custom
-attributes are allowed as long as they start with "data-", such as
-"data-type".
-
-Browsers are supposed to implement a 'dataset' property for element
-objects, but most do not at the moment. Therefore, canui uses the
-simple getAttribute() when 'dataset' is undefined.
-
-The tag name of the element matters not, as long as it can have
-children. <div> is used in this document and examples because it is
-short.
-
-Using html tags, the structure of the interface (as well as a few
-cosmetic options) can be specified directly. However, for any kind
-of interaction, javascript is needed. Ids may be assigned to controls
-and used with root_panel.find_id():
-
-  <div id="ui">
-    <div data-type="root_panel" width="200" height="200">
-      <div id="label" data-type="label"></div>
-    </div>
-  </div>
-
-  // ...
-  function f()
-  {
-    var rp = ui.create_root_panel(document.getElementById("ui"));
-    rp.find_id("label").caption("this is a label");
-  }
-
-The root element, here named "ui", serves only as a top level. Its
-id is irrelevant. After creating the structure, canui will remove that
-element (and its children) from the dom and replace it with a canvas
-element.
-
-When errors are found in the structure (such as having a child element
-inside a control that is not a container), the top level element (here
-"ui") is replaced by a red string with the error message instead of a
-canvas.
-
-These are the recognized attributes:
-
-  data-type
-  The type of the control to create. For a data-type "x", canui will
-  try to do a "new ui.x()". Invalid if the type doesn't exist.
-
-  id
-  The id of the control in the structure. Can be empty.
-
-  data-layout
-  This string is eval'd and passed to container.layout(). Invalid if
-  the control is not a container.
-
-  data-options
-  This must be a JSON structure. It is eval'd and passed to
-  control.options().
-
-These are the recognized events.
-
-  onclick
-  This string is eval'd and added to the 'clicked' signal of the
-  control. Invalid if the control doesn't have that signal.
-
-  onchange
-  This string is eval'd and added to the 'changed' signal of the
-  control. Invalid if the control doesn't have that signal.
-
-Note that the string in an event is eval'd and must evaluate to a
-function that will be called from the signal. Therefore,
-
-  onclick="f()"
-
-will eval "f()" and add its return value to the signal. To call "f"
-when something is clicked, do
-
-  onclick="f"
-
-Finally, all the text between tags is trimmed and passed to the
-caption() member function of the control, if not empty. If there is
-a non-whitespace text as a child element of a control and that control
-has no caption() member function, the structure is ill-formed:
-
-  <div data-type="textbox">text in textbox</div>
-  <div data-type="image">invalid, image doesn't have caption()</div>
-
-
-8 Internals
+7 Internals
 ======================================================================
 
 canui uses some kind of inheritance where member functions are
@@ -1334,7 +1341,7 @@ end, so that these function may be overridden by derived classes.
   d.frob();
 
   
-9 References
+8 References
 ======================================================================
 
 [whatwg-canvas]

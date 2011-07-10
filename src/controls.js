@@ -106,8 +106,11 @@ tooltip: function(opts)
 // a simple horizontal line
 //
 // options:
+//  orientation (vertical/horizontal), default: horizontal
+//    orientation of the line
+//
 //  size (positive integer), default: 1
-//    height in pixels of the line
+//    width or height in pixels of the line
 //
 //  margin (positive integer), default: 5
 //    space around the line
@@ -115,7 +118,7 @@ tooltip: function(opts)
 //  color (color object), default: black
 //    color of the line
 //
-line: function(opts)
+separator: function(opts)
 {
   ui.inherit_control(this, opts);
   var self = this;
@@ -126,6 +129,7 @@ line: function(opts)
   var init = function()
   {
     self.set_default_options({
+      orientation: "horizontal",
       size: 1,
       margin: 5,
       color: new color().black()});
@@ -135,7 +139,14 @@ line: function(opts)
   //
   self.best_dimension = function()
   {
-    var d = new dimension(-1, self.option("margin")*2 + self.option("size"));
+    var d = new dimension(0, 0);
+    var s = self.option("margin") * 2 + self.option("size");
+
+    if (self.option("orientation") == "horizontal")
+      d.h = s;
+    else
+      d.w = s;
+
     assert(valid_dimension(d));
 
     return d;
@@ -150,8 +161,18 @@ line: function(opts)
     var r = new rectangle(
       self.position().x + self.option("margin"),
       self.position().y + self.option("margin"),
-      self.width() - self.option("margin")*2,
-      self.option("size"));
+      0, 0);
+
+    if (self.option("orientation") == "horizontal")
+    {
+      r.w = self.width() - self.option("margin")*2;
+      r.h = self.option("size");
+    }
+    else
+    {
+      r.w = self.option("size");
+      r.h = self.height() - self.option("margin")*2;
+    }
     
     context.fillStyle = self.option("color").string();
     context.fillRect(r.x, r.y, r.w, r.h);
