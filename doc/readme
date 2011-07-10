@@ -1279,7 +1279,7 @@ These are the recognized events.
   control. Invalid if the control doesn't have that signal.
 
 Note that the string in an event is eval'd and must evaluate to a
-function that will be from the signal. Therefore,
+function that will be called from the signal. Therefore,
 
   onclick="f()"
 
