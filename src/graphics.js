@@ -119,14 +119,20 @@ function image_holder(i, f)
   { 
     if (working_)
       return image_.width;
-    return 0;
+    else if (image_.alt != undefined)
+      return text_dimension(image_.alt, ui.theme.default_font()).w;
+    else
+      return 0;
   }
 
   self.height = function()
   {
     if (working_)
       return image_.height;
-    return 0;
+    else if (image_.alt != undefined)
+      return text_dimension(image_.alt, ui.theme.default_font()).h;
+    else
+      return 0;
   }
 
   self.notify = function()

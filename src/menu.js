@@ -18,12 +18,22 @@ menu_button: function(parent, caption)
   var hovered_ = false;
   var active_ = false;
 
+  var arrow_ = {normal: undefined, hovered: undefined};
+
   var init = function()
   {
     self.set_default_options(
       {margin: {left: 18, top: 3, right: 18, bottom: 3},
        bar_margin: 3,
        arrow_margin: 7});
+
+    arrow_.normal = load_image(
+      image_dir() + "/righ1t.png", ">",
+      mem_fun('relayout', self));
+
+    arrow_.hovered = load_image(
+      image_dir() + "/right-w1hite.png", ">",
+      mem_fun('relayout', self));
   };
 
   self.active = function(b)
@@ -130,28 +140,16 @@ menu_button: function(parent, caption)
 
     if (parent_.menu_count() > 0 && !is_on_bar())
     {
-      // todo
-      var i = new Image();
+      var i = arrow_.normal;
+      if (active_ || hovered_)
+        i = arrow_.hovered;
 
-      if (hovered_ || active_)
-        i.src = image_dir() + "/right-white.png";
-      else
-        i.src = image_dir() + "/right.png";
+      var ir = new rectangle(
+        b.x + b.w - i.width() - self.option("arrow_margin"),
+        b.y + b.h/2 - i.height()/2,
+        i.width(), i.height());
 
-      if (i.complete)
-      {
-        var ir = new rectangle(
-          b.x + b.w - i.width - self.option("arrow_margin"),
-          b.y + b.h/2 - i.height/2,
-          i.width, i.height);
-
-        draw_image(context, i, ir);
-      }
-
-      require_loaded(i, function()
-        {
-          self.redraw();
-        });
+      draw_image(context, i, ir);
     }
 
     draw_text(context, caption_, c, r, self.font());

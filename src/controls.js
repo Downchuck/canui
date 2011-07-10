@@ -311,9 +311,6 @@ image: function(opts)
   {
     if (image_.normal == undefined)
       return new dimension(0, 0);
-      
-    if (!image_.normal.working())
-      return text_dimension(image_.normal.alt(), self.font());
 
     var d = new dimension(
       image_.normal.width(), image_.normal.height());

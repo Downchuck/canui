@@ -38,8 +38,10 @@ scroll_button: function(opts)
     
     // todo: path is hardcoded
     // once the image is loaded, set it on the button
-    self.label(new ui.image(
-      {image: load_image(image_dir() + "/" + self.option("image"), self.option("caption"))}));
+    self.label(new ui.image({image: load_image(
+      image_dir() + "/" + self.option("image"),
+      self.option("caption"))}));
+
     self.clicked.add(on_tick);
   };
 
