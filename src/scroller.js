@@ -114,27 +114,47 @@ scrollbar: function(opts)
 
   
   // up/left button
-  var up_ = new ui.scroll_button({image: "up.png", caption: "^"});
+  var up_ = undefined;
 
   // down/right button
-  var down_ = new ui.scroll_button({image: "down.png", caption: "v"});
+  var down_ = undefined;
 
   // slider
-  var thumb_ = new ui.slider({orientation: "vertical", proportional: true});
+  var thumb_ = undefined;
 
   // width/height of a scroll button (todo: put this elsewhere)
   var button_size_ = 17;
+
 
   // constructor
   //
   var init = function()
   {
     self.set_default_options({
-      tick_size: 1});
+      tick_size: 1,
+      orientation: "horizontal"
+    });
 
-    self.add(up_, ui.sides.top);
-    self.add(thumb_, ui.sides.center);
-    self.add(down_, ui.sides.bottom);
+    if (self.option("orientation") == "vertical")
+    {
+      up_ = new ui.scroll_button({image: "up.png", caption: "^"});
+      down_ = new ui.scroll_button({image: "down.png", caption: "v"});
+      thumb_ = new ui.slider({orientation: "vertical", proportional: true});
+
+      self.add(up_, ui.sides.top);
+      self.add(thumb_, ui.sides.center);
+      self.add(down_, ui.sides.bottom);
+    }
+    else
+    {
+      up_ = new ui.scroll_button({image: "left.png", caption: "<"});
+      down_ = new ui.scroll_button({image: "right.png", caption: ">"});
+      thumb_ = new ui.slider({orientation: "horizontal", proportional: true});
+      
+      self.add(up_, ui.sides.left);
+      self.add(thumb_, ui.sides.center);
+      self.add(down_, ui.sides.right);
+    }
 
     thumb_.borders({all: 0});
     thumb_.changed.add(on_thumb_moved);
@@ -162,7 +182,10 @@ scrollbar: function(opts)
   //
   self.best_dimension = function()
   {
-    return new dimension(button_size_, 0);
+    if (self.option("orientation") == "vertical")
+      return new dimension(button_size_, 0);
+    else
+      return new dimension(0, button_size_);
   }
 
   // sets the limits of the scrollbar (forwarded to the slider)
