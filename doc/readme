@@ -542,7 +542,7 @@ Example:
 Textboxes are hard. There's even a long section from whatwg saying
 that "authors should avoid implementing text editing controls using
 the canvas element. Doing so has a large number of disadvantages."
-[whatwg2]
+[whatwg-best]
 
 However, most of the disadvantages are implemented, except for the
 native stuff:
@@ -944,8 +944,8 @@ operations, such as outline_rect() or fill_rect().
 Playing with text is somewhat hard, since there is no reliable way
 of getting the bounding rectangle of a particular string and font.
 measureText() returns the width, but the text may "spill out of the
-[...] width returned by measureText()"[whatwg]. There is no way to get
-any kind of height information.
+[...] width returned by measureText()"[whatwg-canvas]. There is no way
+to get any kind of height information.
 
 canui hardcodes a line height of 16 pixels and a spacing between two
 lines of 3 pixels. These seem to be correct for both firefox and
@@ -1155,7 +1155,149 @@ Example:
   }
 
 
-7 Internals
+7 Creating an interface
+======================================================================
+
+There are two ways to create an interface: using javascript to create
+the dom or using html tags that are parsed by canui. As with most
+things, the former is more explicit, complicated and ugly, but is
+more flexible; the latter is simpler and (arguably) more elegant, but
+will need to be complemented by javascript.
+
+The following creates the root panel with a label and a textbox,
+using javascript:
+
+  function f()
+  {
+    var rp = new ui.root_panel({
+      canvas: $("#canvas-id"),
+      dimension: new dimension(200, 200),
+      layout: new ui.horizontal_layout()
+    });
+
+    rp.add(new ui.label({caption: "Name:"}));
+    rp.add(new ui.textbox({text: "here"}));
+  }
+
+This assumes there's a canvas tag somewhere:
+
+  <canvas id="canvas-id"></canvas>
+
+The following creates the same structure, but with html tags
+
+  <div id="ui">
+    <div data-type="root_panel"
+         data-layout="new ui.horizontal_layout()"
+         width="200" height="200">
+      
+      <div data-type="label">Name:</div>
+      <div data-type="textbox">here</div>
+    </div>
+  </div>
+
+The canvas element itself is not needed, but the following javascript
+code is:
+
+  function f()
+  {
+    var rp = ui.create_root_panel(document.getElementById("ui"));
+  }
+
+
+7.1 Javascript
+
+todo
+
+
+7.2 Html
+
+canui uses the html5 'data' attribute [w3c-data] where custom
+attributes are allowed as long as they start with "data-", such as
+"data-type".
+
+Browsers are supposed to implement a 'dataset' property for element
+objects, but most do not at the moment. Therefore, canui uses the
+simple getAttribute() when 'dataset' is undefined.
+
+The tag name of the element matters not, as long as it can have
+children. <div> is used in this document and examples because it is
+short.
+
+Using html tags, the structure of the interface (as well as a few
+cosmetic options) can be specified directly. However, for any kind
+of interaction, javascript is needed. Ids may be assigned to controls
+and used with root_panel.find_id():
+
+  <div id="ui">
+    <div data-type="root_panel" width="200" height="200">
+      <div id="label" data-type="label"></div>
+    </div>
+  </div>
+
+  // ...
+  function f()
+  {
+    var rp = ui.create_root_panel(document.getElementById("ui"));
+    rp.find_id("label").caption("this is a label");
+  }
+
+The root element, here named "ui", serves only as a top level. Its
+id is irrelevant. After creating the structure, canui will remove that
+element (and its children) from the dom and replace it with a canvas
+element.
+
+When errors are found in the structure (such as having a child element
+inside a control that is not a container), the top level element (here
+"ui") is replaced by a red string with the error message instead of a
+canvas.
+
+These are the recognized attributes:
+
+  data-type
+  The type of the control to create. For a data-type "x", canui will
+  try to do a "new ui.x()". Invalid if the type doesn't exist.
+
+  id
+  The id of the control in the structure. Can be empty.
+
+  data-layout
+  This string is eval'd and passed to container.layout(). Invalid if
+  the control is not a container.
+
+  data-options
+  This must be a JSON structure. It is eval'd and passed to
+  control.options().
+
+These are the recognized events.
+
+  onclick
+  This string is eval'd and added to the 'clicked' signal of the
+  control. Invalid if the control doesn't have that signal.
+
+  onchange
+  This string is eval'd and added to the 'changed' signal of the
+  control. Invalid if the control doesn't have that signal.
+
+Note that the string in an event is eval'd and must evaluate to a
+function that will be from the signal. Therefore,
+
+  onclick="f()"
+
+will eval "f()" and add its return value to the signal. To call "f"
+when something is clicked, do
+
+  onclick="f"
+
+Finally, all the text between tags is trimmed and passed to the
+caption() member function of the control, if not empty. If there is
+a non-whitespace text as a child element of a control and that control
+has no caption() member function, the structure is ill-formed:
+
+  <div data-type="textbox">text in textbox</div>
+  <div data-type="image">invalid, image doesn't have caption()</div>
+
+
+8 Internals
 ======================================================================
 
 canui uses some kind of inheritance where member functions are
@@ -1192,16 +1334,19 @@ end, so that these function may be overridden by derived classes.
   d.frob();
 
   
-8 References
+9 References
 ======================================================================
 
-[whatwg]
+[whatwg-canvas]
 http://www.whatwg.org/specs/web-apps/current-work/multipage/
 the-canvas-element.html
          
-[whatwg2] 
+[whatwg-best] 
 http://www.whatwg.org/specs/web-apps/current-work/multipage/
 the-canvas-element.html#best-practices
 
+[w3c-data]
+http://www.w3.org/TR/html5/elements.html#
+embedding-custom-non-visible-data-with-the-data-attributes
 
 eof
