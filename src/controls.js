@@ -189,7 +189,8 @@ separator: function(opts)
 },
 
 
-// a simple image with a possible overlay
+// a simple image with a possible overlay; both can be grayed when the
+// control is disabled.
 //
 // the images must be Image objects
 //
