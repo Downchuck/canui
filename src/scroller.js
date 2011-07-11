@@ -132,7 +132,7 @@ scrollbar: function(opts)
   {
     self.set_default_options({
       tick_size: 1,
-      orientation: "horizontal"
+      orientation: "vertical"
     });
 
     if (self.option("orientation") == "vertical")
@@ -192,7 +192,18 @@ scrollbar: function(opts)
   //
   self.limits = function(min, max)
   {
-    thumb_.limits(min, max);
+    thumb_.limits(Math.min(min, max), Math.max(min, max));
+
+    if ((thumb_.limits().max - thumb_.limits().min) > 0)
+    {
+      up_.enabled(true);
+      down_.enabled(true);
+    }
+    else
+    {
+      up_.enabled(false);
+      down_.enabled(false);
+    }
   }
 
   // scrolls by the given amount
@@ -244,6 +255,15 @@ scrollbar: function(opts)
 // children around? the child is already in the internal panel, which
 // is an absolute layout
 //
+// options
+//   hbar (never, always, auto), default: auto
+//     never: never shows the horizontal scrollbar, even if needed
+//     always: always shows the horizontal scrollbar
+//     auto: shows the horizontal scrollbar if needed
+//
+//  vbar (never, always, auto), default: auto
+//    see hbar
+//
 scroller: function(opts)
 {
   ui.inherit_container(this,
@@ -251,10 +271,11 @@ scroller: function(opts)
   var self = this;
 
   // this will contain the full size child
-  var panel_ = new ui.panel(new ui.absolute_layout());
+  var panel_ = new ui.panel({layout: new ui.absolute_layout()});
 
-  // scroll bar
-  var bar_ = new ui.scrollbar();
+  // scroll bars
+  var vbar_ = new ui.scrollbar({orientation: "vertical"});
+  var hbar_ = new ui.scrollbar({orientation: "horizontal"});
 
   // current offset of the child (todo: why can't the child
   // coordinates be used instead?)
@@ -265,29 +286,29 @@ scroller: function(opts)
   //
   var init = function()
   {
+    self.set_default_options({
+      hbar: "auto",
+      vbar: "auto"
+    });
+
     // events will go through to the child
     self.transparent(true);
     panel_.transparent(true);
+    panel_.option("background", new color().transparent());
     
     self.container__add(panel_);
-    self.container__add(bar_);
+    self.container__add(vbar_);
+    self.container__add(hbar_);
 
-    bar_.changed.add(on_scrolled);
+    if (self.option("vbar") != "always")
+      vbar_.visible(false);
+
+    if (self.option("hbar") != "always")
+      hbar_.visible(false);
+
+    vbar_.changed.add(on_vscrolled);
+    hbar_.changed.add(on_hscrolled);
   };
-
-  // sets the limits of the scroll (forwarded to the scroll bar)
-  //
-  self.limits = function(min, max)
-  {
-    bar_.limits(min, max);
-  }
-
-  // sets the size of a tick (forwarded to the scroll bar)
-  //
-  self.tick_size = function(v)
-  {
-    bar_.tick_size(v);
-  }
 
   // overriden so that children are added to the internal panel
   //
@@ -313,9 +334,16 @@ scroller: function(opts)
 
   // called when the scrollbar has been moved
   //
-  var on_scrolled = function(v)
+  var on_hscrolled = function(v)
   {
-    self.scroll(0, v);
+    self.scroll(v, -origin_.y);
+  }
+
+  // called when the scrollbar has been moved
+  //
+  var on_vscrolled = function(v)
+  {
+    self.scroll(-origin_.x, v);
   }
 
   // scrolls to the given point in pixels (todo: clamp it)
@@ -332,16 +360,19 @@ scroller: function(opts)
       origin_.x, origin_.y, child().width(), child().height()));
 
     // todo: why? size hasn't changed
-    panel_.do_layout();
+   // panel_.do_layout();
   }
 
   // returns the number of pixels that exceed the scroller's size
   //
   var excess = function()
   {
-    return new dimension(
-      child().width() - panel_.width(),
-      child().height() - panel_.height());
+    var w =
+      child().best_dimension().w - (self.width() - vbar_.width());
+    var h =
+      child().best_dimension().h - (self.height() - hbar_.height());
+
+    return new dimension(Math.max(0, w), Math.max(0, h));
   }
 
   // returns the child controlled by the scroller
@@ -352,36 +383,112 @@ scroller: function(opts)
     return panel_.children()[0];
   }
 
+  var set_scrollbars = function()
+  {
+    var e = excess();
+
+    var vr = new rectangle(0, 0, 0, 0);
+    var hr = new rectangle(0, 0, 0, 0);
+    var d = undefined;
+
+    if (e.h > 0 || self.option("vbar") == "always")
+    {
+      d = new dimension(vbar_.best_dimension().w, self.height());
+      vr = new rectangle(self.width() - d.w, 0, d.w, d.h);
+
+      if (self.option("vbar") != "never")
+        vbar_.visible(true);
+    }
+    else
+    {
+      if (self.option("vbar") != "always")
+        vbar_.visible(false);
+    }
+
+    if (e.w > 0 || self.option("hbar") == "always")
+    {
+      d = new dimension(self.width(), hbar_.best_dimension().h);
+      hr = new rectangle(0, self.height() - d.h, d.w, d.h);
+
+      if (self.option("hbar") != "never")
+        hbar_.visible(true);
+    }
+    else
+    {
+      if (self.option("hbar") != "always")
+        hbar_.visible(false);
+    }
+
+    if (hbar_.visible())
+      vr.h -= hr.h;
+
+    if (vbar_.visible())
+      hr.w -= vr.w;
+
+    if (hbar_.visible())
+    {
+      hbar_.bounds(hr);
+      hbar_.page_size(hr.w);
+      hbar_.do_layout();
+    }
+    else
+    {
+      hbar_.bounds(new rectangle(0, 0, 0, 0));
+    }
+
+    if (vbar_.visible())
+    {
+      vbar_.bounds(vr);
+      vbar_.page_size(vr.h);
+      vbar_.do_layout();
+    }
+    else
+    {
+      vbar_.bounds(new rectangle(0, 0, 0, 0));
+    }
+  };
+
+  var set_child = function()
+  {
+    if (self.children_count() == 0)
+      return;
+
+    // resizing the internal panel so that it takes all the
+    // remaining space
+    panel_.bounds(new rectangle(
+      0, 0,
+      self.width() - vbar_.width(),
+      self.height() - hbar_.height()));
+
+    // makes sure the child is never smaller than the scroller
+    var bd = child().best_dimension();
+    //var w = Math.max(bd.w, panel_.width());
+    //var h = Math.max(bd.h, panel_.height());
+    var w = bd.w;
+    var h = bd.h;
+
+    child().bounds(new rectangle(origin_.x, origin_.y, w, h));
+    panel_.do_layout();
+
+    var e = excess();
+    hbar_.limits(0, e.w);
+    vbar_.limits(0, e.h);
+  }
+
   // moves the scrollbar and resizes the child so it always have at
   // least the scroller's size
   //
   self.on_bounds_changed = function()
   {
-    // preferred width of the scrollbar
-    var bw = bar_.best_dimension().w;
+    set_scrollbars();
+    set_child();
+  }
 
-    // moving the scroll to the side
-    bar_.bounds(new rectangle(
-      self.width() - bw, 0, bw, self.height()));
-    bar_.do_layout();
-    
-    if (self.children_count() != 0)
-    {
-      // resizing the internal panel so that it takes all the
-      // remaining space
-      panel_.bounds(new rectangle(
-        0, 0, self.width() - bw, self.height()));
-
-      // makes sure the child is never smaller than the scroller
-      var bd = child().best_dimension();
-      var w = Math.max(bd.w, panel_.width());
-      var h = Math.max(bd.h, panel_.height());
-
-      child().bounds(new rectangle(origin_.x, origin_.y, w, h));
-      panel_.do_layout();
-
-      bar_.limits(0, excess().h);
-    }
+  self.do_layout = function()
+  {
+    self.container__do_layout();
+    set_scrollbars();
+    set_child();
   }
 
   // this is the child's dimension

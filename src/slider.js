@@ -219,14 +219,22 @@ slider: function(opts)
     return usable;
   }
 
-  // sets the slider limits, rounded to integers. Note that this has
-  // no graphical effect (todo: resize the thumb?); it will only make
-  // sure the value is always between these two
+  // if min and max are not undefined, sets the slider limits, rounded
+  // to integers, and clamps the value. When this slider is
+  // proportional, this will resize the thumb.
+  //
+  // in any case returns the current limit as an object {max: v,
+  // max: v}.
   //
   self.limits = function(min, max)
   {
-    limits_ = {"min": min, "max": max};
-    self.value(value_);
+    if (min != undefined && max != undefined)
+    {
+      limits_ = {"min": Math.min(min, max), "max": Math.max(min, max)};
+      set_value(value_);
+    }
+
+    return limits_;
   }
 
   // sets the page value (todo: this is in the options, the control
@@ -256,8 +264,20 @@ slider: function(opts)
   var set_value = function(v)
   {
     v = clamp(v, limits_.min, limits_.max);
-      
+    
     value_ = v;
+
+    if ((limits_.max - limits_.min) == 0)
+    {
+      self.enabled(false);
+      thumb_.visible(false);
+      return;
+    }
+    else
+    {
+      self.enabled(true);
+      thumb_.visible(true);
+    }
 
     // thumb position
     var p = (value_ / (limits_.max - limits_.min)) * usable();
@@ -333,6 +353,9 @@ slider: function(opts)
   {
     self.control__on_mouse_left_down(mp);
 
+    if (!self.enabled())
+      return;
+
     assert(scrolling_ === false);
     assert(tentative_scrolling_ === false);
 
@@ -373,6 +396,9 @@ slider: function(opts)
   self.on_mouse_left_up = function(mp)
   {
     self.control__on_mouse_left_up(mp);
+
+    if (!self.enabled())
+      return;
 
     // note: this may be called even if no left button down event was
     // received
@@ -440,6 +466,9 @@ slider: function(opts)
   //
   self.on_mouse_move = function(mp)
   {
+    if (!self.enabled())
+      return;
+
     if (!scrolling_)
       return;
 

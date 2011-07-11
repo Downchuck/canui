@@ -30,6 +30,9 @@ namespace("ui",
 //   caption (string), default: ""
 //     initial caption on the button
 //
+//   clicked (function()), default: undefined
+//     initial clicked slot
+//
 inherit_clickable: function(self, opts)
 {
   ui.inherit_container(self,
@@ -55,10 +58,14 @@ inherit_clickable: function(self, opts)
   {
     self.set_default_options({
       caption: "",
+      clicked: undefined,
       pressed_feedback: true,
       hover_feedback: true,
       flat: false,
       toggle: false});
+
+    if (self.option("clicked") != undefined)
+      self.clicked.add(self.option("clicked"));
 
     self.caption(self.option("caption"));
   };

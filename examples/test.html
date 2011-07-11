@@ -53,9 +53,36 @@ function test_widget()
 {
   ui.inherit_control(this);
 
+  this.w = 100;
+  this.h = 100;
+
   this.best_dimension = function()
   {
-    return new dimension(1000, 50);
+    return new dimension(this.w, this.h);
+  }
+
+  this.draw = function(context)
+  {
+    this.control__draw(context);
+
+    var b = this.bounds();
+
+    var w = this.width();
+    var h = this.height();
+
+    w -= text_dimension("10", this.font()).w
+    h -= text_dimension("10", this.font()).h
+
+    outline_rect(context, new color().red(), this.bounds());
+
+    for (var x=0; x<=10; ++x)
+    {
+      for (var y=0; y<=10; ++y)
+      {
+        var r = new rectangle(b.x + (x/10)*w, b.y + (y/10)*h, 50, 50);
+        draw_text(context, "" + x, new color().black(), r, this.font());
+      }
+    }
   }
 }
 
@@ -66,8 +93,38 @@ $(function()
   var r = document.getElementById("ui");
   g_rp = ui.create_root_panel(r);
 
-  var sb = new ui.scrollbar({orientation: "horizontal"});
-  g_rp.add(sb, ui.sides.bottom);
+  var t = new test_widget();
+  var s = new ui.scroller();
+  s.add(t);
+
+  var p = new ui.panel({layout: new ui.vertical_layout()});
+
+  p.add(new ui.button({caption: "more height", clicked: function()
+    {
+      t.h += 50;
+      t.relayout();
+    }}));
+    
+  p.add(new ui.button({caption: "less height", clicked: function()
+    {
+      t.h -= 50;
+      t.relayout();
+    }}));
+    
+  p.add(new ui.button({caption: "more width", clicked: function()
+    {
+      t.w += 50;
+      t.relayout();
+    }}));
+    
+  p.add(new ui.button({caption: "less width", clicked: function()
+    {
+      t.w -= 50;
+      t.relayout();
+    }}));
+    
+  g_rp.add(p, ui.sides.right);
+  g_rp.add(s, ui.sides.center);
 });
 </script>
 
@@ -80,7 +137,7 @@ $(function()
 created.
 
 <div id="ui">
-  <div data-type="root_panel" data-layout="new ui.border_layout()" width="400" height="300">
+  <div data-type="root_panel" data-layout="new ui.border_layout()" width="300" height="300">
   </div>
 </div>
 

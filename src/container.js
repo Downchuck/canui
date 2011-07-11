@@ -108,7 +108,7 @@ inherit_container: function(self, opts)
   self.container__draw = function(context)
   {
     self.control__draw(context);
-    
+
     clip(context, self.bounds());
     
     // offseting
@@ -118,9 +118,12 @@ inherit_container: function(self, opts)
     
     for (var i in children_)
     {
-      context.save();
-      children_[i].draw(context);
-      context.restore();
+      if (children_[i].visible())
+      {
+        context.save();
+        children_[i].draw(context);
+        context.restore();
+      }
     }
   };
   

@@ -44,6 +44,9 @@ inherit_control: function(self, opts)
   // reaction, such as disabled buttons still showing tooltips
   var enabled_ = true;
 
+  // whether this control and its children is visible or not
+  var visible_ = true;
+
   // mouse cursor over this control
   var cursor_ = "default";
 
@@ -282,6 +285,20 @@ inherit_control: function(self, opts)
     
     return true;
   };
+
+  // if v is not undefined, sets this control's visibility status; in
+  // any case returns whether this control is visible
+  //
+  self.control__visible = function(v)
+  {
+    if (v != undefined)
+    {
+      visible_ = v;
+      self.redraw();
+    }
+
+    return visible_;
+  }
   
   // returns this control's parent
   //
@@ -826,6 +843,16 @@ inherit_control: function(self, opts)
     if (id_ != "")
       s += "id:" + id_ + " ";
 
+    if (self.enabled())
+      s += "enabled ";
+    else
+      s += "disabled ";
+
+    if (self.visible())
+      s += "visible ";
+    else
+      s += "hidden ";
+
     s +=
       "(" + pos_.x + "x," + pos_.y + "y)-" +
       "(" + dim_.w + "w," + dim_.h + "h)";
@@ -841,6 +868,7 @@ inherit_control: function(self, opts)
   self.transparent          = self.control__transparent;
   self.redraw               = self.control__redraw;
   self.enabled              = self.control__enabled;
+  self.visible              = self.control__visible;
   self.cursor               = self.control__cursor;
   self.set_default_options  = self.control__set_default_options;
   self.option               = self.control__option;
