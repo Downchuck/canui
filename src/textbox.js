@@ -92,21 +92,61 @@ textbox: function(opts)
     outline_rect(context, new color().black(), self.bounds());
 
     // top-left of the string
-    var p = new point(self.position().x + self.option("margin"), text_y());
+    var p = new point(
+      self.position().x + self.option("margin"),
+      self.option("margin"));
 
-    draw_caret(context);
+    var lines = explode(text_, "\n");
+    var s = normalized_selection();
+    var count = 0;
+    var in_selection = false;
 
-    if (sel_.first == sel_.last)
+    for (var i in lines)
     {
+      var line = lines[i];
+
+      if (!in_selection && s.first >= count)
+        in_selection = true;
+      else if (in_selection && s.last < count)
+        in_selection = false;
+
+      if (in_selection)
+      {
+        var first = Math.max(0, s.first - count);
+        var last = Math.min(line.length, s.last - count);
+
+        var before_w = text_dimension(
+          line.substring(0, first), self.font()).w
+
+        var sel_w = text_dimension(
+          line.substring(first, last), self.font()).w;
+
+        var sr = new rectangle(
+          self.option("margin") + before_w, p.y,
+          sel_w, g_line_height + g_line_spacing);
+
+        if (last - first > 0)
+        {
+          fill_rect(
+            context, self.option("selected_text_background"), sr);
+        }
+      }
+
       draw_text(
-        context, text_, new color().black(),
+        context, line, new color().black(),
         new rectangle(
-          p.x, p.y, self.width() - self.option("margin")*2, g_line_height),
-      self.font()); 
+          p.x, p.y,
+          self.width() - self.option("margin")*2,
+          g_line_height),
+        self.font()); 
+
+      count += line.length + 1;
+      p.y += g_line_height + g_line_spacing;
     }
+
+/*    }
     else
     {
-      var s = normalized_selection();
 
       var t1 = text_.substring(0, s.first);
       var t2 = text_.substring(s.first, s.last);
@@ -125,8 +165,6 @@ textbox: function(opts)
           p1.x, p1.y, self.width() - self.option("margin")*2, g_line_height),
       self.font()); 
       
-      fill_rect(context, self.option("selected_text_background"),
-        new rectangle(p2.x, p2.y, w2, g_line_height));
 
       draw_text(
         context, t2, self.option("selected_text_color"),
@@ -141,7 +179,9 @@ textbox: function(opts)
           p3.x, p3.y,
           self.width() - self.option("margin")*2 - w2 - w1, g_line_height),
       self.font()); 
-    }
+    }*/
+
+    draw_caret(context);
   };
 
   // returns the y position of the top of the string (where the caret
@@ -149,7 +189,7 @@ textbox: function(opts)
   //
   var text_y = function()
   {
-    return self.position().y + self.height()/2 - g_line_height/2;
+    return self.position().y;// + self.height()/2 - g_line_height/2;
   };
 
   // draws the caret if the control has focus and the caret tick is
@@ -161,12 +201,28 @@ textbox: function(opts)
     if (!self.is_focused() || !caret_)
       return;
 
-    var td = text_dimension(
-      text_.substring(0, sel_.last), self.font());
+    var p = new point(0, 0);
+      //self.position().x + td.w + self.option("margin"), text_y());
 
-    var p = new point(
-      self.position().x + td.w + self.option("margin"), text_y());
+    var this_line = "";
+    for (var i=0; i<sel_.last; ++i)
+    {
+      if (text_[i] == "\n")
+      {
+        p.y += g_line_height + g_line_spacing;
+        this_line = "";
+      }
+      else
+      {
+        this_line += text_[i];
+      }
+    }
 
+    p.x = text_dimension(this_line, self.font()).w;
+
+    p.x += self.option("margin");
+    p.y += self.option("margin");
+    
     draw_line(context, new color().black(), new rectangle(
       p.x, p.y, 1, g_line_height));
   }
@@ -303,11 +359,126 @@ textbox: function(opts)
     return adjacent_word(text_, sel_.last, true);
   }
 
+  // returns the column of the given index
+  //
+  var column_for_index = function(i)
+  {
+    return i - line_for_index(i);
+  };
+
+  // returns the index of the start of the line on which the given
+  // index is
+  //
+  var line_for_index = function(index)
+  {
+    var line_start = 0;
+
+    for (var i=index-1; i>=0; --i)
+    {
+      if (text_[i] == "\n")
+      {
+        line_start = i + 1;
+        break;
+      }
+    }
+
+    return line_start;
+  }
+
+  // returns the index of the start of the the line preceeding the one
+  // on which the given index is; if the given line is the first one,
+  // returns 0
+  //
+  var previous_line_for_index = function(index)
+  {
+    var line_start = line_for_index(index);
+    var previous_line_start = 0;
+
+    for (var i=line_start-2; i>= 0; --i)
+    {
+      if (text_[i] == "\n")
+      {
+        previous_line_start = i + 1;
+        break;
+      }
+    }
+
+    return previous_line_start;
+  }
+
+  // returns the index of the start of the line following the one on
+  // which the given index is; if the given line is the last one,
+  // returns text_.length;
+  //
+  var next_line_for_index = function(index)
+  {
+    var next_line_start = text_.length;
+    for (var i=index; i<text_.length; ++i)
+    {
+      if (text_[i] == "\n")
+      {
+        next_line_start = i + 1;
+        break;
+      }
+    }
+
+    return next_line_start;
+  }
+
+  // returns the index of the character on the same column in the
+  // line preceeding the one on which the given index is; if the
+  // column is larger than the line's length, returns the line's
+  // length; if the given line is the first one, returns 'index'
+  //
+  var previous_line_same_column = function(index)
+  {
+    var col = column_for_index(index);
+    var line_start = line_for_index(index);
+
+    if (line_start == 0)
+      return index;
+
+    var previous_line_start = previous_line_for_index(index);
+    var line_length = line_start - previous_line_start;
+
+    if (col >= line_length)
+      col = line_length - 1;
+
+    return previous_line_start + col;
+  }
+
+  // returns the index of the character on the same column in the
+  // line following the one on which the given index is; if the column
+  // is larger than the line's length, returns the line's length; if
+  // the given line is the last one, returns 'index'
+  //
+  var next_line_same_column = function(index)
+  {
+    var col = column_for_index(index);
+    var next_line_start = next_line_for_index(index);
+    var next_line_end = next_line_for_index(next_line_start);
+
+    if (next_line_start == next_line_end)
+      return index;
+
+    if (next_line_end < text_.length)
+      --next_line_end;
+
+    var line_length = next_line_end - next_line_start;
+
+    if (col >= line_length)
+      col = line_length;
+
+    return next_line_start + col;
+  }
+
   // called when a key is down while the textbox has focus
   //
   self.on_keydown = function(code)
   {
     var rp = self.get_root_panel();
+
+    console.log("keydown: " + code);
 
     switch (code)
     {
@@ -369,22 +540,79 @@ textbox: function(opts)
         return true;
       }
 
+      case ui.key_codes.up:
+      {
+        if (rp.key_state(ui.key_codes.ctrl))
+        {
+          // noop, todo: scroll up
+        }
+        else
+        {
+          if (rp.key_state(ui.key_codes.shift))
+          {
+            var p = previous_line_same_column(sel_.last);
+            self.selection(sel_.first, p);
+          }
+          else
+          {
+            var s = Math.min(sel_.first, sel_.last);
+            var p = previous_line_same_column(s);
+
+            self.selection(p);
+          }
+        }
+        
+        return true;
+      }
+
+      case ui.key_codes.down:
+      {
+        if (rp.key_state(ui.key_codes.ctrl))
+        {
+          // noop, todo: scroll down
+        }
+        else
+        {
+          if (rp.key_state(ui.key_codes.shift))
+          {
+            var p = next_line_same_column(sel_.last);
+            self.selection(sel_.first, p);
+          }
+          else
+          {
+            var s = Math.max(sel_.first, sel_.last);
+            var p = next_line_same_column(s);
+
+            self.selection(p);
+          }
+        }
+
+        return true;
+      }
+
       case ui.key_codes.home:
       {
+        var p = line_for_index(sel_.first);
+
         if (rp.key_state(ui.key_codes.shift))
-          self.selection(sel_.first, 0);
+          self.selection(sel_.first, p);
         else
-          self.selection(0);
+          self.selection(p);
 
         return true;
       }
 
       case ui.key_codes.end:
       {
+        var p = next_line_for_index(sel_.first);
+
+        if (p < text_.length)
+          --p;
+
         if (rp.key_state(ui.key_codes.shift))
-          self.selection(sel_.first, text_.length);
+          self.selection(sel_.first, p);
         else
-          self.selection(text_.length);
+          self.selection(p);
 
         return true;
       }
@@ -421,6 +649,13 @@ textbox: function(opts)
 
         return true;
       }
+
+      case ui.key_codes.enter:
+      {
+        self.replace_selection("\n");
+        self.selection(sel_.first + 1);
+        break;
+      }
     }
 
     return false;
@@ -432,6 +667,8 @@ textbox: function(opts)
   {
     if (code == 0 || contains(ui.key_codes, code))
       return true;
+
+    console.log("keypress: " + code);
 
     var rp = self.get_root_panel();
     var c = String.fromCharCode(code);
@@ -686,27 +923,58 @@ textbox: function(opts)
   }
 
   // returns the index of the caracter under the given position (in
-  // pixels, relative to this control); if the x position is before
-  // any character, returns 0; if the x position is after the last
+  // pixels, relative to this control); if the position is before
+  // any character, returns 0; if the position is after the last
   // character, returns text().length
   //
   self.index_from_point = function(p)
   {
     assert(p != undefined && p.internal_is_a_point);
 
-    if (text_.length == 0 || p.x <= self.option("margin"))
+    if (text_.length == 0)
       return 0;
 
     var current = 0;
 
+    var got_line = false;
+    var last_line_start = 0;
+    
+    var x = self.option("margin");
+    var y = self.option("margin");
+
     for (var i=0; i<text_.length; ++i)
     {
-      var s = text_dimension(text_[i], self.font()).w;
-      
-      if (p.x >= current && p.x < (current + s))
+      if (got_line || 
+          p.y >= y && p.y < (y + g_line_height + g_line_spacing))
+      {
+        got_line = true;
+        
+        var cw = text_dimension(text_[i], self.font()).w;
+        if (p.x < (x + cw))
+          return i;
+
+        x += cw;
+      }
+
+      if (text_[i] == "\n")
+      {
+        last_line_start = i + 1;
+
+        if (got_line)
+          return i;
+
+        y += g_line_height + g_line_spacing;
+      }
+    }
+
+    x = self.option("margin");
+    for (var i=last_line_start; i<text_.length; ++i)
+    {
+      var cw = text_dimension(text_[i], self.font()).w;
+      if (p.x < (x + cw))
         return i;
 
-      current += s;
+      x += cw;
     }
 
     return text_.length;

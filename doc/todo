@@ -52,17 +52,22 @@ Bugs: none
 
 
 2.8 scrollbar
-Todo: horizontal needs testing, mouse wheel
+Todo: mouse wheel
 Bugs: none
 
 
-2.9 slider
+2.9 scroller
 Todo: none
 Bugs: none
 
 
-2.10 textbox
-Todo: dnd, multiline, undo/redo
+2.10 slider
+Todo: none
+Bugs: none
+
+
+2.11 textbox
+Todo: dnd, multiline, undo/redo, scrolling
 Bugs: double-click select and moving sometimes unselect original word
 
 
@@ -71,12 +76,6 @@ Bugs: double-click select and moving sometimes unselect original word
 ======================================================================
 These controls are currently mostly unusable because of lack of
 testing or features, or bugs.
-
-
-3.1 scroller
-Todo: more testing, cannibalized into scrollbar, not sure what still
-      works
-
 
 3.2 menu
 Todo: separators, keybindings?, icons, disabled, customize, close on
