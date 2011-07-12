@@ -35,6 +35,9 @@ image
 label
   draws a caption with various alignments
 
+link
+  blue and underlined label which can be clicked to open a url
+
 list
   a scrollable list of items with columns
 
@@ -467,6 +470,27 @@ Example:
     rp.add(new ui.separator(2, {margin: 10}));
   }
   
+
+3.6 link
+
+This is a label with a blue and underlined font. The cursor when
+hovering is the usual "hand". Clicking the link will open the
+specified url. The url is also displayed as a tooltip.
+
+Options:
+  . url (string), default: ""
+    the url to open when clicked
+
+  . target (string), default: "_blank"
+    the target in which to open the link; this is the same as the
+    "target" attribute of the "a" element:
+
+      _blank: new window/tab
+      _parent: parent frame
+      _self: current window/tab
+      _top: top frame
+      anything else: the name of a window
+
 
 3.6 list
 

@@ -487,6 +487,75 @@ image: function(opts)
   }
   
   init();
+},
+
+// displays a link to the given url and opens the url on click
+//
+// options:
+//   url (string), default: ""
+//   the url to open when clicked
+//
+//   target (string), default: "_blank"
+//   the target in which to open the link; this is the same as the
+//   "target" attribute of the "a" element:
+//
+//     _blank: new window/tab
+//     _parent: parent frame
+//     _self: current window/tab
+//     _top: top frame
+//     anything else: the name of a window
+//
+link: function(opts)
+{
+  ui.inherit_label(this, opts);
+  var self = this;
+
+  var init = function()
+  {
+    self.set_default_options({
+      url: "",
+      target: "_blank"
+    });
+
+    self.cursor("pointer");
+    self.option("color", ui.theme.link_color());
+    self.font().underlined(true);
+
+    check_tooltip();
+  };
+
+  var check_tooltip = function()
+  {
+    if (self.option("url") != "")
+      self.tooltip(new ui.tooltip({caption: self.option("url")}));
+    else
+      self.reset_tooltip();
+  }
+
+  self.option = function(n, v)
+  {
+    var r = self.control__option(n, v);
+
+    if (n == "url" && v != undefined)
+      check_tooltip();
+
+    return r;
+  }
+
+  self.draw = function(context)
+  {
+    self.label__draw(context);
+  }
+
+  self.on_mouse_left_up = function(mp)
+  {
+    self.control__on_mouse_left_up(mp);
+
+    if (self.option("url") != "")
+      window.open(self.option("url"), self.option("target"));
+  }
+
+  init();
 }
 
 });   // namespace ui

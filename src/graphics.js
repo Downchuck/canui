@@ -634,6 +634,15 @@ function draw_text(context, s, c, r, font)
     assert(is_number(y));
 
     context.fillText(lines[i], p.x, y);
+
+    if (font.option("underlined"))
+    {
+      var lr = new rectangle(
+        p.x, p.y + g_line_height - 1,
+        text_dimension(lines[i], font).w, 1);
+
+      draw_line(context, c, lr);
+    }
   }
 
   context.restore();

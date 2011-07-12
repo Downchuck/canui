@@ -18,10 +18,9 @@ namespace("ui",
 // color (color object), default: ui.theme.text_color()
 //   text color
 //
-label: function(opts)
+inherit_label: function(self, opts)
 {
-  ui.inherit_control(this, opts);
-  var self = this;
+  ui.inherit_control(self, opts);
 
   // text
   var caption_ = "";
@@ -43,7 +42,7 @@ label: function(opts)
 
   // sets the text on the label
   //  
-  self.caption = function(s)
+  self.label__caption = function(s)
   {
     if (s != undefined)
     {    
@@ -59,14 +58,14 @@ label: function(opts)
   
   // size of the caption 
   //
-  self.best_dimension = function()
+  self.label__best_dimension = function()
   {
     return text_dimension(caption_, self.font());
   };
   
   // draws the caption
   //
-  self.draw = function(context)
+  self.label__draw = function(context)
   {
     self.control__draw(context);
 
@@ -101,8 +100,17 @@ label: function(opts)
   {
     return "label (" + caption_ + ")";
   };
+
+  self.caption          = self.label__caption;
+  self.best_dimension   = self.label__best_dimension;
+  self.draw             = self.label__draw;
   
   init();
+},
+
+label: function(opts)
+{
+  ui.inherit_label(this, opts);
 }
 
 });   // namespace ui

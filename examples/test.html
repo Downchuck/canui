@@ -96,14 +96,7 @@ $(function()
   //var tb = new ui.textbox({text: "case ui.key_codes.down:\n{\nif (rp.key_state(ui.key_codes.ctrl))\n{\n// noop, todo: scroll down\n}\nelse\n{\nif (rp.key_state(ui.key_codes.shift))\n{\nvar p = next_line_same_column(sel_.last);\nself.selection(sel_.first, p);\n}\nelse\n{\nvar s = Math.max(sel_.first, sel_.last);\nvar p = next_line_same_column(s);\n\nself.selection(p);\n}\n"});
   //g_rp.add(tb, ui.sides.center);
 
-  for (var i=0; i<5; ++i)
-  {
-    var c = new ui.radio({caption: "Mtestg"});
-    c.borders({all: 1});
-
-    g_rp.add(c);
-  }
-
+  g_rp.add(new ui.link({caption: "test", target: "_self", url: "http://google.com"}));
 });
 </script>
 

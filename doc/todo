@@ -18,55 +18,60 @@ Todo: keyboard
 Bugs: none
 
 
-2.2 panel
+2.2 link
+Todo: none
+Bugs: non
+
+
+2.3 panel
 Todo: none
 Bugs: none
 
 
-2.3 status_bar
+2.4 status_bar
 Todo: this is currently just a panel. It will either be
       removed or reworked completely.
 
 Bugs: none
 
 
-2.4 tooltip
+2.5 tooltip
 Todo: none
 Bugs:
  . tooltip stays stuck when mouse leaves (cancel timer on leave?)
 
 
-2.5 separator
+2.6 separator
 Todo: none
 Bugs: none
 
 
-2.6 image
+2.7 image
 Todo: none
 Bugs: none
 
 
-2.7 label
+2.8 label
 Todo: none
 Bugs: none
 
 
-2.8 scrollbar
+2.9 scrollbar
 Todo: mouse wheel, keyboard
 Bugs: none
 
 
-2.9 scroller
+2.10 scroller
 Todo: mouse wheel, keyboard
 Bugs: none
 
 
-2.10 slider
+2.11 slider
 Todo: keyboard
 Bugs: none
 
 
-2.11 textbox
+2.12 textbox
 Todo: dnd, multiline, undo/redo, scrolling
 Bugs: double-click select and moving sometimes unselect original word
 
@@ -99,7 +104,6 @@ Bugs: none
   . date/time
   . progress bar/spinner
   . toolbar
-  . link
   . notebook
   . up-down
   . color

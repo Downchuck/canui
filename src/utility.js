@@ -12,27 +12,38 @@ key_codes:
 
 // represents a font, can be used to construct css strings
 //
-font: function(name, size, i, b)
+// options:
+//   name
+//   size
+//   italic
+//   bold 
+//   underlined
+//   
+font: function(opts)
 {
   var self = this;
 
   // for sanity checks
   self.internal_is_a_font = true;
-
-
-  assert(name != undefined && name !== "");
-  assert(size != undefined && size !== "");
   
-  // font family
-  var name_ = name;
+  var opts_ = (opts == undefined ? {} : opts);
 
-  // size
-  var size_ = size;
+  var init = function()
+  {
+    set_default(opts_, {
+      name: "sans-serif",
+      size: "11pt",
+      italic: false,
+      bold: false,
+      underlined: false
+    });
+  }
 
-  // italic/bold
-  var opts_ = {
-    "italic": (i === true ? true : false),
-    "bold": (b === true ? true : false)};
+  self.option = function(n)
+  {
+    assert(opts_.hasOwnProperty(n));
+    return opts_[n];
+  }
   
   // returns something like "italic 12pt arial", valid for context.font
   // 
@@ -46,31 +57,49 @@ font: function(name, size, i, b)
     if (opts_.bold)
       s += "bold ";
     
-    s += size_ + " " + name_;
+    s += opts_.size + " " + opts_.name;
     
     return s;
   };
   
-  // makes this font italic
+  // if b is not undefined, sets whether this font is italic; in any
+  // case returns the current italic state
   //
-  self.italic = function()
+  self.italic = function(b)
   {
-    opts_.italic = true;
-    return self;
+    if (b != undefined)
+      opts_.italic = b;
+    return opts_.italic;
   };
   
-  // makes this font bold
+  // if b is not undefined, sets whether this font is bold; in any
+  // case returns the current bold state
   //
-  self.bold = function()
+  self.bold = function(b)
   {
-    opts_.bold = true;
-    return self;
+    if (b != undefined)
+      opts_.bold = b;
+    return opts_.bold;
+  };
+
+  // if b is not undefined, sets whether this font is underlined; in
+  // any case returns the current italic state. Note that "underlined"
+  // is not a valid property of a font; this is handled by draw_text()
+  // by drawing a line
+  //
+  self.underlined = function(b)
+  {
+    if (b != undefined)
+      opts_.underlined = b;
+    return opts_.underlined;
   };
 
   self.clone = function()
   {
-    return new ui.font(name_, size_, opts_.italic, opts_.bold);
+    return new ui.font(clone(opts_));
   }
+
+  init();
 },
 
 
@@ -80,7 +109,7 @@ theme:
 {
   default_font: function()
   {
-    return new ui.font("sans-serif", "11pt", false, false);
+    return new ui.font();
   },
 
   face_color: function()
@@ -126,6 +155,11 @@ theme:
   tooltip_color: function()
   {
     return new color(1.0, 1.0, 0.85);
+  },
+
+  link_color: function()
+  {
+    return new color(0.0, 0.0, 0.92);
   }
 },
 
