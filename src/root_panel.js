@@ -638,7 +638,7 @@ root_panel: function(opts)
         if (!captured_ || (captured_ == hovered_))
           hovered_.on_mouse_leave();
       }
-      
+
       hovered_ = c;
       
       // the newly hovered control will be notified that the mouse
@@ -678,7 +678,7 @@ root_panel: function(opts)
     // todo: can this happen?
     if (cursor === "")
       cursor = "default";
-    
+
     canvas_.css("cursor", cursor);
   };
   

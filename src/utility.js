@@ -136,7 +136,8 @@ system_options:
   scroll_delay: 300,
   scroll_tick_delay: 50,
 
-  checkbox_size: 13
+  checkbox_size: 13,
+  radio_size: 12
 }
 
 });   // namespace ui

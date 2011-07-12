@@ -338,7 +338,7 @@ inherit_control: function(self, opts)
     var r = self.get_root_panel();
     if (r == undefined)
       return false;
-    
+
     if (r.hovered() == self)
       return true;
     

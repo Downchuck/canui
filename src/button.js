@@ -46,10 +46,6 @@ inherit_clickable: function(self, opts)
   // the control inside the button
   var label_ = undefined;
 
-  // whether the button is currently hovered (todo: use hovered()
-  // instead)
-  var hovered_ = false;
-
   // whether the button is currently pressed (regardless of hovering)
   var pressed_ = false;
 
@@ -73,16 +69,14 @@ inherit_clickable: function(self, opts)
     self.caption(self.option("caption"));
   };
 
-  // if b is not undefined, sets the pressed state; this is ignored
-  // if the button is not a toggle
-  //
-  // in any case returns the current pressed state
+  // if b is not undefined, sets the pressed state; in any case
+  // returns the current state
   //
   self.clickable__pressed = function(b)
   {
-    if (b != undefined && self.option("toggle"))
+    if (b != undefined)
     {
-      self.set_state(hovered_, b);
+      pressed_ = b;
       self.redraw();
     }
 
@@ -190,7 +184,7 @@ inherit_clickable: function(self, opts)
     }
     else
     {
-      self.set_state(true, true);
+      self.pressed(true);
     }
 
     captured_ = true;
@@ -206,27 +200,27 @@ inherit_clickable: function(self, opts)
   //
   self.clickable__on_mouse_left_up = function(mp)
   {
-    self.control__on_mouse_left_down(mp);
+    self.control__on_mouse_left_up(mp);
 
     if (!self.enabled() || !captured_)
       return;
 
-    captured_ = false;
-    self.release_mouse();
-    self.on_released(mp);
-
     if (self.option("toggle"))
     {
-      if (hovered_)
-        self.set_state(hovered_, !original_);
+      if (self.is_hovered())
+        self.pressed(!original_);
     }
     else
     {
-      self.set_state(hovered_, false);
-
-      if (hovered_)
-        self.clicked.fire();
+      self.pressed(false);
     }
+    
+    if (self.is_hovered())
+      self.clicked.fire();
+
+    captured_ = false;
+    self.release_mouse();
+    self.on_released(mp);
 
     self.redraw();
   };
@@ -251,7 +245,6 @@ inherit_clickable: function(self, opts)
     if (!self.enabled())
       return;
       
-    self.set_state(true, pressed_);
     self.redraw();
   };
   
@@ -264,17 +257,7 @@ inherit_clickable: function(self, opts)
     if (!self.enabled())
       return;
       
-    self.set_state(false, pressed_);
     self.redraw();
-  };
-
-  // changes the padding to offset the child label
-  // (todo: see container.force_padding)
-  //  
-  self.clickable__set_state = function(hovered, pressed)
-  {
-    hovered_ = hovered;
-    pressed_ = pressed;
   };
   
   // debug: returns this control's name
@@ -304,7 +287,6 @@ inherit_clickable: function(self, opts)
   self.on_click             = self.clickable__on_click;
   self.on_dragging          = self.clickable__on_dragging;
   self.transitioning        = self.clickable__transitioning;
-  self.set_state            = self.clickable__set_state;
 
   init(opts);
 },
@@ -314,6 +296,7 @@ inherit_clickable: function(self, opts)
 inherit_button: function(self, opts)
 {
   ui.inherit_clickable(self, opts);
+  self.internal_is_a_button = true;
   
   // draws a rectangle (reversed when pressed and hovered)
   //
@@ -357,7 +340,9 @@ button: function(opts)
 checkbox: function(opts)
 {
   ui.inherit_clickable(this, merge(opts, {toggle: true}));
+  
   var self = this;
+  self.internal_is_a_checkbox = true;
 
   var image_ = undefined;
 
@@ -382,9 +367,6 @@ checkbox: function(opts)
 
   self.draw = function(context)
   {
-    var p = false;
-    var h = false;
-
     var f = new color().white();
     if (self.transitioning() && self.is_hovered())
       f = ui.theme.face_color();
@@ -408,6 +390,80 @@ checkbox: function(opts)
       draw_image(context, image_, ir);
     }
     
+    self.container__draw(context);
+  };
+
+  init();
+},
+
+radio: function(opts)
+{
+  ui.inherit_clickable(this, merge(opts, {toggle: true}));
+
+  var self = this;
+  self.internal_is_a_radio = true;
+
+  var init = function()
+  {
+    self.add(new ui.spacer(
+      {size: new dimension(
+        ui.system_options.radio_size,
+        ui.system_options.radio_size)}),
+      ui.sides.left);
+  };
+
+  self.pressed = function(b)
+  {
+    var r = self.clickable__pressed(b);
+
+    if (b != undefined)
+    {
+      self.parent().each_child(function(c)
+        {
+          if (c == self)
+            return;
+
+          if (c.internal_is_a_radio)
+            c.clickable__pressed(false);
+        });
+    }
+
+    return r;
+  }
+
+  // forwards to pressed()
+  //
+  self.checked = function(b)
+  {
+    return self.pressed(b);
+  };
+
+  self.draw = function(context)
+  {
+    var f = new color().white();
+    if (self.transitioning() && self.is_hovered())
+      f = ui.theme.face_color();
+      
+    var r = self.bounds();
+    r = new rectangle(
+      r.x, r.y + r.h/2 - ui.system_options.radio_size/2,
+      ui.system_options.radio_size,
+      ui.system_options.radio_size);
+
+    r.x += ui.system_options.radio_size/2 + 1;
+    r.y += ui.system_options.radio_size/2;
+    r.w = ui.system_options.radio_size - 2;
+
+    fill_circle(context, f, r);
+    outline_circle(context, new color().black(), r, Math.PI/6, 5*Math.PI/4);
+    outline_circle(context, ui.theme.face_color(), r, Math.PI/6, 5*Math.PI/4, true);
+
+    if (self.pressed())
+    {
+      r.w = ui.system_options.radio_size/3;
+      fill_circle(context, new color().black(), r);
+    }
+
     self.container__draw(context);
   };
 

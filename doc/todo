@@ -13,8 +13,8 @@ used. They may lack in options, callbacks or in ways to obtain
 information.
 
 
-2.1 button
-Todo: none
+2.1 button/checkbox/radio
+Todo: keyboard
 Bugs: none
 
 
@@ -52,17 +52,17 @@ Bugs: none
 
 
 2.8 scrollbar
-Todo: mouse wheel
+Todo: mouse wheel, keyboard
 Bugs: none
 
 
 2.9 scroller
-Todo: none
+Todo: mouse wheel, keyboard
 Bugs: none
 
 
 2.10 slider
-Todo: none
+Todo: keyboard
 Bugs: none
 
 
@@ -102,8 +102,6 @@ Bugs: none
   . link
   . notebook
   . up-down
-  . checkbox
-  . radio
   . color
   . file picker?
   . collapsible panel

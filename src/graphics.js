@@ -639,6 +639,42 @@ function draw_text(context, s, c, r, font)
   context.restore();
 }
 
+// 
+//
+function outline_circle(context, c, r, start, end, cw)
+{
+  make_circle_path(context, r, start, end, cw);
+  
+  context.strokeStyle = c.string();
+  context.stroke();
+}
+
+//
+function fill_circle(context, c, r)
+{
+  make_circle_path(context, r);
+  context.fillStyle = c.string();
+  context.fill();
+}
+
+function make_circle_path(context, r, start, end, cw)
+{
+  assert(valid_bounds(r));
+
+  if (start == undefined)
+    start = 0;
+
+  if (end == undefined)
+    end = 2*Math.PI;
+
+  if (cw == undefined)
+    cw = false;
+
+  context.beginPath();    
+  context.moveTo(r.x + to_int(r.w/2), r.y);
+  context.arc(to_int(r.x), to_int(r.y), to_int(r.w/2), -start, -end, !cw);
+}
+
 // returns the dimensions of the given string for the given font. If
 // the text has multiple lines (with \n), the widest line is used.
 //

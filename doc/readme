@@ -24,7 +24,8 @@ container
 This is a list of the available controls:
 
 button
-  this is a regular button that fires a signal when clicked
+  this is a regular button, a checkbox or a radio that fires a signal
+  when clicked
 
 image
   takes an Image object and draws it. It can also take a second image
@@ -314,6 +315,15 @@ interactions:
     unless the mouse is not hovering anymore
   . releasing the left mouse button while hovering will fire a
     'clicked' signal
+
+Other types of buttons include checkboxes and radios. Both are
+considered "buttons" because they behave the same way: clicking them
+changes their state and they handle moving the mouse in and out while
+holding the left mouse button down.
+
+Radio buttons are mutually exclusive within the same container. When
+clicked, a radio button will walk all the children of its parent and
+turn the radio buttons off.
 
 Options:
     
