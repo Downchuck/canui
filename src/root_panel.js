@@ -556,6 +556,9 @@ root_panel: function(opts)
   //
   self.set_focus = function(c)
   {
+    if (c != undefined && !c.needs_focus())
+      return;
+
     if (focused_ == c)
       return;
 

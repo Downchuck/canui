@@ -10,6 +10,33 @@ panel: function(opts)
   ui.inherit_basic_panel(this, opts);
 },
 
+// an empty control that has the best dimension given
+// 
+// options:
+//   size (dimension object), default: new dimension(0, 0)
+//   size in pixels
+//
+spacer: function(opts)
+{
+  ui.inherit_control(this, opts);
+  var self = this;
+
+  var init = function()
+  {
+    self.set_default_options({
+      size: new dimension(0, 0)
+    });
+
+    self.transparent(true);
+  };
+
+  self.best_dimension = function()
+  {
+    return self.option("size");
+  }
+
+  init();
+},
 
 // panel with borders (todo: use a panel instead?)
 //

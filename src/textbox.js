@@ -14,7 +14,8 @@ namespace("ui",
 //
 textbox: function(opts)
 {
-  ui.inherit_control(this, opts);
+  ui.inherit_container(this, merge(opts,
+    {layout: new ui.border_layout()}));
   var self = this;
 
   // caret timer
@@ -60,6 +61,9 @@ textbox: function(opts)
   // text buffer
   var text_ = "";
 
+  var hbar_ = new ui.scrollbar();
+  var vbar_ = new ui.scrollbar();
+
 
   var init = function()
   {
@@ -70,8 +74,12 @@ textbox: function(opts)
       selected_text_color: ui.theme.selected_text_color(),
       selected_text_background: ui.theme.selected_text_background(),
       background: new color().white()
-      });
+    });
 
+    hbar_.visible(false);
+    vbar_.visible(false);
+
+    self.needs_focus(true);
     self.cursor("text");
 
     if (self.option("text") != undefined)
@@ -82,8 +90,25 @@ textbox: function(opts)
   //
   self.best_dimension = function()
   {
-    return new dimension(180, g_line_height + self.option("margin")*2);
+    var r = text_rectangle();
+    return new dimension(
+      r.w + self.option("margin")*2,
+      r.h + self.option("margin")*2);
   };
+
+  var text_rectangle = function()
+  {
+    var lines = explode(text_, "\n");
+    var w = 0;
+
+    for (var i in lines)
+    {
+      var line = lines[i];
+      w = Math.max(w, text_dimension(line, self.font()).w);
+    }
+
+    return new rectangle(0, 0, w, lines.length * (g_line_height + g_line_spacing));
+  }
 
 
   self.draw = function(context)
@@ -94,7 +119,7 @@ textbox: function(opts)
     // top-left of the string
     var p = new point(
       self.position().x + self.option("margin"),
-      self.option("margin"));
+      self.position().y + self.option("margin"));
 
     var lines = explode(text_, "\n");
     var s = normalized_selection();
@@ -201,8 +226,7 @@ textbox: function(opts)
     if (!self.is_focused() || !caret_)
       return;
 
-    var p = new point(0, 0);
-      //self.position().x + td.w + self.option("margin"), text_y());
+    var p = new point(self.position().x, self.position().y);
 
     var this_line = "";
     for (var i=0; i<sel_.last; ++i)
@@ -941,6 +965,9 @@ textbox: function(opts)
     
     var x = self.option("margin");
     var y = self.option("margin");
+
+    if (p.y <= y)
+      got_line = true;
 
     for (var i=0; i<text_.length; ++i)
     {

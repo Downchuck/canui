@@ -36,34 +36,23 @@ function require_loaded(image, f)
         p = "naturalWidth";
 
       if (image[p] != 0)
-      {
-        log_message(pretty_image_src(image) + " is working");
         f(true);
-      }
       else
-      {
-        log_message(pretty_image_src(image) + " is broken");
         f(false);
-      }
     };
 
   
   // already loaded
   if (image.src != undefined && image.src != "" && image.complete)
-  {
-    log_message(pretty_image_src(image) + " is already complete");
     cb();
-  }
 
   image.onload = function()
     {
-      log_message(pretty_image_src(image) + " onload");
       cb();
     };
   
   image.onerror = function()
     {
-      log_message(pretty_image_src(image) + " onerror");
       cb();
     };
 }
@@ -167,7 +156,6 @@ function load_image(src, alt, f)
   {
     if (g_image_cache[src].hasOwnProperty("normal"))
     {
-      log_message("using cached image");
       h = g_image_cache[src].normal;
       h.notify();
     }
@@ -175,7 +163,6 @@ function load_image(src, alt, f)
 
   if (h == undefined)
   {
-    log_message("loading new image");
     var i = new Image();
 
     if (alt != undefined)
@@ -463,7 +450,7 @@ function make_rect_path(context, r)
 // gradient when the button is pressed, 'lighter' is used when
 // hovered)
 //
-function fill_3d_rect(context, up, lighter, r)
+function fill_3d_rect(context, up, lighter, r, fill)
 {
   assert(valid_bounds(r));
 
@@ -471,7 +458,9 @@ function fill_3d_rect(context, up, lighter, r)
   var light = new color(0.82, 0.81, 0.78);
   var dark = new color(0.50, 0.50, 0.50);
   var darkest = new color(0.25, 0.25, 0.25);
-  var fill = ui.theme.face_color();
+
+  if (fill == undefined)
+    fill = ui.theme.face_color();
 
   if (!up)
   {
@@ -600,7 +589,7 @@ function draw_image(context, h, r, alpha)
       context.globalAlpha = alpha;
     }
   
-    context.drawImage(i, r.x, r.y);
+    context.drawImage(i, to_int(r.x), to_int(r.y));
   
     if (alpha != 1.0)
       context.restore();
@@ -704,18 +693,12 @@ function create_grayscale(image, f)
     if (g_image_cache.hasOwnProperty(image.src))
     {
       if (g_image_cache[image.src].hasOwnProperty("disabled"))
-      {
-        log_message("using cached grayscale for " + pretty_image_src(image.image()));
         return g_image_cache[image.src].disabled;
-      }
     }
   }
 
   if (!image.working())
-  {
-    log_message("can't create grayscale for " + pretty_image_src(image.image()) + ", returning original");
     return image;
-  }
 
   try
   {
@@ -770,7 +753,6 @@ function create_grayscale(image, f)
 
     g_image_cache[image.image().src].disabled = h;
 
-    log_message("created new grayscale for " + pretty_image_src(image.image()));
     return h;
   }
   catch(e)
@@ -778,10 +760,7 @@ function create_grayscale(image, f)
     // SECURITY_ERR is 1000, but it doesn't seem to be defined
     // anywhere
     if (e.code == 1000)
-    {
-      log_message("error while creating grayscale for " + pretty_image_src(image.image()) + ", returning original");
       return image;
-    }
 
     throw e;
   }

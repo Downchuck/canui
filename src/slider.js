@@ -9,7 +9,7 @@ namespace("ui", {
 //
 slider_thumb: function(parent)
 {
-  ui.inherit_clickable(this,
+  ui.inherit_button(this,
     {caption: "", hover_feedback: false, pressed_feedback: false});
   var self = this;
 

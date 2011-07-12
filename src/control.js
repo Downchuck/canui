@@ -47,6 +47,9 @@ inherit_control: function(self, opts)
   // whether this control and its children is visible or not
   var visible_ = true;
 
+  // whether this control wants focus when clicked
+  var needs_focus_ = false;
+
   // mouse cursor over this control
   var cursor_ = "default";
 
@@ -116,6 +119,16 @@ inherit_control: function(self, opts)
     if (id_ == i)
       return self;
     return undefined;
+  }
+
+  // if b is not undefined, sets whether this control needs focus on
+  // click; any case returns the current state
+  //
+  self.needs_focus = function(b)
+  {
+    if (b != undefined)
+      needs_focus_ = b;
+    return needs_focus_;
   }
 
   // sets this control's cursor when hovered if 'c' is not undefined;

@@ -53,6 +53,9 @@ inherit_clickable: function(self, opts)
   // whether the button is currently pressed (regardless of hovering)
   var pressed_ = false;
 
+  var original_ = false;
+  var captured_ = false;
+
 
   var init = function(opts)
   {
@@ -84,6 +87,11 @@ inherit_clickable: function(self, opts)
     }
 
     return pressed_;
+  }
+
+  self.clickable__transitioning = function()
+  {
+    return captured_;
   }
 
   // make sure the button has enough width so that the rounded
@@ -128,34 +136,15 @@ inherit_clickable: function(self, opts)
       // events will go to the button, not the label
       lb.transparent(true);
     
+      if (label_ != undefined)
+        label_.remove();
+
       label_ = lb;
     
-      self.remove_all();
       self.add(label_, ui.sides.center);
     }
 
     return label_;
-  };
-  
-  // draws a rectangle (reversed when pressed and hovered)
-  //
-  self.clickable__draw = function(context)
-  {
-    var p = false;
-    var h = false;
-
-    if (self.option("toggle"))
-      p = pressed_;
-    else if (pressed_ && hovered_ && self.option("pressed_feedback"))
-      p = true;
-    
-    if (hovered_ && self.option("hover_feedback"))
-      h = true;
-
-    if (!self.option("flat") || hovered_ || pressed_)
-      fill_3d_rect(context, !p, h, self.bounds());
-    
-    self.container__draw(context);
   };
 
   // hook: user released the left mouse button over the control
@@ -197,13 +186,15 @@ inherit_clickable: function(self, opts)
 
     if (self.option("toggle"))
     {
-      self.set_state(true, !pressed_);
+      original_ = pressed_;
     }
     else
     {
       self.set_state(true, true);
-      self.capture_mouse();
     }
+
+    captured_ = true;
+    self.capture_mouse();
 
     self.on_pressed(mp);
 
@@ -217,19 +208,26 @@ inherit_clickable: function(self, opts)
   {
     self.control__on_mouse_left_down(mp);
 
-    if (!self.enabled() || !pressed_)
+    if (!self.enabled() || !captured_)
       return;
 
-    if (!self.option("toggle"))
+    captured_ = false;
+    self.release_mouse();
+    self.on_released(mp);
+
+    if (self.option("toggle"))
     {
-      self.release_mouse();
+      if (hovered_)
+        self.set_state(hovered_, !original_);
+    }
+    else
+    {
       self.set_state(hovered_, false);
-      self.on_released(mp);
 
       if (hovered_)
         self.clicked.fire();
     }
-    
+
     self.redraw();
   };
 
@@ -277,14 +275,6 @@ inherit_clickable: function(self, opts)
   {
     hovered_ = hovered;
     pressed_ = pressed;
-    
-    if (self.option("pressed_feedback"))
-    {
-      if (pressed_ && (hovered_ || self.option("toggle")))
-        self.force_padding(new dimension(1, 1));
-      else
-        self.force_padding(new dimension(0, 0));
-    }
   };
   
   // debug: returns this control's name
@@ -313,6 +303,7 @@ inherit_clickable: function(self, opts)
   self.on_released          = self.clickable__on_released;
   self.on_click             = self.clickable__on_click;
   self.on_dragging          = self.clickable__on_dragging;
+  self.transitioning        = self.clickable__transitioning;
   self.set_state            = self.clickable__set_state;
 
   init(opts);
@@ -320,9 +311,107 @@ inherit_clickable: function(self, opts)
 
 // see inherit_clickable
 //
+inherit_button: function(self, opts)
+{
+  ui.inherit_clickable(self, opts);
+  
+  // draws a rectangle (reversed when pressed and hovered)
+  //
+  self.draw = function(context)
+  {
+    if (self.option("pressed_feedback"))
+    {
+      if (self.pressed() && (self.is_hovered() || self.option("toggle")))
+        self.force_padding(new dimension(1, 1));
+      else
+        self.force_padding(new dimension(0, 0));
+    }
+
+    var p = false;
+    var h = false;
+
+    if (self.option("toggle"))
+      p = self.pressed();
+    else if (self.pressed() && self.is_hovered() && self.option("pressed_feedback"))
+      p = true;
+    
+    if (self.is_hovered() && self.option("hover_feedback"))
+      h = true;
+
+    if (!self.option("flat") || self.is_hovered() || self.pressed())
+      fill_3d_rect(context, !p, h, self.bounds());
+    
+    self.container__draw(context);
+  };
+},
+
 button: function(opts)
 {
-  ui.inherit_clickable(this, opts);
+  ui.inherit_button(this, opts);
+},
+
+// options:
+// padding (positive integer), default: 5
+// space between the checkbox and the label
+//
+checkbox: function(opts)
+{
+  ui.inherit_clickable(this, merge(opts, {toggle: true}));
+  var self = this;
+
+  var image_ = undefined;
+
+  var init = function()
+  {
+    image_ = load_image(
+      image_dir() + "/check.png", "x", mem_fun('redraw', self));
+
+    self.add(new ui.spacer(
+      {size: new dimension(
+        ui.system_options.checkbox_size,
+        ui.system_options.checkbox_size)}),
+      ui.sides.left);
+  };
+  
+  // forwards to clickable__pressed
+  //
+  self.checked = function(b)
+  {
+    return self.clickable_pressed(b);
+  };
+
+  self.draw = function(context)
+  {
+    var p = false;
+    var h = false;
+
+    var f = new color().white();
+    if (self.transitioning() && self.is_hovered())
+      f = ui.theme.face_color();
+
+    var r = self.bounds();
+    r = new rectangle(
+      r.x, r.y + r.h/2 - ui.system_options.checkbox_size/2,
+      ui.system_options.checkbox_size,
+      ui.system_options.checkbox_size);
+
+    fill_3d_rect(context, false, false, r, f);
+
+    if (self.pressed())
+    {
+      var ir = new rectangle(
+        r.x + r.w/2 - image_.width()/2,
+        r.y + r.h/2 - image_.height()/2,
+        image_.width(),
+        image_.height());
+
+      draw_image(context, image_, ir);
+    }
+    
+    self.container__draw(context);
+  };
+
+  init();
 }
 
 });   // namespace ui

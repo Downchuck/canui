@@ -10,7 +10,7 @@ namespace("ui", {
 //
 scroll_button: function(opts)
 {
-  ui.inherit_clickable(this, opts);
+  ui.inherit_button(this, opts);
   var self = this;
 
   // fired then the button is clicked or held down
