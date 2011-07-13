@@ -347,18 +347,20 @@ inherit_combobox: function(self, opts)
   var init = function()
   {
     self.set_default_options({
-      dropstyle: "list"
+      dropstyle: "edit"
     });
 
     self.borders({all: 1});
 
-    var i = new ui.image({image:
-      load_image("down.png", "v")});
+    var i = new ui.image({image: load_image("down.png", "v")});
     drop_.label(i);
     drop_.down.add(on_drop);
 
     text_.minimum_size(new dimension(10, 1));
-    text_.option("unresponsive", true);
+
+    if (self.option("dropstyle") == "list")
+      text_.option("unresponsive", true);
+
     text_.borders({all: 0});
 
     self.add(text_, ui.sides.center);
@@ -390,6 +392,8 @@ inherit_combobox: function(self, opts)
     assert(s.length != 0);
 
     text_.text(s[0].caption(0));
+    text_.select_all();
+    text_.focus();
   }
 
   self.close = function()

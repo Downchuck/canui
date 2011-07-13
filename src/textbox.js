@@ -216,7 +216,7 @@ inherit_textbox: function(self, opts)
 
         var sr = new rectangle(
           p.x + before_w, p.y,
-          sel_w, g_line_height + g_line_spacing);
+          sel_w + 1, g_line_height + g_line_spacing);
 
         if (last - first > 0)
         {
@@ -295,8 +295,12 @@ inherit_textbox: function(self, opts)
 
     p.x += self.option("margin");
     p.y += self.option("margin");
-    
-    draw_line(context, new color().black(), new rectangle(
+
+    var c = new color().black();
+    if (sel_.last != sel_.first)
+      c = new color(0.95, 0.85, 0.58);
+
+    draw_line(context, c, new rectangle(
       p.x, p.y, 1, g_line_height));
   }
 
@@ -325,11 +329,11 @@ inherit_textbox: function(self, opts)
     self.redraw();
   };
 
-  // selects all the characters; the caret is put at the beginning
+  // selects all the characters; the caret is put at the end
   //
   self.textbox__select_all = function()
   {
-    self.selection(text_.length, 0);
+    self.selection(0, text_.length);
   }
 
   // returns the selection where 'first' is always lower than 'last'

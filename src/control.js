@@ -361,7 +361,21 @@ inherit_control: function(self, opts)
     
     return false;
   }
-  
+
+  // gives focus to this control
+  //
+  self.control__focus = function()
+  {
+    if (!self.internal_parent)
+      return;
+
+    var r = self.get_root_panel();
+    if (r == undefined)
+      return;
+
+    r.set_focus(self);
+  }
+    
   // marks this control as dirty
   //
   self.control__redraw = function()
@@ -894,6 +908,7 @@ inherit_control: function(self, opts)
   self.remove               = self.control__remove;
   self.is_hovered           = self.control__is_hovered;
   self.is_focused           = self.control__is_focused;
+  self.focus                = self.control__focus;
   self.children_count       = self.control__children_count;
   self.has_child            = self.control__has_child;
   self.trigger_detached     = self.control__trigger_detached;
