@@ -61,6 +61,9 @@ textbox: function(opts)
   // text buffer
   var text_ = "";
 
+  // minimum size in characters
+  var minimum_ = new dimension(0, 0);
+
   var hbar_ = new ui.scrollbar();
   var vbar_ = new ui.scrollbar();
 
@@ -86,11 +89,34 @@ textbox: function(opts)
       self.text(self.option("text"));
   };
 
+  // if 'd' is not undefined, sets the minimum size (best dimension)
+  // in characters and lines of this textbox; in any case, returns
+  // the current minimum size
+  //
+  self.minimum_size = function(d)
+  {
+    if (d != undefined)
+    {
+      minimum_ = d;
+      self.relayout();
+    }
+
+    return minimum_;
+  }
+
   // todo
   //
   self.best_dimension = function()
   {
     var r = text_rectangle();
+
+    var m = new dimension(
+      text_dimension("W", self.font()).w * minimum_.w,
+      (g_line_height + g_line_spacing) * minimum_.h);
+
+    r.w = Math.max(r.w, m.w);
+    r.h = Math.max(r.h, m.h);
+
     return new dimension(
       r.w + self.option("margin")*2,
       r.h + self.option("margin")*2);
@@ -135,16 +161,18 @@ textbox: function(opts)
       else if (in_selection && s.last < count)
         in_selection = false;
 
-      if (in_selection)
+      if (s.first != s.last && in_selection)
       {
         var first = Math.max(0, s.first - count);
         var last = Math.min(line.length, s.last - count);
 
-        var before_w = text_dimension(
-          line.substring(0, first), self.font()).w
+        var before = line.substring(0, first);
+        var sel = line.substring(first, last);
+        var after = line.substring(last);
 
-        var sel_w = text_dimension(
-          line.substring(first, last), self.font()).w;
+        var before_w = text_dimension(before, self.font()).w
+        var sel_w = text_dimension(sel, self.font()).w;
+        var after_w = text_dimension(after, self.font()).w;
 
         var sr = new rectangle(
           p.x + before_w, p.y,
@@ -155,56 +183,37 @@ textbox: function(opts)
           fill_rect(
             context, self.option("selected_text_background"), sr);
         }
-      }
 
-      draw_text(
-        context, line, new color().black(),
-        new rectangle(
-          p.x, p.y,
-          self.width() - self.option("margin")*2,
-          g_line_height),
-        self.font()); 
+        draw_text(
+          context, before, new color().black(),
+          new rectangle(p.x, p.y, before_w, g_line_height),
+          self.font());
+
+        draw_text(
+          context, sel, new color().white(),
+          new rectangle(p.x + before_w, p.y, sel_w, g_line_height),
+          self.font());
+
+        draw_text(
+          context, after, new color().black(),
+          new rectangle(
+            p.x + before_w + sel_w, p.y, after_w, g_line_height),
+          self.font());
+      }
+      else
+      {
+        draw_text(
+          context, line, new color().black(),
+          new rectangle(
+            p.x, p.y,
+            self.width() - self.option("margin")*2,
+            g_line_height),
+          self.font()); 
+      }
 
       count += line.length + 1;
       p.y += g_line_height + g_line_spacing;
     }
-
-/*    }
-    else
-    {
-
-      var t1 = text_.substring(0, s.first);
-      var t2 = text_.substring(s.first, s.last);
-      var t3 = text_.substring(s.last);
-
-      var w1 = text_dimension(t1, self.font()).w;
-      var w2 = text_dimension(t2, self.font()).w;
-
-      var p1 = p;
-      var p2 = new point(p1.x + w1, p1.y);
-      var p3 = new point(p2.x + w2, p1.y);
-
-      draw_text(
-        context, t1, self.option("text_color"),
-        new rectangle(
-          p1.x, p1.y, self.width() - self.option("margin")*2, g_line_height),
-      self.font()); 
-      
-
-      draw_text(
-        context, t2, self.option("selected_text_color"),
-        new rectangle(
-          p2.x, p2.y,
-          self.width() - self.option("margin")*2 - w1, g_line_height),
-      self.font()); 
-
-      draw_text(
-        context, t3, self.option("text_color"),
-        new rectangle(
-          p3.x, p3.y,
-          self.width() - self.option("margin")*2 - w2 - w1, g_line_height),
-      self.font()); 
-    }*/
 
     draw_caret(context);
   };

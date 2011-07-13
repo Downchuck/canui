@@ -142,13 +142,10 @@ function image_holder(i, f)
   init(i, f);
 }
 
-// creates an Image element, sets the source to the given path and
-// calls require_loaded with the given function (if any).
+// same as load_image(), but uses 'src' verbatim instead of adjusting
+// it for image_dir()
 //
-// this will also cache the image internally; the cached version will
-// be returned if present.
-//
-function load_image(src, alt, f)
+function load_external_image(src, alt, f)
 {
   var h = undefined;
 
@@ -178,6 +175,19 @@ function load_image(src, alt, f)
   }
 
   return h;
+}
+
+// creates an Image element, sets the source to the given path (using
+// image_dir()) and calls require_loaded with the given function (if
+// any).
+//
+// this will also cache the image internally; the cached version will
+// be returned if present.
+//
+function load_image(src, alt, f)
+{
+  return load_external_image(image_dir() + "/" + src, alt, f);
+
 }
 
 // rgba color, all between 0.0 and 1.0. Predefined colors can used

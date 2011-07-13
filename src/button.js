@@ -349,7 +349,7 @@ checkbox: function(opts)
   var init = function()
   {
     image_ = load_image(
-      image_dir() + "/check.png", "x", mem_fun('redraw', self));
+      "check.png", "x", mem_fun('redraw', self));
 
     self.add(new ui.spacer(
       {size: new dimension(

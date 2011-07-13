@@ -28,12 +28,10 @@ menu_button: function(parent, caption)
        arrow_margin: 7});
 
     arrow_.normal = load_image(
-      image_dir() + "/right.png", ">",
-      mem_fun('relayout', self));
+      "right.png", ">", mem_fun('relayout', self));
 
     arrow_.hovered = load_image(
-      image_dir() + "/right-white.png", ">",
-      mem_fun('relayout', self));
+      "right-white.png", ">", mem_fun('relayout', self));
   };
 
   self.active = function(b)

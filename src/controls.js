@@ -283,6 +283,34 @@ link: function(opts)
   }
 
   init();
+},
+
+inherit_combobox: function(self, opts)
+{
+  ui.inherit_container(self, merge(opts,
+    {layout: new ui.border_layout()}));
+  
+  var text_ = new ui.textbox();
+  var drop_ = new ui.button();
+
+  var init = function()
+  {
+    var i = new ui.image({image:
+      load_image("down.png", "v")});
+    drop_.label(i);
+
+    text_.minimum_size(new dimension(10, 1));
+
+    self.add(text_, ui.sides.center);
+    self.add(drop_, ui.sides.right);
+  };
+
+  init();
+},
+
+combobox: function(opts)
+{
+  ui.inherit_combobox(this, opts);
 }
 
 });   // namespace ui
