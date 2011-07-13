@@ -12,6 +12,27 @@ namespace("ui",
 // text (string), default: ""
 //   initial value
 //
+// margin (positive integer), default: 2
+//   space on either side of the text
+//
+// text_color (color object), default: ui.theme.text_color()
+//   color of the text
+//
+// background (color object), default: new color().white()
+//   color of the text background
+//
+// selected_text_color (color object),
+// default: ui.theme.selected_text_color()
+//   color of the selected text
+//
+// selected_text_background (color object),
+// default: ui.theme.selected_text_background()
+//   color of the selected text background
+//
+// unresponsive (true/false), default: false
+//   when true, the textbox behaves like a label but does not change
+//   its appearance (in contrast with being disabled)
+//
 inherit_textbox: function(self, opts)
 {
   ui.inherit_container(self, merge(opts,
@@ -73,9 +94,10 @@ inherit_textbox: function(self, opts)
       text: "",
       margin: 2,
       text_color: ui.theme.text_color(),
+      background: new color().white(),
       selected_text_color: ui.theme.selected_text_color(),
       selected_text_background: ui.theme.selected_text_background(),
-      background: new color().white()
+      unresponsive: false
     });
 
     self.borders({all: 1});
@@ -84,12 +106,27 @@ inherit_textbox: function(self, opts)
     vbar_.visible(false);
 
     self.needs_focus(true);
-    self.cursor("text");
+
+    if (!self.option("unresponsive"))
+      self.cursor("text");
 
     if (self.option("text") != undefined)
       self.text(self.option("text"));
   };
 
+  self.option = function(n, v)
+  {
+    if (n == "unresponsive" && v != undefined)
+    {
+      if (v)
+        self.cursor("default");
+      else
+        self.cursor("text");
+    }
+
+    return self.control__option(n, v);
+  };
+  
   // if 'd' is not undefined, sets the minimum size (best dimension)
   // in characters and lines of this textbox; in any case, returns
   // the current minimum size
@@ -163,7 +200,8 @@ inherit_textbox: function(self, opts)
       else if (in_selection && s.last < count)
         in_selection = false;
 
-      if (s.first != s.last && in_selection)
+      if (s.first != s.last && in_selection &&
+          !self.option("unresponsive"))
       {
         var first = Math.max(0, s.first - count);
         var last = Math.min(line.length, s.last - count);
@@ -511,9 +549,10 @@ inherit_textbox: function(self, opts)
   //
   self.textbox__on_keydown = function(code)
   {
-    var rp = self.get_root_panel();
+    if (self.option("unresponsive") || !self.enabled())
+      return;
 
-    //console.log("keydown: " + code);
+    var rp = self.get_root_panel();
 
     switch (code)
     {
@@ -700,6 +739,9 @@ inherit_textbox: function(self, opts)
   //
   self.textbox__on_keypress = function(code)
   {
+    if (self.option("unresponsive") || !self.enabled())
+      return;
+
     if (code == 0 || contains(ui.key_codes, code))
       return true;
 
@@ -743,6 +785,9 @@ inherit_textbox: function(self, opts)
   self.textbox__on_mouse_left_down = function(mp)
   {
     self.control__on_mouse_left_down(mp);
+
+    if (self.option("unresponsive") || !self.enabled())
+      return;
 
     var now = new Date().getTime();
 
@@ -802,6 +847,9 @@ inherit_textbox: function(self, opts)
   self.textbox__on_mouse_left_up = function(mp)
   {
     self.control__on_mouse_left_up(mp);
+
+    if (self.option("unresponsive") || !self.enabled())
+      return;
 
     if (selecting_char_)
       stop_char_selection();
@@ -916,6 +964,9 @@ inherit_textbox: function(self, opts)
   {
     self.control__on_mouse_move(mp);
 
+    if (self.option("unresponsive") || !self.enabled())
+      return;
+
     var i = self.index_from_point(mp);
 
     if (selecting_char_)
@@ -1025,6 +1076,9 @@ inherit_textbox: function(self, opts)
   {
     hide_caret();
 
+    if (self.option("unresponsive") || !self.enabled())
+      return;
+
     caret_timer_ = setInterval(on_caret_timer, 500);
     caret_ = true;
     self.redraw();
@@ -1047,6 +1101,9 @@ inherit_textbox: function(self, opts)
   //
   self.textbox__on_focus = function(other)
   {
+    if (self.option("unresponsive") || !self.enabled())
+      return;
+
     show_caret();
   };
 
@@ -1054,6 +1111,9 @@ inherit_textbox: function(self, opts)
   //
   self.textbox__on_blur = function(other)
   {
+    if (self.option("unresponsive") || !self.enabled())
+      return;
+
     hide_caret();
     self.selection(sel_.last);
   }

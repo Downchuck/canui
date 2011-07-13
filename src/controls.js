@@ -306,12 +306,37 @@ cb_panel: function(cb, list, opts)
   };
 },
 
+cb_text: function(cb, opts)
+{
+  ui.inherit_textbox(this, opts);
+  var self = this;
+
+  var cb_ = cb;
+
+  self.on_mouse_left_down = function(mp)
+  {
+    if (self.option("unresponsive"))
+    {
+      cb_.open();
+      return true;
+    }
+    else
+    {
+      return self.textbox__on_mouse_left_down(mp);
+    }
+  }
+},
+
+// options:
+//   dropstyle (edit, list), default: list
+//     if 'edit', the textbox is editable
+//
 inherit_combobox: function(self, opts)
 {
   ui.inherit_container(self, merge(opts,
     {layout: new ui.border_layout({margin: 1})}));
   
-  var text_ = new ui.textbox();
+  var text_ = new ui.cb_text(self);
   var drop_ = new ui.button({toggle: true, fast: true});
   var list_ = new ui.list({
     show_header: false, track: true, padding: 2,
@@ -321,6 +346,10 @@ inherit_combobox: function(self, opts)
 
   var init = function()
   {
+    self.set_default_options({
+      dropstyle: "list"
+    });
+
     self.borders({all: 1});
 
     var i = new ui.image({image:
@@ -328,12 +357,12 @@ inherit_combobox: function(self, opts)
     drop_.label(i);
     drop_.down.add(on_drop);
 
-    text_.borders({all: 0});
     text_.minimum_size(new dimension(10, 1));
+    text_.option("unresponsive", true);
+    text_.borders({all: 0});
 
     self.add(text_, ui.sides.center);
     self.add(drop_, ui.sides.right);
-
     panel_.add(list_, ui.sides.center);
     
     list_.add_column("");
@@ -348,14 +377,14 @@ inherit_combobox: function(self, opts)
   var on_drop = function()
   {
     if (panel_.parent() != undefined)
-      close();
+      self.close();
     else
-      open();
+      self.open();
   };
 
   var on_selection = function()
   {
-    close();
+    self.close();
 
     var s = list_.selection();
     assert(s.length != 0);
@@ -363,7 +392,7 @@ inherit_combobox: function(self, opts)
     text_.text(s[0].caption(0));
   }
 
-  var close = function()
+  self.close = function()
   {
     assert(panel_.parent() != undefined);
     
@@ -371,7 +400,7 @@ inherit_combobox: function(self, opts)
     panel_.remove();
   };
 
-  var open = function()
+  self.open = function()
   {
     assert(panel_.parent() == undefined);
 
