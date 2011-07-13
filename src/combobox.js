@@ -42,6 +42,17 @@ cb_text: function(cb, opts)
       return self.textbox__on_mouse_left_down(mp);
     }
   }
+
+  self.on_double_click = function(mp)
+  {
+    if (self.option("unresponsive"))
+    {
+      cb_.focus();
+      return true;
+    }
+
+    return self.textbox__on_mouse_double_click(mp);
+  };
 },
 
 // options:
@@ -95,13 +106,14 @@ inherit_combobox: function(self, opts)
     panel_.add(list_, ui.sides.center);
     
     list_.add_column("");
-    list_.add_item(["test1"]);
-    list_.add_item(["test2"]);
-    list_.add_item(["test3"]);
-    list_.add_item(["test4"]);
 
     list_.on_item_clicked.add(on_selection);
   };
+
+  self.add_item = function(s)
+  {
+    list_.add_item([s]);
+  }
 
   self.select = function(i)
   {
