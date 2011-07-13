@@ -12,6 +12,9 @@ namespace("ui",
 // text (string), default: ""
 //   initial value
 //
+// multiline (true/false), default: false
+//   whether multiple lines are allowed
+//
 // margin (positive integer), default: 2
 //   space on either side of the text
 //
@@ -101,6 +104,7 @@ inherit_textbox: function(self, opts)
     self.set_default_options({
       text: "",
       margin: 2,
+      multiline: false,
       text_color: ui.theme.text_color(),
       background: new color().white(),
       selected_text_color: ui.theme.selected_text_color(),
@@ -156,9 +160,13 @@ inherit_textbox: function(self, opts)
   {
     var r = text_rectangle();
 
+    var mh = g_line_height;
+    if (self.option("multiline"))
+      mh += g_line_spacing;
+
     var m = new dimension(
       text_dimension("W", self.font()).w * minimum_.w,
-      (g_line_height + g_line_spacing) * minimum_.h);
+      mh * minimum_.h);
 
     r.w = Math.max(r.w, m.w);
     r.h = Math.max(r.h, m.h);
@@ -179,10 +187,15 @@ inherit_textbox: function(self, opts)
       w = Math.max(w, text_dimension(line, self.font()).w);
     }
 
-    return new rectangle(0, 0, w, lines.length * (g_line_height + g_line_spacing));
+    var h = g_line_height;
+    if (self.option("multiline"))
+      h += g_line_spacing;
+
+    return new rectangle(0, 0, w, lines.length * h);
   }
 
-
+  //
+  //
   self.textbox__draw = function(context)
   {
     // todo: this is a larger problem: borders are often not taken
@@ -224,7 +237,10 @@ inherit_textbox: function(self, opts)
 
         var sr = new rectangle(
           p.x + before_w, p.y,
-          sel_w + 1, g_line_height + g_line_spacing);
+          sel_w + 1, g_line_height);
+          
+        if (self.option("multiline"))
+          sr.h += g_line_spacing;
 
         if (last - first > 0)
         {
@@ -795,7 +811,12 @@ inherit_textbox: function(self, opts)
 
       case ui.key_codes.enter:
       {
-        change_replace("\n", {first: sel_.first + 1, last: undefined});
+        if (self.option("multiline"))
+        {
+          change_replace("\n",
+            {first: sel_.first + 1, last: undefined});
+        }
+
         break;
       }
     }
