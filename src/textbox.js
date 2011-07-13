@@ -147,7 +147,7 @@ textbox: function(opts)
           line.substring(first, last), self.font()).w;
 
         var sr = new rectangle(
-          self.option("margin") + before_w, p.y,
+          p.x + before_w, p.y,
           sel_w, g_line_height + g_line_spacing);
 
         if (last - first > 0)
@@ -242,7 +242,7 @@ textbox: function(opts)
       }
     }
 
-    p.x = text_dimension(this_line, self.font()).w;
+    p.x += text_dimension(this_line, self.font()).w;
 
     p.x += self.option("margin");
     p.y += self.option("margin");
