@@ -61,6 +61,9 @@ inherit_combobox: function(self, opts)
     });
   var panel_ = new ui.cb_panel(self, list_);
 
+  var completing_ = false;
+  var last_text_ = "";
+
   var init = function()
   {
     self.set_default_options({
@@ -74,6 +77,7 @@ inherit_combobox: function(self, opts)
     drop_.down.add(on_drop);
 
     text_.minimum_size(new dimension(10, 1));
+    text_.changed.add(on_text_changed);
 
     if (self.option("dropstyle") == "list")
       text_.option("unresponsive", true);
@@ -111,7 +115,43 @@ inherit_combobox: function(self, opts)
     text_.text(s[0].caption(0));
     text_.select_all();
     text_.focus();
-  }
+  };
+
+  var on_text_changed = function()
+  {
+    assert(self.option("dropstyle"));
+
+    if (completing_)
+      return;
+
+    var s = text_.selection();
+    var t = text_.text();
+
+    if (s.first == s.last)
+    {
+      if (s.first == t.length && t.length > last_text_.length)
+      {
+        for (var i=0; i<list_.items().length; ++i)
+        {
+          var item = list_.items()[i];
+
+          if (starts_with(item.caption(0), t))
+          {
+            completing_ = true;
+            
+            text_.text(item.caption(0));
+            text_.selection(text_.text().length, s.first);
+
+            completing_ = false;
+
+            break;
+          }
+        }
+      }
+    }
+
+    last_text_ = t;
+  };
 
   self.close = function()
   {

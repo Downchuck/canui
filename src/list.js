@@ -403,6 +403,13 @@ list: function(opts)
       update();
   };
 
+  // returns an array of list_item objects
+  //
+  self.items = function()
+  {
+    return items_;
+  }
+
   self.frozen = function(b)
   {
     var needs_update = false;

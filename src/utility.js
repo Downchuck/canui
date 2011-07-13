@@ -263,6 +263,19 @@ function explode(s, sep)
   return r;
 }
 
+// returns whether 's' starts with 'w')
+//
+function starts_with(s, w)
+{
+  if (w.length > s.length)
+    return false;
+
+  if (s.substring(0, w.length) == w)
+    return true;
+
+  return false;
+}
+
 // where o and values are arrays, sets the elements in 'o' if the
 // index from 'values' does not exist
 //

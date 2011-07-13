@@ -38,6 +38,14 @@ inherit_textbox: function(self, opts)
   ui.inherit_container(self, merge(opts,
     {layout: new ui.border_layout()}));
 
+
+  // fired when the content changes
+  self.changed = new signal();
+
+  // fired when the selection changes
+  self.selection_changed = new signal();
+
+
   // caret timer
   var caret_timer_ = undefined;
 
@@ -304,36 +312,33 @@ inherit_textbox: function(self, opts)
       p.x, p.y, 1, g_line_height));
   }
 
-  // selects the given range (clamped to [0, text().length]); if
-  // last is undefined or the same as first, this sets the caret to
-  // the given position. note that the caret will always be at
-  // 'last', even if it is lower than 'first'
+  // if first is not undefined, selects the given range (clamped to
+  // [0, text().length]); if first is not undefined and last is
+  // undefined or the same as first, this sets the caret to the given
+  // position. note that the caret will always be at 'last', even if
+  // it is lower than 'first'
+  //
+  // in any case, returns the current selection as an object
+  // {first: n, last: n}
   //
   self.textbox__selection = function(first, last)
   {
-    assert(first != undefined);
-
-    if (last == undefined)
-      last = first;
-
-    first = clamp(first, 0, text_.length);
-    last = clamp(last, 0, text_.length);
-
-    if (first != sel_.first || last != sel_.last)
+    if (first != undefined)
     {
-      sel_.first = first;
-      sel_.last = last;
+      if (last == undefined)
+        last = first;
+
+      change(undefined, {first: first, last: last});
     }
 
-    show_caret();
-    self.redraw();
+    return {first: sel_.first, last: sel_.last};
   };
 
   // selects all the characters; the caret is put at the end
   //
   self.textbox__select_all = function()
   {
-    self.selection(0, text_.length);
+    change(undefined, {first: 0, last: text_.length});
   }
 
   // returns the selection where 'first' is always lower than 'last'
@@ -352,11 +357,7 @@ inherit_textbox: function(self, opts)
   //
   self.textbox__replace_selection = function(t)
   {
-    var s = normalized_selection();
-    self.text(
-      text_.substring(0, s.first) + t + text_.substring(s.last));
-
-    self.selection(s.first);
+    change_replace(t);
   }
 
   // if 's' is not undefined, sets the text in the textbox; in any
@@ -365,20 +366,67 @@ inherit_textbox: function(self, opts)
   self.textbox__text = function(s)
   {
     if (s != undefined)
-    {
-      if (text_ != s)
-      {
-        text_ = "" + s;
-
-        // reclamp selection
-        self.selection(sel_.first, sel_.second);
-
-        self.redraw();
-      }
-    }
+      change(s, undefined);
 
     return text_;
   }
+
+  var change_replace = function(new_text, new_sel)
+  {
+    var s = normalized_selection();
+    var t = text_.substring(0, s.first) + new_text + text_.substring(s.last);
+
+    if (new_sel != undefined)
+      s = {first: new_sel.first, last: new_sel.last};
+
+    change(t, s);
+  }
+
+  var change = function(new_text, new_sel)
+  {
+    var text_changed = false;
+    var selection_changed = false;
+
+    if (new_text != undefined)
+    {
+      text_ = "" + new_text;
+      text_changed = true;
+    }
+
+    if (new_sel != undefined)
+    {
+      assert(new_sel.first != undefined);
+
+      if (new_sel.last == undefined)
+        new_sel.last = new_sel.first;
+
+      new_sel.first = clamp(new_sel.first, 0, text_.length);
+      new_sel.last = clamp(new_sel.last, 0, text_.length);
+
+      if (new_sel.first != sel_.first || new_sel.last != sel_.last)
+      {
+        sel_.first = new_sel.first;
+        sel_.last = new_sel.last;
+
+        selection_changed = true;
+
+      }
+    }
+
+    if (text_changed)
+    {
+      self.changed.fire();
+      self.redraw();
+    }
+
+    if (selection_changed)
+    {
+      show_caret();
+      self.redraw();
+
+      self.selection_changed.fire();
+    }
+  };
 
   // forwards to text()
   //
@@ -392,7 +440,7 @@ inherit_textbox: function(self, opts)
   self.textbox__append = function(s)
   {
     assert(s != undefined);
-    self.text(text_ + s);
+    change(text_ + s, undefined);
   }
 
   // returns the index of the start of the word under the caret; if
@@ -567,22 +615,30 @@ inherit_textbox: function(self, opts)
           var p = self.previous_word();
 
           if (rp.key_state(ui.key_codes.shift))
-            self.selection(sel_.first, p);
+            change(undefined, {first: sel_.first, last: p});
           else
-            self.selection(p);
+            change(undefined, {first: p, last: p});
         }
         else
         {
           if (rp.key_state(ui.key_codes.shift))
           {
-            self.selection(sel_.first, sel_.last - 1);
+            change(undefined,
+              {first: sel_.first, last: sel_.last - 1});
           }
           else
           {
             if (sel_.first == sel_.last)
-              self.selection(sel_.first-1);
+            {
+              change(undefined,
+                {first: sel_.first-1, last: undefined});
+            }
             else
-              self.selection(Math.min(sel_.first, sel_.last));
+            {
+              change(undefined,
+                {first: Math.min(sel_.first, sel_.last),
+                 last: undefined});
+            }
           }
         }
 
@@ -596,22 +652,30 @@ inherit_textbox: function(self, opts)
           var p = self.next_word();
 
           if (rp.key_state(ui.key_codes.shift))
-            self.selection(sel_.first, p);
+            change(undefined, {first: sel_.first, last: p});
           else
-            self.selection(p);
+            change(undefined, {first: p, last: p});
         }
         else
         {
           if (rp.key_state(ui.key_codes.shift))
           {
-            self.selection(sel_.first, sel_.last + 1);
+            change(undefined,
+              {first: sel_.first, last: sel_.last + 1});
           }
           else
           {
             if (sel_.first == sel_.last)
-              self.selection(sel_.first+1);
+            {
+              change(undefined,
+                {first: sel_.first+1, last: undefined});
+            }
             else
-              self.selection(Math.max(sel_.first, sel_.last));
+            {
+              change(undefined,
+                {first: Math.max(sel_.first, sel_.last),
+                 last: undefined});
+            }
           }
         }
 
@@ -629,14 +693,14 @@ inherit_textbox: function(self, opts)
           if (rp.key_state(ui.key_codes.shift))
           {
             var p = previous_line_same_column(sel_.last);
-            self.selection(sel_.first, p);
+            change(undefined, {first: sel_.first, last: p});
           }
           else
           {
             var s = Math.min(sel_.first, sel_.last);
             var p = previous_line_same_column(s);
 
-            self.selection(p);
+            change(undefined, {first: p, last: p});
           }
         }
         
@@ -654,14 +718,14 @@ inherit_textbox: function(self, opts)
           if (rp.key_state(ui.key_codes.shift))
           {
             var p = next_line_same_column(sel_.last);
-            self.selection(sel_.first, p);
+            change(undefined, {first: sel_.first, last: p});
           }
           else
           {
             var s = Math.max(sel_.first, sel_.last);
             var p = next_line_same_column(s);
 
-            self.selection(p);
+            change(undefined, {first: p, last: p});
           }
         }
 
@@ -673,9 +737,9 @@ inherit_textbox: function(self, opts)
         var p = line_for_index(sel_.first);
 
         if (rp.key_state(ui.key_codes.shift))
-          self.selection(sel_.first, p);
+          change(undefined, {first: sel_.first, last: p});
         else
-          self.selection(p);
+          change(undefined, {first: p, last: p});
 
         return true;
       }
@@ -688,9 +752,9 @@ inherit_textbox: function(self, opts)
           --p;
 
         if (rp.key_state(ui.key_codes.shift))
-          self.selection(sel_.first, p);
+          change(undefined, {first: sel_.first, last: p});
         else
-          self.selection(p);
+          change(undefined, {first: p, last: p});
 
         return true;
       }
@@ -701,13 +765,13 @@ inherit_textbox: function(self, opts)
 
         if (s.first != s.last)
         {
-          self.replace_selection("");
+          change_replace("");
         }
         else if (sel_.first > 0)
         {
-          self.text(
-            text_.substr(0, s.first-1) + text_.substr(s.first));
-          self.selection(s.first-1);
+          change(
+            text_.substr(0, s.first-1) + text_.substr(s.first),
+            {first: s.first-1, last: undefined});
         }
 
         return true;
@@ -717,12 +781,13 @@ inherit_textbox: function(self, opts)
       {
         if (sel_.first != sel_.last)
         {
-          self.replace_selection("");
+          change_replace("");
         }
         else if (sel_.first < text_.length)
         {
-          self.text(
-            text_.substr(0, sel_.first) + text_.substr(sel_.first+1));
+          change(
+            text_.substr(0, sel_.first) + text_.substr(sel_.first+1),
+            undefined);
         }
 
         return true;
@@ -730,8 +795,7 @@ inherit_textbox: function(self, opts)
 
       case ui.key_codes.enter:
       {
-        self.replace_selection("\n");
-        self.selection(sel_.first + 1);
+        change_replace("\n", {first: sel_.first + 1, last: undefined});
         break;
       }
     }
@@ -776,10 +840,7 @@ inherit_textbox: function(self, opts)
       return true;
     }
 
-    self.replace_selection(c);
-    self.selection(sel_.first + 1);
-
-    self.redraw();
+    change_replace(c, {first: sel_.first + 1, last: undefined});
 
     return true;
   }

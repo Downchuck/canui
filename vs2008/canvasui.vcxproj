@@ -66,6 +66,7 @@
     <None Include="..\examples\test.html" />
     <None Include="..\libs\jquery.mousewheel.min.js" />
     <None Include="..\src\button.js" />
+    <None Include="..\src\combobox.js" />
     <None Include="..\src\container.js" />
     <None Include="..\src\control.js" />
     <None Include="..\src\controls.js" />
