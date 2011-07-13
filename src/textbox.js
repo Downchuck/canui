@@ -12,11 +12,10 @@ namespace("ui",
 // text (string), default: ""
 //   initial value
 //
-textbox: function(opts)
+inherit_textbox: function(self, opts)
 {
-  ui.inherit_container(this, merge(opts,
+  ui.inherit_container(self, merge(opts,
     {layout: new ui.border_layout()}));
-  var self = this;
 
   // caret timer
   var caret_timer_ = undefined;
@@ -95,7 +94,7 @@ textbox: function(opts)
   // in characters and lines of this textbox; in any case, returns
   // the current minimum size
   //
-  self.minimum_size = function(d)
+  self.textbox__minimum_size = function(d)
   {
     if (d != undefined)
     {
@@ -108,7 +107,7 @@ textbox: function(opts)
 
   // todo
   //
-  self.best_dimension = function()
+  self.textbox__best_dimension = function()
   {
     var r = text_rectangle();
 
@@ -139,7 +138,7 @@ textbox: function(opts)
   }
 
 
-  self.draw = function(context)
+  self.textbox__draw = function(context)
   {
     // todo: this is a larger problem: borders are often not taken
     // into account, needs a more generic way
@@ -268,7 +267,7 @@ textbox: function(opts)
   // the given position. note that the caret will always be at
   // 'last', even if it is lower than 'first'
   //
-  self.selection = function(first, last)
+  self.textbox__selection = function(first, last)
   {
     assert(first != undefined);
 
@@ -290,7 +289,7 @@ textbox: function(opts)
 
   // selects all the characters; the caret is put at the beginning
   //
-  self.select_all = function()
+  self.textbox__select_all = function()
   {
     self.selection(text_.length, 0);
   }
@@ -309,7 +308,7 @@ textbox: function(opts)
   // selection, inserts the given text at the caret position. this
   // leaves the caret at its lowest position
   //
-  self.replace_selection = function(t)
+  self.textbox__replace_selection = function(t)
   {
     var s = normalized_selection();
     self.text(
@@ -321,7 +320,7 @@ textbox: function(opts)
   // if 's' is not undefined, sets the text in the textbox; in any
   // case returns the current text
   //
-  self.text = function(s)
+  self.textbox__text = function(s)
   {
     if (s != undefined)
     {
@@ -341,14 +340,14 @@ textbox: function(opts)
 
   // forwards to text()
   //
-  self.caption = function(s)
+  self.textbox__caption = function(s)
   {
     return self.text(s);
   }
 
   // appends the given text
   //
-  self.append = function(s)
+  self.textbox__append = function(s)
   {
     assert(s != undefined);
     self.text(text_ + s);
@@ -358,7 +357,7 @@ textbox: function(opts)
   // the caret is preceeded by a space, returns the index of the
   // previous word
   //
-  self.previous_word = function()
+  self.textbox__previous_word = function()
   {
     var itor = new word_iterator(self.text_);
     var count = 0;
@@ -383,14 +382,14 @@ textbox: function(opts)
   // returns the index of the start of the previous word from the
   // caret
   //
-  self.previous_word = function()
+  self.textbox__previous_word = function()
   {
     return adjacent_word(text_, sel_.last, false);
   }
 
   // returns the index of the start of the next word from the caret
   //
-  self.next_word = function()
+  self.textbox__next_word = function()
   {
     return adjacent_word(text_, sel_.last, true);
   }
@@ -510,7 +509,7 @@ textbox: function(opts)
 
   // called when a key is down while the textbox has focus
   //
-  self.on_keydown = function(code)
+  self.textbox__on_keydown = function(code)
   {
     var rp = self.get_root_panel();
 
@@ -699,7 +698,7 @@ textbox: function(opts)
 
   // called when a key is pressed while the textbox has focus
   //
-  self.on_keypress = function(code)
+  self.textbox__on_keypress = function(code)
   {
     if (code == 0 || contains(ui.key_codes, code))
       return true;
@@ -741,7 +740,7 @@ textbox: function(opts)
 
   // moves the caret to the hovered character, starts the selection
   //
-  self.on_mouse_left_down = function(mp)
+  self.textbox__on_mouse_left_down = function(mp)
   {
     self.control__on_mouse_left_down(mp);
 
@@ -800,7 +799,7 @@ textbox: function(opts)
 
   // stops the selection
   //
-  self.on_mouse_left_up = function(mp)
+  self.textbox__on_mouse_left_up = function(mp)
   {
     self.control__on_mouse_left_up(mp);
 
@@ -913,7 +912,7 @@ textbox: function(opts)
 
   // selects characters if the left button is down
   //
-  self.on_mouse_move = function(mp)
+  self.textbox__on_mouse_move = function(mp)
   {
     self.control__on_mouse_move(mp);
 
@@ -963,7 +962,7 @@ textbox: function(opts)
   // any character, returns 0; if the position is after the last
   // character, returns text().length
   //
-  self.index_from_point = function(p)
+  self.textbox__index_from_point = function(p)
   {
     assert(p != undefined && p.internal_is_a_point);
 
@@ -1046,14 +1045,14 @@ textbox: function(opts)
   
   // called when the textbox gets focus, shows the caret
   //
-  self.on_focus = function(other)
+  self.textbox__on_focus = function(other)
   {
     show_caret();
   };
 
   // called when the textbox loses focus, hides the caret
   //
-  self.on_blur = function(other)
+  self.textbox__on_blur = function(other)
   {
     hide_caret();
     self.selection(sel_.last);
@@ -1075,7 +1074,33 @@ textbox: function(opts)
     return "textbox";
   }
 
+  self.minimum_size           = self.textbox__minimum_size;
+  self.best_dimension         = self.textbox__best_dimension;
+  self.draw                   = self.textbox__draw;
+  self.selection              = self.textbox__selection;
+  self.select_all             = self.textbox__select_all;
+  self.replace_selection      = self.textbox__replace_selection;
+  self.text                   = self.textbox__text;
+  self.caption                = self.textbox__caption;
+  self.append                 = self.textbox__append;
+  self.previous_word          = self.textbox__previous_word;
+  self.previous_word          = self.textbox__previous_word;
+  self.next_word              = self.textbox__next_word;
+  self.on_keydown             = self.textbox__on_keydown;
+  self.on_keypress            = self.textbox__on_keypress;
+  self.on_mouse_left_down     = self.textbox__on_mouse_left_down;
+  self.on_mouse_left_up       = self.textbox__on_mouse_left_up;
+  self.on_mouse_move          = self.textbox__on_mouse_move;
+  self.index_from_point       = self.textbox__index_from_point;
+  self.on_focus               = self.textbox__on_focus;
+  self.on_blur                = self.textbox__on_blur;
+
   init();
+},
+
+textbox: function(opts)
+{
+  ui.inherit_textbox(this, opts);
 }
 
 });   // namespace ui
