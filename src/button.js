@@ -24,8 +24,14 @@ namespace("ui",
 //     if true, the borders will only appear when hovered
 //
 //   toggle (true/false), default: false
-//     if true, immediately changes the toggle state on left mouse
-//     button down; this does not capture the mouse
+//     if true, clicking the button (down + up while over) will change
+//     its state, instead of getting a temporary pressed state while
+//     the mouse button is down
+//
+//   fast (true/false), default: false
+//     ignore if toggle is false; toggles the button on left button
+//     down instead of waiting for up + hover; this does not capture
+//     the mouse
 //
 //   caption (string), default: ""
 //     initial caption on the button
@@ -33,14 +39,26 @@ namespace("ui",
 //   clicked (function()), default: undefined
 //     initial clicked slot
 //
+// todo: clean up the hooks, some are redundant; they may be all
+//       unnecessary, in fact
+//
 inherit_clickable: function(self, opts)
 {
   ui.inherit_container(self,
     merge(opts, {layout: new ui.border_layout({margin: 5})}));
 
 
-  // called when the button is clicked
+  // fired when the button is clicked
   self.clicked = new signal();
+
+  // fired when the button is pressed; this will not be called again
+  // unless the button is release, that is, it won't be fired
+  // repeatedly even if the mouse goes in and out while dragging
+  self.down = new signal();
+
+  // fire when the button is released; this will be called when the
+  // mouse left button goes up, whether it is over the button or not
+  self.up = new signal();
 
 
   // the control inside the button
@@ -61,6 +79,7 @@ inherit_clickable: function(self, opts)
       pressed_feedback: true,
       hover_feedback: true,
       flat: false,
+      fast: false,
       toggle: false});
 
     if (self.option("clicked") != undefined)
@@ -178,18 +197,33 @@ inherit_clickable: function(self, opts)
     if (!self.enabled())
       return;
 
+    var cap = true;
+
     if (self.option("toggle"))
     {
-      original_ = pressed_;
+      if (self.option("fast"))
+      {
+        self.pressed(!pressed_);
+        self.clicked.fire();
+        cap = false;
+      }
+      else
+      {
+        original_ = pressed_;
+      }
     }
     else
     {
       self.pressed(true);
     }
 
-    captured_ = true;
-    self.capture_mouse();
+    if (cap)
+    {
+      captured_ = true;
+      self.capture_mouse();
+    }
 
+    self.down.fire();
     self.on_pressed(mp);
 
     self.redraw();
@@ -205,23 +239,36 @@ inherit_clickable: function(self, opts)
     if (!self.enabled() || !captured_)
       return;
 
+    var do_click = true;
+
     if (self.option("toggle"))
     {
-      if (self.is_hovered())
+      if (self.is_hovered() && !self.option("fast"))
+      {
         self.pressed(!original_);
+        do_click = false;
+      }
     }
     else
     {
       self.pressed(false);
     }
     
-    if (self.is_hovered())
-      self.clicked.fire();
+    self.up.fire();
 
-    captured_ = false;
-    self.release_mouse();
+    if (do_click)
+    {
+      if (self.is_hovered())
+        self.clicked.fire();
+
+      if (captured_)
+      {
+        captured_ = false;
+        self.release_mouse();
+      }
+    }
+
     self.on_released(mp);
-
     self.redraw();
   };
 

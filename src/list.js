@@ -279,7 +279,6 @@ dragger: function(c)
   }
 },
 
-
 // scollable list of items and a clickable header
 //
 // the list can be frozen so that columns won't be resized immediately
@@ -313,6 +312,10 @@ dragger: function(c)
 //  item_scroll (true/false), default: false
 //    whether scrolling is per-pixel or per-item
 //
+//  track (true/false), default: false
+//    the item under the mouse will be automatically selected without
+//    having to click
+//
 list: function(opts)
 {
   ui.inherit_container(this,
@@ -321,6 +324,7 @@ list: function(opts)
 
 
   self.on_item_selection = new signal();
+  self.on_item_clicked = new signal();
   self.on_item_double_click = new signal();
 
   // an array of list_item objects
@@ -362,6 +366,7 @@ list: function(opts)
       show_header: true,
       expand_header: false,
       item_scroll: false,
+      track: false,
       padding: 5
     });
 
@@ -420,7 +425,7 @@ list: function(opts)
 
   var calculate_header_widths = function()
   {
-    var widths = [];
+    var ws = [];
     var total_width = 0;
 
     var vw = viewport_bounds().w;
@@ -429,7 +434,7 @@ list: function(opts)
     {
       var w = header_.header_width(i);
 
-      widths.push(w);
+      ws.push(w);
       total_width += w
     }
 
@@ -437,17 +442,17 @@ list: function(opts)
     {
       total_width = 0;
       for (var i=0; i<cols_.length - 1; ++i)
-        total_width += widths[i];
+        total_width += ws[i];
 
-      widths[cols_.length - 1] = vw - total_width;
+      ws[cols_.length - 1] = vw - total_width;
     }
 
-    return widths;
+    return ws;
   }
 
   var calculate_content_widths = function()
   {
-    var widths = [];
+    var ws = [];
     var total_width = 0;
 
     var vw = viewport_bounds().w;
@@ -462,23 +467,68 @@ list: function(opts)
           self.option("padding") + 
           text_dimension(items_[i].caption(c), self.font()).w;
 
+        if (c == 0)
+          largest += self.option("padding");
+
         largest = Math.max(largest, iw);
       }
 
-      widths.push(largest);
+      ws.push(largest);
       total_width += largest;
     }
 
     if (self.option("expand_header") && total_width < vw)
     {
       total_width = 0;
-      for (var i=0; i<cols_.length - 1; ++i)
-        total_width += widths[i];
+      for (var i=0; i<ws.length - 1; ++i)
+        total_width += ws[i];
 
-      widths[cols_.length - 1] = vw - total_width;
+      ws[ws.length - 1] = vw - total_width;
     }
 
-    return widths;
+    return ws;
+  }
+
+  var calculate_auto_widths = function()
+  {
+    var hws = calculate_header_widths();
+    var cws = calculate_content_widths();
+    assert(hws.length == cws.length);
+
+    ws = [];
+    var total_width = 0;
+
+    for (var i=0; i<hws.length; ++i)
+    {
+      var w = Math.max(hws[i], cws[i]);
+      ws.push(w);
+      total_width += w;
+    }
+
+    var vw = viewport_bounds().w;
+
+    if (self.option("expand_header") && total_width >= vw)
+    {
+      total_width = 0;
+      for (var i=0; i<ws.length - 1; ++i)
+        total_width += ws[i];
+
+      ws[ws.length - 1] = vw - total_width;
+    }
+
+    return ws;
+  }
+
+  var calculate_widths = function()
+  {
+    if (self.option("column_resize") == "header")
+      return calculate_header_widths();
+    else if (self.option("column_resize") == "content")
+      return calculate_content_widths();
+    else if (self.option("column_resize") == "auto")
+      return calculate_auto_widths();
+    
+    return undefined;
   }
 
   // resizes each column depending on the resize option
@@ -488,48 +538,7 @@ list: function(opts)
     if (cols_.length == 0)
       return;
       
-    var ws = undefined;
-
-    if (self.option("column_resize") == "header")
-    {
-      ws = calculate_header_widths();
-    }
-    else if (self.option("column_resize") == "content")
-    {
-      ws = calculate_content_widths();
-    }
-    else if (self.option("column_resize") == "auto")
-    {
-      var hws = calculate_header_widths();
-      var cws = calculate_content_widths();
-      assert(hws.length == cws.length);
-
-      ws = [];
-      var total_width = 0;
-
-      for (var i=0; i<hws.length; ++i)
-      {
-        var w = Math.max(hws[i], cws[i]);
-        ws.push(w);
-        total_width += w;
-      }
-
-      var vw = viewport_bounds().w;
-
-      if (self.option("expand_header") && total_width >= vw)
-      {
-        total_width = 0;
-        for (var i=0; i<ws.length - 1; ++i)
-          total_width += ws[i];
-
-        ws[ws.length - 1] = vw - total_width;
-      }
-    }
-    else
-    {
-      // noop
-    }
-
+    var ws = calculate_widths();
     if (ws != undefined)
     {
       for (var i=0; i<ws.length; ++i)
@@ -609,6 +618,10 @@ list: function(opts)
 
     if (self.option("show_header"))
       ld.h += header_.height();
+
+    // todo: why? border?
+    ld.w += 2;
+    ld.h += 3;
 
     return ld;
   };
@@ -728,10 +741,19 @@ list: function(opts)
 
   var list_dimension = function()
   {
-    // todo: width
-    var w = 200;
-    var h = self.option("item_height") * items_.length;
+    var w = 0;
 
+    var ws = calculate_widths();
+    if (ws != undefined)
+    {
+      for (var i in ws)
+        w += ws[i];
+    }
+
+    if (w == 0)
+      w = 200;
+    
+    var h = self.option("item_height") * items_.length;
     if (h == 0)
       h = 100;
     
@@ -880,7 +902,8 @@ list: function(opts)
     }
     else
     {
-      dragger_.on_mouse_left_down(mp);
+      if (!self.option("track"))
+        dragger_.on_mouse_left_down(mp);
     }
 
     return true;
@@ -897,6 +920,9 @@ list: function(opts)
     {
       if (!selection_handled_)
         handle_click_selection(i);
+
+      if (i != -1)
+        self.on_item_clicked.fire(items_[i]);
     }
 
     selection_handled_ = false;
@@ -908,7 +934,24 @@ list: function(opts)
 
   self.on_mouse_move = function(mp)
   {
-    return dragger_.on_mouse_move(mp);
+    if (self.option("track"))
+    {
+      var ht = self.hit_test(mp);
+
+      if (ht.part == "before" || ht.part == "caption" ||
+          ht.part == "nowhere" || ht.part == "after")
+      {
+        self.select_only([ht.item]);
+      }
+      else
+      {
+        self.select_only([]);
+      }
+    }
+    else
+    {
+      return dragger_.on_mouse_move(mp);
+    }
   }
 
   self.on_double_click = function(mp)
@@ -993,6 +1036,30 @@ list: function(opts)
     self.redraw();
   }
 
+  // returns the specific part of the list that's under the given
+  // point, relative to this control:
+  //
+  //   {
+  //     item: the index of the item, -1 if none; this is set even if
+  //           the cursor is outside the item but aligned with it
+  // 
+  //     column: the index of the column, -1 if none; this is set
+  //             even if the cursor is not over an item
+  //
+  //     part: one of:
+  //       above:   the point is above the first item (such as between
+  //                the header and the first item)
+  //       below:   the point is below the last item
+  //       before:  the point is in the margin before the start of the
+  //                item (up to the start of the focus ring)
+  //       caption: the point is on the caption of an item (that is,
+  //                there is text under the cursor)
+  //       nowhere: the point is inside a column, but not over a
+  //                caption (such as in the space between two captions
+  //                on the same line)
+  //       after:   the point is after the last column
+  //  }
+  //  
   self.hit_test = function(p)
   {
     assert(p != undefined && p.internal_is_a_point);

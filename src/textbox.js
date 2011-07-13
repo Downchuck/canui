@@ -79,6 +79,8 @@ textbox: function(opts)
       background: new color().white()
     });
 
+    self.borders({all: 1});
+
     hbar_.visible(false);
     vbar_.visible(false);
 
@@ -139,8 +141,9 @@ textbox: function(opts)
 
   self.draw = function(context)
   {
-    fill_rect(context, self.option("background"), self.bounds());
-    outline_rect(context, new color().black(), self.bounds());
+    // todo: this is a larger problem: borders are often not taken
+    // into account, needs a more generic way
+    fill_rect(context, self.option("background"), deflate(self.bounds(), 1));
 
     // top-left of the string
     var p = new point(
@@ -511,7 +514,7 @@ textbox: function(opts)
   {
     var rp = self.get_root_panel();
 
-    console.log("keydown: " + code);
+    //console.log("keydown: " + code);
 
     switch (code)
     {
@@ -701,7 +704,7 @@ textbox: function(opts)
     if (code == 0 || contains(ui.key_codes, code))
       return true;
 
-    console.log("keypress: " + code);
+    //console.log("keypress: " + code);
 
     var rp = self.get_root_panel();
     var c = String.fromCharCode(code);

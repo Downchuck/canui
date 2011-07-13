@@ -558,8 +558,8 @@ inherit_control: function(self, opts)
     // at this point, the tooltip may not have been layout yet and
     // its content may have changed. because tooltips are not part
     // of the normal hierarchy, it needs to be layout manually here
-    tooltip_.dimension(tooltip_.best_dimension());
-    tooltip_.do_layout();
+    //tooltip_.dimension(tooltip_.best_dimension());
+    //tooltip_.do_layout();
     
     // the tooltip position may have been hardcoded in set_tooltip().
     // if that's not the case, position it so its bottom-left corner

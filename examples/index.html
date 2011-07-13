@@ -61,7 +61,8 @@ $(function()
   g_rp.find_id("captioned-panel").borders({all: 1});
   g_rp.find_id("captioned-panel").layout().option("margin", 4);
 
-  g_rp.find_id("image").image(load_image("example.png", "alt: this is an image"));
+  g_rp.find_id("image").image(
+    load_external_image("example.png", "alt: this is an image"));
   g_rp.find_id("slider").value(40);
 
 

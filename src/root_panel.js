@@ -349,7 +349,10 @@ root_panel: function(opts)
       self.redraw();
 
       for (var i in floating_)
+      {
+        floating_[i].dimension(floating_[i].best_dimension());
         floating_[i].do_layout();
+      }
 
       // because the position of the controls might have changed, the
       // one that was hovered might not be there anymore. This will
@@ -438,7 +441,7 @@ root_panel: function(opts)
   self.relayout = function()
   {
     needs_layout_ = true;
-    this.redraw();
+    self.redraw();
   };
   
   // captures the mouse for the given control; this assumes no
@@ -520,6 +523,23 @@ root_panel: function(opts)
     // if not, it might be in the container
     self.container__remove_child(c);
   };
+
+  // also checks the floating controls
+  //
+  self.has_child = function(ct)
+  {
+    if (self.container__has_child(ct))
+      return true;
+    
+    for (var i in floating_)
+    {
+      if (floating_[i].has_child(ct))
+        return true;
+    }
+    
+    return false;
+  };
+
   
   // adds the given control as floating
   //
@@ -530,7 +550,6 @@ root_panel: function(opts)
     
     c.internal_set_parent(self);
     floating_.push(c);
-    self.redraw();
 
     self.relayout();
   };
