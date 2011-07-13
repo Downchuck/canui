@@ -249,7 +249,7 @@ inherit_textbox: function(self, opts)
         }
 
         draw_text(
-          context, before, new color().black(),
+          context, before, self.option("text_color"),
           new rectangle(p.x, p.y, before_w, g_line_height),
           self.font());
 
@@ -259,7 +259,7 @@ inherit_textbox: function(self, opts)
           self.font());
 
         draw_text(
-          context, after, new color().black(),
+          context, after, self.option("text_color"),
           new rectangle(
             p.x + before_w + sel_w, p.y, after_w, g_line_height),
           self.font());
@@ -267,7 +267,7 @@ inherit_textbox: function(self, opts)
       else
       {
         draw_text(
-          context, line, new color().black(),
+          context, line, self.option("text_color"),
           new rectangle(
             p.x, p.y,
             self.width() - self.option("margin")*2,

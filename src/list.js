@@ -646,6 +646,19 @@ list: function(opts)
     return s;
   }
 
+  self.selection_indices = function()
+  {
+    var s = [];
+
+    for (var i=0; i<items_.length; ++i)
+    {
+      if (items_[i].selected())
+        s.push(i);
+    }
+
+    return s;
+  }
+
   // selects all the items having the given indices, unselecting
   // the rest
   //

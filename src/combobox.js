@@ -34,7 +34,7 @@ cb_text: function(cb, opts)
   {
     if (self.option("unresponsive"))
     {
-      cb_.open();
+      cb_.toggle();
       return true;
     }
     else
@@ -51,7 +51,7 @@ cb_text: function(cb, opts)
 inherit_combobox: function(self, opts)
 {
   ui.inherit_container(self, merge(opts,
-    {layout: new ui.border_layout({margin: 1})}));
+    {layout: new ui.border_layout({margin: 1, padding: 1})}));
   
   var text_ = new ui.cb_text(self);
   var drop_ = new ui.button({toggle: true, fast: true});
@@ -63,13 +63,19 @@ inherit_combobox: function(self, opts)
 
   var completing_ = false;
   var last_text_ = "";
+  var selection_ = -1;
+  
+  var search_ = "";
+  var last_search_time_ = 0;
+  var search_delay_ = 1000;
 
   var init = function()
   {
     self.set_default_options({
-      dropstyle: "edit"
+      dropstyle: "list"
     });
 
+    self.needs_focus(true);
     self.borders({all: 1});
 
     var i = new ui.image({image: load_image("down.png", "v")});
@@ -97,25 +103,104 @@ inherit_combobox: function(self, opts)
     list_.on_item_clicked.add(on_selection);
   };
 
+  self.select = function(i)
+  {
+    if (i < 0 || i >= list_.items().length)
+      return;
+
+    selection_ = i;
+
+    text_.text(list_.items()[i].caption(0));
+    text_.select_all();
+  }
+
   var on_drop = function()
   {
-    if (panel_.parent() != undefined)
-      self.close();
-    else
-      self.open();
+    self.toggle();
   };
 
   var on_selection = function()
   {
     self.close();
 
-    var s = list_.selection();
+    var s = list_.selection_indices();
     assert(s.length != 0);
 
-    text_.text(s[0].caption(0));
-    text_.select_all();
-    text_.focus();
+    self.select(s[0]);
   };
+
+  self.on_focus = function()
+  {
+    self.control__on_focus();
+    text_.option("background", ui.theme.selected_text_background());
+    text_.option("text_color", ui.theme.selected_text_color());
+  };
+
+  self.on_blur = function()
+  {
+    self.control__on_blur();
+    text_.option("background", new color().white());
+    text_.option("text_color", ui.theme.text_color());
+  }
+
+  self.on_keypress = function(code)
+  {
+    if (code == 0 || contains(ui.key_codes, code))
+      return true;
+
+    var now = new Date().getTime();
+    if (now - last_search_time_ > search_delay_)
+      search_ = "";
+
+    search_ += String.fromCharCode(code);
+
+    var start = selection_;
+    if (start < 0)
+      start = 0;
+
+    var i = search(search_, start);
+    if (i == -1 && start != 0)
+      i = search(search_, 0);
+
+    if (i != -1)
+      self.select(i);
+
+    last_search_time_ = now;
+  }
+
+  var search = function(s, from)
+  {
+    var items = list_.items();
+    for (var i=from; i<items.length; ++i)
+    {
+      var item = items[i];
+
+      if (starts_with(item.caption(0), s))
+        return i;
+    }
+
+    return -1;
+  }
+
+  self.on_keydown = function(code)
+  {
+    switch(code)
+    {
+      case ui.key_codes.down:
+      {
+        self.select(selection_ + 1);
+        break;
+      }
+
+      case ui.key_codes.up:
+      {
+        self.select(selection_ - 1);
+        break;
+      }
+    }
+
+    return true;
+  }
 
   var on_text_changed = function()
   {
@@ -153,12 +238,25 @@ inherit_combobox: function(self, opts)
     last_text_ = t;
   };
 
+  self.toggle = function()
+  {
+    if (panel_.parent() != undefined)
+      self.close();
+    else
+      self.open();
+  };
+
   self.close = function()
   {
     assert(panel_.parent() != undefined);
     
     drop_.pressed(false);
     panel_.remove();
+
+    if (self.option("dropstyle") == "edit")
+      text_.focus();
+    else
+      self.focus();
   };
 
   self.open = function()

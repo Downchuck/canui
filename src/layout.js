@@ -743,6 +743,9 @@ border_layout: function(opts)
       
       center.y = h;
       center.h -= h;
+
+      if (controls_[ui.sides.center])
+        center.y += self.option("padding");
     }
     
     c = controls_[ui.sides.bottom];
@@ -753,6 +756,9 @@ border_layout: function(opts)
       bottom = new rectangle(x0, usable_h - h, usable_w, h);
       
       center.h -= h;
+
+      if (controls_[ui.sides.center])
+        center.h -= self.option("padding");
     }
 
     c = controls_[ui.sides.left];
@@ -764,6 +770,9 @@ border_layout: function(opts)
       
       center.x += w;
       center.w -= w;
+
+      if (controls_[ui.sides.center])
+        center.x += self.option("padding");
     }
     
     c = controls_[ui.sides.right];
@@ -774,6 +783,9 @@ border_layout: function(opts)
       right = new rectangle(usable_w - w, center.y, w, center.h);
       
       center.w -= w;
+
+      if (controls_[ui.sides.center])
+        center.w -= self.option("padding");
     }
 
     var d = 0, md = undefined;
