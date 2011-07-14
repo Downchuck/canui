@@ -92,13 +92,12 @@ $(function()
 {
   set_image_dir("../src/images");
   
-  var r = document.getElementById("ui");
-  g_rp = ui.create_root_panel(r);
+  g_rp = ui.create_root_panel("rp");
 
   //var tb = new ui.textbox({text: "case ui.key_codes.down:\n{\nif (rp.key_state(ui.key_codes.ctrl))\n{\n// noop, todo: scroll down\n}\nelse\n{\nif (rp.key_state(ui.key_codes.shift))\n{\nvar p = next_line_same_column(sel_.last);\nself.selection(sel_.first, p);\n}\nelse\n{\nvar s = Math.max(sel_.first, sel_.last);\nvar p = next_line_same_column(s);\n\nself.selection(p);\n}\n"});
   //g_rp.add(tb, ui.sides.center);
 
-  var p = new ui.progress();
+  /*var p = new ui.progress();
   p.value(-1);
 
   setTimeout(function()
@@ -109,7 +108,9 @@ $(function()
       }, 500);
     }, 5000);
 
-  g_rp.add(p);
+  g_rp.add(p);*/
+
+  g_rp.add(new ui.textbox());
 });
 </script>
 
@@ -121,9 +122,7 @@ $(function()
 <p>This is a &lt;canvas&gt; element on which several controls are
 created.
 
-<div id="ui">
-  <div data-type="root_panel" data-layout="new ui.vertical_layout({margin: 5})" width="300" height="300">
-  </div>
+<div id="rp" data-layout="new ui.vertical_layout({margin: 5})" width="300" height="300">
 </div>
 
 </p>

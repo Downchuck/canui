@@ -93,7 +93,7 @@ inherit_textbox: function(self, opts)
   var text_ = "";
 
   // minimum size in characters
-  var minimum_ = new dimension(0, 0);
+  var minimum_ = new dimension(10, 1);
 
   var hbar_ = new ui.scrollbar();
   var vbar_ = new ui.scrollbar();
@@ -198,6 +198,8 @@ inherit_textbox: function(self, opts)
   //
   self.textbox__draw = function(context)
   {
+    self.control__draw(context);
+
     // todo: this is a larger problem: borders are often not taken
     // into account, needs a more generic way
     fill_rect(context, self.option("background"), deflate(self.bounds(), 1));

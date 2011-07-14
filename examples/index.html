@@ -20,9 +20,9 @@
   <script type="text/javascript" src="../src/controls.js"></script>
   <script type="text/javascript" src="../src/slider.js"></script>
   <script type="text/javascript" src="../src/scroller.js"></script>
-  <script type="text/javascript" src="../src/menu.js"></script>
-  <script type="text/javascript" src="../src/combobox.js"></script>
   <script type="text/javascript" src="../src/image.js"></script>
+  <script type="text/javascript" src="../src/combobox.js"></script>
+  <script type="text/javascript" src="../src/menu.js"></script>
   <script type="text/javascript" src="../src/html.js"></script>
   <script type="text/javascript" src="../src/layout.js"></script>
 </head>
@@ -43,31 +43,66 @@ function test()
   alert("hello");
 }
 
-function slider_changed(v)
-{
-  assert(g_rp != undefined);
-  g_rp.find_id("slider-value").caption(
-    "slider value: " + to_int(v));
-}
-
 $(function()
 {
   set_image_dir("../src/images");
-  
-  var r = document.getElementById("ui");
-  g_rp = ui.create_root_panel(r);
-  
-  g_rp.find_id("tooltip-label").tooltip(new ui.tooltip({caption: "this is a tooltip"}));
-  
-  g_rp.find_id("captioned-panel").borders({all: 1});
-  g_rp.find_id("captioned-panel").layout().option("margin", 4);
 
-  g_rp.find_id("image").image(
+  /*ui.create_root_panel("button-example");
+    
+  var combobox = ui.create_root_panel("combobox-example");
+  for (var i=0; i<3; ++i)
+    combobox.find_id("cb").add_item("item " + (i + 1));
+
+  var image = ui.create_root_panel("image-example");
+  image.find_id("image").image(load_external_image("example.png"));
+
+  ui.create_root_panel("label-example");
+  ui.create_root_panel("separator-example");
+  ui.create_root_panel("menu-example");
+  ui.create_root_panel("link-example");
+
+  var list_e = ui.create_root_panel("list-example");
+  var list = list_e.find_id("list");
+  list.add_column("col1");
+  list.add_column("col2");
+  for (var i=0; i<10; ++i)
+    list.add_item(["" + i, "sub" + i]);
+
+  var progress = ui.create_root_panel("progress-example");
+  progress.find_id("progress1").value(-1);
+  setInterval(function()
+    {
+      var p = progress.find_id("progress2");
+      if (p.value() == 100)
+        p.value(0);
+
+      p.value(p.value() + 2);
+    }, 500);
+
+  ui.create_root_panel("textbox-example");
+
+  var tooltip = ui.create_root_panel("tooltip-example");
+  tooltip.find_id("label").tooltip(new ui.tooltip({caption: "tooltip"}));
+
+  */
+  var rp = ui.create_root_panel("layout-example");
+  g_rp = rp;
+  
+  rp.find_id("tooltip-label").tooltip(new ui.tooltip({caption: "this is a tooltip"}));
+  
+  rp.find_id("captioned-panel").borders({all: 1});
+  rp.find_id("captioned-panel").layout().option("margin", 4);
+
+  rp.find_id("image").image(
     load_external_image("example.png", "alt: this is an image"));
-  g_rp.find_id("slider").value(40);
+  rp.find_id("slider").value(40);
+  rp.find_id("slider").changed.add(function(v)
+    {
+      rp.find_id("slider-value").caption("slider value: " + to_int(v));
+    });
 
 
-  var list = g_rp.find_id("list");
+  var list = rp.find_id("list");
   
   list.add_column("column 1");
   list.add_column("column 2");
@@ -76,7 +111,7 @@ $(function()
   list.frozen(true);
   
   // adding a bunch of items
-  for (var i=1; i<=230; ++i)
+  for (var i=1; i<=100; ++i)
     list.add_item(["item " + i, "col " + i]);
     
   // resize the columns
@@ -89,81 +124,171 @@ $(function()
 <p><a href="../index.html">home</a><br>
 <a href="https://sourceforge.net/projects/canui/">sourceforge project page</a></p>
 
-<p>This is a &lt;canvas&gt; element on which several controls are
-created.
+<p>This is a series of &lt;canvas&gt; with the individual controls:</p>
+<table cellpadding="10">
+  <tr valign="top">
+    <td>Buttons:<br>
+      <div id="button-example" data-layout="new ui.vertical_layout({margin: 2, padding: 5})" width="150" height="100">
+        <div data-type="button">button</div>
+        <div data-type="checkbox">checkbox</div>
+        <div data-type="radio">radio1</div>
+        <div data-type="radio">radio2</div>
+      </div>
+    </td>
 
-<div id="ui">
-  <div data-type="root_panel" data-layout="new ui.border_layout()" width="400" height="300">
-    <div data-type="menu" data-layout-info="ui.sides.top">
-    
-      <div data-type="menu">
-        File
-        <div data-type="menu">New</div>
-        <div data-type="menu">Open...</div>
-        <div data-type="menu">Quit</div>
+    <td>Combobox:<br>
+      <div id="combobox-example" data-layout="new ui.vertical_layout({margin: 2})" width="150" height="100">
+        <div id="cb" data-type="combobox"></div>
       </div>
-      
-      <div data-type="menu">
-        Edit
-        <div data-type="menu" onclick="test">Cut</div>
-        <div data-type="menu">Copy</div>
-        <div data-type="menu">Paste</div>
+    </td>
+
+    <td>Image:<br>
+      <div id="image-example" data-layout="new ui.border_layout({margin: 2})" width="150" height="100">
+        <div id="image" data-type="image" data-layout-info="ui.sides.center"></div>
       </div>
-      
-      <div data-type="menu">
-        Test
-        <div data-type="menu">Item1</div>
-        <div data-type="menu">Item2</div>
-        <div data-type="menu">
-          Submenu
-          <div data-type="menu" onclick="test">Subitem1</div>
-          <div data-type="menu">Subitem2</div>
-          <div data-type="menu">Subitem3</div>
-          <div data-type="menu">
-            Submenu2
-            <div data-type="menu">Subsubitem1</div>
-            <div data-type="menu">Subsubitem2</div>
+    </td>
+
+    <td>Label:<br>
+      <div id="label-example" data-layout="new ui.border_layout({margin: 2})" width="150" height="100">
+        <div data-type="label" data-layout-info="ui.sides.center">a label</div>
+      </div>
+    </td>
+  </tr>
+
+  <tr valign="top">
+    <td>Menu:<br>
+      <div id="menu-example" data-layout="new ui.border_layout({margin: 2})" width="150" height="100">
+        <div data-type="menu" data-layout-info="ui.sides.top">
+          <div data-type="menu">Test
+            <div data-type="menu">Sub
+              <div data-type="menu">1</div>
+              <div data-type="menu">2</div>
+            </div>
           </div>
+          <div data-type="menu">Test2
+            <div data-type="menu">Item</div>
+          </div>
+      </div>
+    </td>
+
+    <td>Separator:<br>
+      <div id="separator-example" data-layout="new ui.border_layout({margin: 2})" width="150" height="20">
+        <div data-type="separator" data-layout-info="ui.sides.center"></div>
+      </div>
+    </td>
+
+    <td>Link:<br>
+      <div id="link-example" data-layout="new ui.border_layout({margin: 2})" width="150" height="40">
+        <div data-type="link" data-layout-info="ui.sides.center" data-options="{url: 'http://google.com'}">click</div>
+      </div>
+    </td>
+
+    <td>List:<br>
+      <div id="list-example" data-layout="new ui.border_layout({margin: 2})" width="150" height="100">
+        <div id="list" data-type="list" data-layout-info="ui.sides.center"></div>
+      </div>
+    </td>
+  </tr>
+
+  <tr valign="top">
+    <td>Progress:<br>
+      <div id="progress-example" data-layout="new ui.vertical_layout({margin: 2})" width="150" height="50">
+        <div id="progress1" data-type="progress"></div>
+        <div id="progress2" data-type="progress"></div>
+      </div>
+    </td>
+
+    <td>Textbox:<br>
+      <div id="textbox-example" data-layout="new ui.border_layout({margin: 2, padding: 5})" width="150" height="100">
+        <div data-type="textbox" data-layout-info="ui.sides.top">textbox</div>
+        <div data-type="textbox" data-layout-info="ui.sides.center" data-options="{multiline: true}" >multiline textbox</div>
+      </div>
+    </td>
+
+    <td>Tooltip:<br>
+      <div id="tooltip-example" data-layout="new ui.border_layout({margin: 2})" width="150" height="100">
+        <div id="label" data-type="label" data-layout-info="ui.sides.center">mouse here</div>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<p>This is a larger canvas with several controls:</p>
+<div id="layout-example" data-layout="new ui.border_layout()" width="400" height="300">
+         
+  <div data-type="menu" data-layout-info="ui.sides.top">
+    <div data-type="menu">
+      File
+      <div data-type="menu">New</div>
+      <div data-type="menu">Open...</div>
+      <div data-type="menu">Quit</div>
+    </div>
+      
+    <div data-type="menu">
+      Edit
+      <div data-type="menu" onclick="test">Cut</div>
+      <div data-type="menu">Copy</div>
+      <div data-type="menu">Paste</div>
+    </div>
+      
+    <div data-type="menu">
+      Test
+      <div data-type="menu">Item1</div>
+      <div data-type="menu">Item2</div>
+      <div data-type="menu">
+        Submenu
+        <div data-type="menu" onclick="test">Subitem1</div>
+        <div data-type="menu">Subitem2</div>
+        <div data-type="menu">Subitem3</div>
+        <div data-type="menu">
+          Submenu2
+          <div data-type="menu">Subsubitem1</div>
+          <div data-type="menu">Subsubitem2</div>
         </div>
       </div>
     </div>
-    
-    <div id="panel"
-         data-type="panel"
-         data-layout="new ui.horizontal_layout({margin: 2, expand: true})"
-         data-layout-info="ui.sides.center"
-         data-options="{background: ui.theme.panel_color()}">
-         
-      <div id="left-panel"
-           data-type="panel"
-           data-layout="new ui.vertical_layout({margin: 2, expand: true})">
-        <div id="image" data-type="image"></div>
-        <div data-type="textbox">this is a textbox</div>
-        <div data-type="label">this is a label</div>
-        <div data-type="button" onclick="test">this is a button</div>
-        <div data-type="separator"></div>
-        <div id="captioned-panel" data-type="panel">
-          panel caption
-          <div data-type="label">this is a label in a panel</div>
-        </div>
-        <div id="tooltip-label" data-type="label">this is a label with a tooltip</div>
-        <div id="slider" data-type="slider" onchange="slider_changed"></div>
-        <div id="slider-value" data-type="label"></div>
+  </div>
+  
+  <div id="panel"
+       data-type="panel"
+       data-layout="new ui.border_layout({margin: 2, expand: true})"
+       data-layout-info="ui.sides.center"
+       data-options="{background: ui.theme.panel_color()}">
+
+
+    <div id="left-panel"
+          data-type="panel"
+          data-layout-info="ui.sides.left"
+          data-layout="new ui.vertical_layout({margin: 2, padding: 5, expand: true})">
+      <div id="image" data-type="image"></div>
+      <div data-type="textbox">this is a textbox</div>
+      <div data-type="label">this is a label</div>
+      <div data-type="button" onclick="test">this is a button</div>
+      <div data-type="separator"></div>
+      <div id="captioned-panel" data-type="panel">
+        panel caption
+        <div data-type="label">this is a label in a panel</div>
       </div>
+      <div id="tooltip-label" data-type="label">this is a label with a tooltip</div>
+      <div id="slider" data-type="slider"></div>
+      <div id="slider-value" data-type="label"></div>
+    </div>
       
-      <div id="right-panel"
-           data-type="panel">
-        <div id="list"
-             data-type="list"
-             data-options="{expand_header: true, item_scroll: false, column_resize: 'auto'}">
-        </div>
+    <div id="right-panel"
+         data-type="panel"
+         data-layout-info="ui.sides.center"
+         data-layout="new ui.border_layout()">
+      <div id="list"
+            data-type="list"
+            data-layout-info="ui.sides.center"
+            data-options="{item_scroll: false}">
       </div>
     </div>
   </div>
 </div>
 
-</p>
 <p>This will show the structure of the controls: <input type="button" value="dump" onclick="dump()" /></p>
 
 </div>
+</body>
 </html>

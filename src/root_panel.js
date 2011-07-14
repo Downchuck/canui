@@ -345,6 +345,7 @@ root_panel: function(opts)
     {
       needs_layout_ = false;
 
+      console.log("relayout");
       self.do_layout();
       self.redraw();
 

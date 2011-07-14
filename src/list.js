@@ -305,7 +305,7 @@ dragger: function(c)
 //  show_header (true/false), default: true
 //    whether the column headers should be visible
 //
-//  expand_header (true/false), default: false
+//  expand_header (true/false), default: true
 //    whether the last column should be expanded to take the remaining
 //    horizontal space
 //
@@ -364,7 +364,7 @@ list: function(opts)
       item_height: g_line_height + 4,
       column_resize: "auto",
       show_header: true,
-      expand_header: false,
+      expand_header: true,
       item_scroll: false,
       track: false,
       padding: 5
@@ -419,18 +419,18 @@ list: function(opts)
     frozen_ = b;
 
     if (needs_update)
-    {
-    }
+      update();
   }
 
   var update = function()
   {
     header_.set(cols_);
-    resize_columns();
-    self.redraw();
+    self.relayout();
+    //resize_columns();
+    //self.redraw();
   }
 
-  var calculate_header_widths = function()
+  var calculate_header_widths = function(fill)
   {
     var ws = [];
     var total_width = 0;
@@ -445,19 +445,22 @@ list: function(opts)
       total_width += w
     }
 
-    if (self.option("expand_header") && total_width < vw)
+    if (fill)
     {
-      total_width = 0;
-      for (var i=0; i<cols_.length - 1; ++i)
-        total_width += ws[i];
+      if (self.option("expand_header") && total_width < vw)
+      {
+        total_width = 0;
+        for (var i=0; i<cols_.length - 1; ++i)
+          total_width += ws[i];
 
-      ws[cols_.length - 1] = vw - total_width;
+        ws[cols_.length - 1] = vw - total_width;
+      }
     }
 
     return ws;
   }
 
-  var calculate_content_widths = function()
+  var calculate_content_widths = function(fill)
   {
     var ws = [];
     var total_width = 0;
@@ -475,7 +478,7 @@ list: function(opts)
           text_dimension(items_[i].caption(c), self.font()).w;
 
         if (c == 0)
-          largest += self.option("padding");
+          iw += self.option("padding");
 
         largest = Math.max(largest, iw);
       }
@@ -484,22 +487,25 @@ list: function(opts)
       total_width += largest;
     }
 
-    if (self.option("expand_header") && total_width < vw)
+    if (fill)
     {
-      total_width = 0;
-      for (var i=0; i<ws.length - 1; ++i)
-        total_width += ws[i];
+      if (self.option("expand_header") && total_width < vw)
+      {
+        total_width = 0;
+        for (var i=0; i<ws.length - 1; ++i)
+          total_width += ws[i];
 
-      ws[ws.length - 1] = vw - total_width;
+        ws[ws.length - 1] = vw - total_width;
+      }
     }
 
     return ws;
   }
 
-  var calculate_auto_widths = function()
+  var calculate_auto_widths = function(fill)
   {
-    var hws = calculate_header_widths();
-    var cws = calculate_content_widths();
+    var hws = calculate_header_widths(fill);
+    var cws = calculate_content_widths(fill);
     assert(hws.length == cws.length);
 
     ws = [];
@@ -512,28 +518,31 @@ list: function(opts)
       total_width += w;
     }
 
-    var vw = viewport_bounds().w;
-
-    if (self.option("expand_header") && total_width >= vw)
+    if (fill)
     {
-      total_width = 0;
-      for (var i=0; i<ws.length - 1; ++i)
-        total_width += ws[i];
+      var vw = viewport_bounds().w;
 
-      ws[ws.length - 1] = vw - total_width;
+      if (self.option("expand_header") && total_width >= vw)
+      {
+        total_width = 0;
+        for (var i=0; i<ws.length - 1; ++i)
+          total_width += ws[i];
+
+        ws[ws.length - 1] = vw - total_width;
+      }
     }
 
     return ws;
   }
 
-  var calculate_widths = function()
+  var calculate_widths = function(fill)
   {
     if (self.option("column_resize") == "header")
-      return calculate_header_widths();
+      return calculate_header_widths(fill);
     else if (self.option("column_resize") == "content")
-      return calculate_content_widths();
+      return calculate_content_widths(fill);
     else if (self.option("column_resize") == "auto")
-      return calculate_auto_widths();
+      return calculate_auto_widths(fill);
     
     return undefined;
   }
@@ -545,7 +554,7 @@ list: function(opts)
     if (cols_.length == 0)
       return;
       
-    var ws = calculate_widths();
+    var ws = calculate_widths(true);
     if (ws != undefined)
     {
       for (var i=0; i<ws.length; ++i)
@@ -598,6 +607,8 @@ list: function(opts)
 
       vert_scroll_.limits(0, ld.h - ub.h);
       vert_scroll_.page_size(viewport_bounds().h - self.option("item_height")*2);
+
+      self.relayout();
     }
     else
     {
@@ -625,6 +636,9 @@ list: function(opts)
 
     if (self.option("show_header"))
       ld.h += header_.height();
+
+    if (vert_scroll_.parent() != undefined)
+      ld.w += vert_scroll_.best_dimension().w;
 
     // todo: why? border?
     ld.w += 2;
@@ -763,7 +777,7 @@ list: function(opts)
   {
     var w = 0;
 
-    var ws = calculate_widths();
+    var ws = calculate_widths(false);
     if (ws != undefined)
     {
       for (var i in ws)

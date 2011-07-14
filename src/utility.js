@@ -297,8 +297,11 @@ function mouse_pos(ev)
 {
   var cv = ev.currentTarget;
 
-  var x = document.body.scrollLeft + ev.clientX;
-  var y = document.body.scrollTop + ev.clientY;
+  //var x = document.body.scrollLeft + ev.clientX;
+  //var y = document.body.scrollTop + ev.clientY;
+
+  var x = document.body.scrollLeft + ev.pageX;
+  var y = document.body.scrollTop + ev.pageY;
   
   var node = cv;
   while (node)

@@ -178,36 +178,16 @@ create_root_panel: function(r)
   var root = undefined;
   var rp = undefined;
   
+  if (r.getAttribute == undefined)
+    r = document.getElementById(r);
+
   //try
   {
-    for (var i=0; i<r.childNodes.length; ++i)
-    {
-      var e = r.childNodes[i];
-      
-      if (e.getAttribute == undefined)
-        continue;
-        
-      var type = ui.get_data(e, "type");
-      if (type == undefined)
-        continue;
-        
-      if (type == "root_panel")
-      {
-        if (root != undefined)
-          throw "root_panel is specified twice";
-        
-        rp = ui.create_ui(e);
-        ui.parse_impl(rp, e);
-      }
-      else
-      {
-        throw "ui element '" + type + "' outside of root_panel";
-      }
-    }
-    
-    if (rp == undefined)
-      throw "no root_panel element found";
+    r.setAttribute("data-type", "root_panel");
 
+    rp = ui.create_ui(r);
+    ui.parse_impl(rp, r);
+    
     root = rp.canvas()[0];
   }
   /*catch(error)

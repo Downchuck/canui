@@ -240,17 +240,17 @@ inherit_control: function(self, opts)
   self.internal_set_parent = function(cont)
   {
     // if cont is undefined, this control is being detached, in
-    // which case internal_parent must not be undefined; if cont
+    // which case internal_parent_ must not be undefined; if cont
     // is a valid container, this control can't already have a parent
     if (cont != undefined)
-      assert(self.internal_parent == undefined);
+      assert(self.internal_parent_ == undefined);
     else
-      assert(self.internal_parent != undefined);
+      assert(self.internal_parent_ != undefined);
 
     // cont must be valid
     assert(cont == undefined || cont.internal_is_a_container);
 
-    self.internal_parent = cont;
+    self.internal_parent_ = cont;
 
     // this control was removed from the tree, fire the signal. note
     // that container's implementation will do the same for all its
@@ -293,8 +293,8 @@ inherit_control: function(self, opts)
     if (!enabled_)
       return false;
 
-    if (self.internal_parent)
-      return self.internal_parent.enabled();
+    if (self.internal_parent_)
+      return self.internal_parent_.enabled();
     
     return true;
   };
@@ -317,7 +317,7 @@ inherit_control: function(self, opts)
   //
   self.control__parent = function()
   {
-    return self.internal_parent;
+    return self.internal_parent_;
   };
   
   // returns whether this control is dirty
@@ -332,7 +332,7 @@ inherit_control: function(self, opts)
   //
   self.control__is_hovered = function()
   {
-    if (!self.internal_parent)
+    if (!self.internal_parent_)
       return false;
     
     var r = self.get_root_panel();
@@ -349,7 +349,7 @@ inherit_control: function(self, opts)
   //
   self.control__is_focused = function()
   {
-    if (!self.internal_parent)
+    if (!self.internal_parent_)
       return false;
     
     var r = self.get_root_panel();
@@ -366,7 +366,7 @@ inherit_control: function(self, opts)
   //
   self.control__focus = function()
   {
-    if (!self.internal_parent)
+    if (!self.internal_parent_)
       return;
 
     var r = self.get_root_panel();
@@ -387,7 +387,7 @@ inherit_control: function(self, opts)
   //
   self.control__relayout = function()
   {
-    if (!self.internal_parent)
+    if (!self.internal_parent_)
       return;
     
     var r = self.get_root_panel();
@@ -410,10 +410,10 @@ inherit_control: function(self, opts)
   //
   self.control__remove = function()
   {
-    assert(self.internal_parent);
-    assert(self.internal_parent.internal_is_a_container);
+    assert(self.internal_parent_);
+    assert(self.internal_parent_.internal_is_a_container);
     
-    self.internal_parent.remove_child(self);
+    self.internal_parent_.remove_child(self);
   };
   
   // returns the number of children for this control; this is
@@ -504,7 +504,16 @@ inherit_control: function(self, opts)
         dim_.h = r.h;
 
         self.on_bounds_changed();
-        self.relayout();
+
+        // todo: this is a hack: when changing the bounds of a control
+        // inside an absolute layout, there's no need to relayout the
+        // whole thing; this is a pain for the slider, which changes
+        // bounds of the thumb constantly, making scrolling down a 
+        // list very slow for example
+        if (self.internal_parent_ == undefined ||
+            self.internal_parent_.layout == undefined ||
+            !self.internal_parent_.layout().internal_is_a_absolute_layout)
+          self.relayout();
       }
     }
     
@@ -520,10 +529,10 @@ inherit_control: function(self, opts)
   {
     p = new point(p.x + pos_.x, p.y + pos_.y);
     
-    if (!self.internal_parent)
+    if (!self.internal_parent_)
       return p;
     
-    return self.internal_parent.local_to_absolute(p);
+    return self.internal_parent_.local_to_absolute(p);
   };
   
   // converts the given point from an absolute coordinate (relative
@@ -535,10 +544,10 @@ inherit_control: function(self, opts)
     assert(p);
     p = new point(p.x - pos_.x, p.y - pos_.y);
     
-    if (!self.internal_parent)
+    if (!self.internal_parent_)
       return p;
     
-    return self.internal_parent.absolute_to_local(p);
+    return self.internal_parent_.absolute_to_local(p);
   };
   
   // called when the mouse is entering or moving over this control;
@@ -821,10 +830,10 @@ inherit_control: function(self, opts)
   //
   self.control__get_root_panel = function()
   {
-    if (self.internal_parent == undefined)
+    if (self.internal_parent_ == undefined)
       return undefined;
     
-    return self.internal_parent.get_root_panel();
+    return self.internal_parent_.get_root_panel();
   };
   
   // captures the mouse for this control; all events will be
@@ -833,7 +842,7 @@ inherit_control: function(self, opts)
   //
   self.capture_mouse = function()
   {
-    assert(self.internal_parent);
+    assert(self.internal_parent_);
     var rp = self.get_root_panel();
     
     assert(rp);
@@ -845,7 +854,7 @@ inherit_control: function(self, opts)
   //
   self.release_mouse = function()
   {
-    assert(self.internal_parent);
+    assert(self.internal_parent_);
     self.get_root_panel().release_mouse(self);
   };
   

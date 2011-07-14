@@ -83,7 +83,7 @@ slider
 textbox
   Todo: dnd, multiline, undo/redo, scrolling
   Bugs: double-click select and moving sometimes unselect original
-        word
+        word; multiline selection + replace sometimes corrupts content
 
 
 3 Controls in progress

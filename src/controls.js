@@ -33,7 +33,12 @@ spacer: function(opts)
   self.best_dimension = function()
   {
     return self.option("size");
-  }
+  };
+
+  self.typename = function()
+  {
+    return "spacer";
+  };
 
   init();
 },
@@ -340,7 +345,7 @@ progress: function(opts)
   self.best_dimension = function()
   {
     // todo
-    return new dimension(100, 17);
+    return new dimension(150, 17);
   };
   
   self.draw = function(context)

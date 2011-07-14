@@ -44,7 +44,7 @@ inherit_layout: function(self, opts)
   //
   self.layout__option = function(n, v)
   {
-    assert(opts_[n] != undefined);
+    assert(opts_.hasOwnProperty(n));
 
     if (v != undefined)
     {
@@ -118,6 +118,8 @@ absolute_layout: function(cont)
 {
   ui.inherit_layout(this);
   var self = this;
+
+  self.internal_is_a_absolute_layout = true;
 
   var bd_ = new dimension(0, 0);
 
@@ -699,7 +701,7 @@ border_layout: function(opts)
     {
       if (controls_[i] == c)
       {
-        controls_.splice(i, 1);
+        controls_[i] = undefined;
         return;
       }
     }
@@ -745,7 +747,10 @@ border_layout: function(opts)
       center.h -= h;
 
       if (controls_[ui.sides.center])
+      {
         center.y += self.option("padding");
+        center.h -= self.option("padding");
+      }
     }
     
     c = controls_[ui.sides.bottom];
@@ -772,7 +777,10 @@ border_layout: function(opts)
       center.w -= w;
 
       if (controls_[ui.sides.center])
+      {
         center.x += self.option("padding");
+        center.w -= self.option("padding");
+      }
     }
     
     c = controls_[ui.sides.right];

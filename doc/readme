@@ -484,7 +484,7 @@ Example:
   }
 
 
-3.5 sepatator
+3.5 separator
 
 This is just a horizontal or vertical line.
 
@@ -528,7 +528,7 @@ Options:
       anything else: the name of a window
 
 
-3.6 list
+3.7 list
 
 This is a list of items with columns. It only supports "details" view
 for now, with single and multiple selections.
@@ -573,7 +573,11 @@ Example:
   }
 
 
-3.7 panel
+3.8 menu
+todo
+
+
+3.9 panel
 
 This is a container with a background. It is mainly used when multiple
 layouts are needed.
@@ -628,7 +632,7 @@ Example:
   }
 
 
-3.8 progress
+3.10 progress
 A rectangle in which a part is filled, depending on the current value.
 It can also be in indeterminate mode, in which case it will be
 regularly redrawn with a block that moves back and forth.
@@ -660,11 +664,11 @@ Example:
   }
 
 
-3.9 scrollbar
+3.11 scrollbar
 
-This is a slider [3.11] with up/down or left/right buttons. A scroller
-[3.10] can be used to automatically manage scrolling a child control,
-but standalone scrollbars can also be used. The list control [3.6]
+This is a slider [3.13] with up/down or left/right buttons. A scroller
+[3.12] can be used to automatically manage scrolling a child control,
+but standalone scrollbars can also be used. The list control [3.7]
 uses them.
 
   function f(rp)
@@ -692,12 +696,12 @@ uses them.
   }
 
 
-3.10 scroller
+3.12 scroller
 
 This is a panel with scrollbars. Its only child will always have its
 preferred size and will be moved around when scrolling.
 
-A scroller uses sliders [3.11] and special buttons that support holding
+A scroller uses sliders [3.13] and special buttons that support holding
 them down to continuously scroll.
 
 Options:
@@ -721,7 +725,7 @@ Example:
   }
 
 
-3.11 slider
+3.13 slider
 
 This is a thin panel with a button that can be moved around,
 constrained to the panel. It also supports clicking in the empty
@@ -770,7 +774,7 @@ Example:
   }
 
 
-3.12 textbox
+3.14 textbox
 
 Textboxes are hard. There's even a long section from whatwg saying
 that "authors should avoid implementing text editing controls using
@@ -831,7 +835,7 @@ Example:
   }
   
 
-3.13 tooltip
+3.15 tooltip
 
 A tooltip is nothing special, except that it has a yellow background
 and borders. Every control can have a tooltip (set by calling
@@ -852,7 +856,7 @@ Example:
     rp.add(lb);
   }
 
-3.14 control and container base classes
+3.16 control and container base classes
 
 All controls inherit from the 'control' class, which has some member
 functions of its own. For example, it allows for changing the mouse

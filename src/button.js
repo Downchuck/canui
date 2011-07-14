@@ -45,7 +45,7 @@ namespace("ui",
 inherit_clickable: function(self, opts)
 {
   ui.inherit_container(self,
-    merge(opts, {layout: new ui.border_layout({margin: 5})}));
+    merge(opts, {layout: new ui.border_layout()}));
 
 
   // fired when the button is clicked
@@ -260,12 +260,12 @@ inherit_clickable: function(self, opts)
     {
       if (self.is_hovered())
         self.clicked.fire();
+    }
 
-      if (captured_)
-      {
-        captured_ = false;
-        self.release_mouse();
-      }
+    if (captured_)
+    {
+      captured_ = false;
+      self.release_mouse();
     }
 
     self.on_released(mp);
@@ -311,7 +311,7 @@ inherit_clickable: function(self, opts)
   //
   self.typename = function()
   {
-    var s = "button";
+    var s = "clickable";
     if (label_.caption != undefined)
       s += " (" + label_.caption() + ")";
     return s;
@@ -344,6 +344,12 @@ inherit_button: function(self, opts)
 {
   ui.inherit_clickable(self, opts);
   self.internal_is_a_button = true;
+
+  
+  var init = function()
+  {
+    self.layout().option("margin", 5);
+  };
   
   // draws a rectangle (reversed when pressed and hovered)
   //
@@ -373,6 +379,13 @@ inherit_button: function(self, opts)
     
     self.container__draw(context);
   };
+
+  self.typename = function()
+  {
+    return "button";
+  };
+
+  init();
 },
 
 button: function(opts)
@@ -397,6 +410,8 @@ checkbox: function(opts)
   {
     image_ = load_image(
       "check.png", "x", mem_fun('redraw', self));
+
+    self.layout().option("padding", 3);
 
     self.add(new ui.spacer(
       {size: new dimension(
@@ -440,6 +455,11 @@ checkbox: function(opts)
     self.container__draw(context);
   };
 
+  self.typename = function()
+  {
+    return "checkbox";
+  }
+
   init();
 },
 
@@ -452,6 +472,8 @@ radio: function(opts)
 
   var init = function()
   {
+    self.layout().option("padding", 3);
+
     self.add(new ui.spacer(
       {size: new dimension(
         ui.system_options.radio_size,
@@ -461,10 +483,12 @@ radio: function(opts)
 
   self.pressed = function(b)
   {
-    var r = self.clickable__pressed(b);
+    var r = self.clickable__pressed();
 
     if (b != undefined)
     {
+      self.clickable__pressed(true);
+
       self.parent().each_child(function(c)
         {
           if (c == self)
@@ -513,6 +537,11 @@ radio: function(opts)
 
     self.container__draw(context);
   };
+
+  self.typename = function()
+  {
+    return "radio";
+  }
 
   init();
 }
