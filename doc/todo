@@ -13,68 +13,77 @@ used. They may lack in options, callbacks or in ways to obtain
 information.
 
 
-2.1 button/checkbox/radio
-Todo: keyboard
-Bugs: none
+button/checkbox/radio
+  Todo: keyboard
+  Bugs: none
 
 
-2.2 link
-Todo: none
-Bugs: non
+combobox
+  Todo: none
+  Bugs: non
 
 
-2.3 panel
-Todo: none
-Bugs: none
+link
+  Todo: none
+  Bugs: non
 
 
-2.4 status_bar
-Todo: this is currently just a panel. It will either be
-      removed or reworked completely.
-
-Bugs: none
+panel
+  Todo: none
+  Bugs: none
 
 
-2.5 tooltip
-Todo: none
-Bugs:
- . tooltip stays stuck when mouse leaves (cancel timer on leave?)
+progress
+  Todo: none
+  Bugs: none
 
 
-2.6 separator
-Todo: none
-Bugs: none
+status_bar
+  Todo: this is currently just a panel. It will either be
+        removed or reworked completely.
+  Bugs: none
 
 
-2.7 image
-Todo: none
-Bugs: none
+tooltip
+  Todo: none
+  Bugs:
+   . tooltip stays stuck when mouse leaves (cancel timer on leave?)
 
 
-2.8 label
-Todo: none
-Bugs: none
+separator
+  Todo: none
+  Bugs: none
 
 
-2.9 scrollbar
-Todo: mouse wheel, keyboard
-Bugs: none
+image
+  Todo: none
+  Bugs: none
 
 
-2.10 scroller
-Todo: mouse wheel, keyboard
-Bugs: none
+label
+  Todo: none
+  Bugs: none
 
 
-2.11 slider
-Todo: keyboard
-Bugs: none
+scrollbar
+  Todo: mouse wheel, keyboard
+  Bugs: none
 
 
-2.12 textbox
-Todo: dnd, multiline, undo/redo, scrolling
-Bugs: double-click select and moving sometimes unselect original word
+scroller
+  Todo: mouse wheel, keyboard
+  Bugs: none
 
+
+slider
+  Todo: keyboard
+  Bugs: none
+
+
+textbox
+  Todo: dnd, multiline, undo/redo, scrolling
+  Bugs: double-click select and moving sometimes unselect original
+        word
 
 
 3 Controls in progress
@@ -82,27 +91,23 @@ Bugs: double-click select and moving sometimes unselect original word
 These controls are currently mostly unusable because of lack of
 testing or features, or bugs.
 
-3.2 menu
-Todo: separators, keybindings?, icons, disabled, customize, close on
-      click elsewhere, timers, checkboxes/radios
+menu
+  Todo: separators, keybindings?, icons, disabled, customize, close on
+        click elsewhere, timers, checkboxes/radios
 
 
-3.2 list
-Todo: column resize/move, item drag/drop, keyboard nav, other views
-      (icon, etc.), icon in column, allow any control (editable list),
-      sort, tooltips, horizontal scroll, always draws all items
-
+list
+  Todo: column resize/move, item drag/drop, keyboard nav, other views
+        (icon, etc.), icon in column, allow any control (editable
+        list), sort, tooltips, horizontal scroll, always draws all
+        items
 Bugs: none
-
 
 
 4 Controls to do
 ======================================================================
-
   . tree
-  . combobox
   . date/time
-  . progress bar/spinner
   . toolbar
   . notebook
   . up-down

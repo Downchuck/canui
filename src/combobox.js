@@ -289,6 +289,11 @@ inherit_combobox: function(self, opts)
     rp.add_floating(panel_);
   };
 
+  self.typename = function()
+  {
+    return "combobox";
+  }
+
   init();
 },
 

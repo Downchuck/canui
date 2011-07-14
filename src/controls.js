@@ -282,6 +282,123 @@ link: function(opts)
       window.open(self.option("url"), self.option("target"));
   }
 
+  self.typename = function()
+  {
+    return "link";
+  }
+
+  init();
+},
+
+// limits are always [0, 100]; pass -1 to value() to make it
+// indeterminate. In this mode, a 500ms timer will redraw the bar
+// with a moving block.
+//
+progress: function(opts)
+{
+  ui.inherit_control(this, opts);
+  var self = this;
+
+  var value_ = 0;
+  var limits_ = {first: 0, last: 100};
+  var timer_ = undefined;
+
+  var ind_ = 0;
+  var ind_delay_ = 500;
+  var ind_count_ = 5;
+  var ind_dir_ = 1;
+
+  var init = function()
+  {
+    self.borders({all: 1});
+  };
+
+  self.value = function(v)
+  {
+    if (v != undefined)
+    {
+      if (v != -1)
+      {
+        stop_indeterminate();
+        v = to_int(clamp(v, limits_.first, limits_.last));
+      }
+      else
+      {
+        start_indeterminate();
+      }
+
+      if (value_ != v)
+      {
+        value_ = v;
+        self.redraw();
+      }
+    }
+
+    return value_;
+  };
+
+  self.best_dimension = function()
+  {
+    // todo
+    return new dimension(100, 17);
+  };
+  
+  self.draw = function(context)
+  {
+    self.control__draw(context);
+
+    //todo
+    var r = self.bounds();
+    deflate(r, 1);
+
+    if (value_ == -1)
+    {
+      r.x += (r.w + 1) * (ind_ / ind_count_);
+      r.w /= ind_count_;
+    }
+    else
+    {
+      r.w *= (value_ / 100);
+    }
+
+    fill_rect(context, ui.theme.selected_text_background(), r);
+  };
+
+  var start_indeterminate = function()
+  {
+    assert(timer_ == undefined);
+    timer_ = setInterval(function()
+      {
+        ind_ += ind_dir_;
+        if (ind_ < 0)
+        {
+          ind_ = 1;
+          ind_dir_ = -ind_dir_;
+        }
+        else if (ind_ >= ind_count_)
+        {
+          ind_ = ind_count_ - 2;
+          ind_dir_ = -ind_dir_;
+        }
+
+        self.redraw();
+      }, ind_delay_);
+  };
+
+  var stop_indeterminate = function()
+  {
+    if (timer_ != undefined)
+    {
+      clearInterval(timer_);
+      timer_ = undefined;
+    }
+  };
+
+  self.typename = function()
+  {
+    return "progress";
+  };
+
   init();
 }
 

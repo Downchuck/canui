@@ -27,6 +27,10 @@ button
   this is a regular button, a checkbox or a radio that fires a signal
   when clicked
 
+combobox
+  a textbox with a dropdown button that displays a list of items to
+  choose from; the textbox can be editable or not
+
 image
   takes an Image object and draws it. It can also take a second image
   as an overlay. It handles grayscale images automatically when
@@ -349,8 +353,39 @@ Example:
     // changes the caption
     b.caption("frob");
   }
+  
 
-3.2 image
+3.2 combobox
+
+The combobox has a textbox that be either editable or not
+("unresponsive"). When unresponsive, clicking the textbox opens the
+list.
+
+When an item is clicked, it is selected, its caption is shown in
+the textbox and the list is closed.
+
+When the combobox has focus, items can be navigated with the up/down
+arrows. Items can also be searched for by typing; if more than one
+second elapses between two keys, the search string is reset.
+
+Options:
+  . dropstyle (edit, list), default: list
+    if 'edit', the textbox is editable
+
+Example:
+  
+  function f(rp)
+  {
+    var c = new ui.combobox();
+
+    for (var i=0; i<10; ++i)
+      c.add_item("item " + (i + 1));
+
+    rp.add(c);
+  }
+
+
+3.3 image
 
 This is a simple control that displays an Image object. It can also
 have a second image that will be overlaid on the first, with a
@@ -447,6 +482,7 @@ Example:
     // label with a simple caption
     rp.add(new ui.label("caption"));
   }
+
 
 3.5 sepatator
 
@@ -592,11 +628,43 @@ Example:
   }
 
 
-3.8 scrollbar
+3.8 progress
+A rectangle in which a part is filled, depending on the current value.
+It can also be in indeterminate mode, in which case it will be
+regularly redrawn with a block that moves back and forth.
 
-This is a slider (3.10) with up/down or left/right buttons. A scroller
-(3.9) can be used to automatically manage scrolling a child control,
-but standalone scrollbars can also be used. The list control (3.6)
+The limits of the bar are hardcoded to [0,100]. Passing -1 to value()
+will put it in indeterminate mode.
+
+Options:
+
+Example:
+  
+  function f(rp)
+  {
+    var p = new ui.progress();
+    p.value(-1);
+    
+    // 5 seconds of indeterminate mode
+    setTimeout(function()
+      {
+        p.value(0);
+
+        // tick twice a second
+        setInterval(function()
+          {
+            p.value(p.value() + 1);
+          }, 500);
+
+      }, 5000);
+  }
+
+
+3.9 scrollbar
+
+This is a slider [3.11] with up/down or left/right buttons. A scroller
+[3.10] can be used to automatically manage scrolling a child control,
+but standalone scrollbars can also be used. The list control [3.6]
 uses them.
 
   function f(rp)
@@ -624,12 +692,12 @@ uses them.
   }
 
 
-3.9 scroller
+3.10 scroller
 
 This is a panel with scrollbars. Its only child will always have its
 preferred size and will be moved around when scrolling.
 
-A scroller uses sliders (3.10) and special buttons that support holding
+A scroller uses sliders [3.11] and special buttons that support holding
 them down to continuously scroll.
 
 Options:
@@ -653,7 +721,7 @@ Example:
   }
 
 
-3.10 slider
+3.11 slider
 
 This is a thin panel with a button that can be moved around,
 constrained to the panel. It also supports clicking in the empty
@@ -702,7 +770,7 @@ Example:
   }
 
 
-3.11 textbox
+3.12 textbox
 
 Textboxes are hard. There's even a long section from whatwg saying
 that "authors should avoid implementing text editing controls using
@@ -763,7 +831,7 @@ Example:
   }
   
 
-3.12 tooltip
+3.13 tooltip
 
 A tooltip is nothing special, except that it has a yellow background
 and borders. Every control can have a tooltip (set by calling
@@ -784,7 +852,7 @@ Example:
     rp.add(lb);
   }
 
-3.13 control and container base classes
+3.14 control and container base classes
 
 All controls inherit from the 'control' class, which has some member
 functions of its own. For example, it allows for changing the mouse
