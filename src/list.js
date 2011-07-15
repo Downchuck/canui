@@ -553,6 +553,8 @@ list: function(opts)
     if (cols_ == undefined)
       return;
 
+    var now = new Date().getTime();
+
     for (var i=0; i<cols_.length; ++i)
     {
       if (cols_[i].sort_direction() != 0)
@@ -564,6 +566,8 @@ list: function(opts)
         break;
       }
     }
+
+    console.log(new Date().getTime() - now);
   }
 
   var update = function()
@@ -916,56 +920,14 @@ list: function(opts)
     context.restore();
   };
 
-  var list_dimension = function()
-  {
-    var w = 0;
-
-    var ws = calculate_widths(false);
-    if (ws != undefined)
-    {
-      for (var i in ws)
-        w += ws[i];
-    }
-
-    if (w == 0)
-      w = 200;
-    
-    var h = self.option("item_height") * items_.length;
-    if (h == 0)
-      h = 100;
-    
-    return new dimension(w, h);
-  }
-
-  var usable_bounds = function()
-  {
-    var y = 1;
-
-    if (self.option("show_header"))
-      y += header_.height();
-
-    return new rectangle(
-      1, y,
-      self.width()-2, self.height() - y - 2);
-  }
-
-  var viewport_bounds = function()
-  {
-    var r = usable_bounds();
-
-    if (vert_scroll_.parent() != undefined)
-      r.w -= vert_scroll_.width();
-
-    return r;
-  }
-
   // draws all the items in the given rectangle
   //
   var draw_items = function(context, r)
   {
-    var p = new point(r.x, r.y);
+    var v = visible_items();
+    var p = new point(r.x, r.y + (v.first * self.option("item_height")));
 
-    for (var x=0; x<items_.length; ++x)
+    for (var x=v.first; x<=v.last; ++x)
     {
       var item = items_[x];
 
@@ -1014,6 +976,71 @@ list: function(opts)
       draw_text(context, item.caption(j), c, r, self.font());
       tw += r.w;
     }
+  };
+
+  var list_dimension = function()
+  {
+    var w = 0;
+
+    var ws = calculate_widths(false);
+    if (ws != undefined)
+    {
+      for (var i in ws)
+        w += ws[i];
+    }
+
+    if (w == 0)
+      w = 200;
+    
+    var h = self.option("item_height") * items_.length;
+    if (h == 0)
+      h = 100;
+    
+    return new dimension(w, h);
+  }
+
+  var usable_bounds = function()
+  {
+    var y = 1;
+
+    if (self.option("show_header"))
+      y += header_.height();
+
+    return new rectangle(
+      1, y,
+      self.width()-2, self.height() - y - 2);
+  }
+
+  var viewport_bounds = function()
+  {
+    var r = usable_bounds();
+
+    if (vert_scroll_.parent() != undefined)
+      r.w -= vert_scroll_.width();
+
+    return r;
+  }
+
+  var visible_items = function()
+  {
+    if (items_.length == 0)
+      return {first: 0, last: 0};
+
+    var r = viewport_bounds();
+    
+    var hidden_count =
+      to_int(-origin_.y / self.option("item_height"));
+
+    var visible_count =
+      to_int(r.h / self.option("item_height")) + 1;
+
+    var first = hidden_count;
+    var last = hidden_count + visible_count;
+
+    if (last >= (items_.length - 1))
+      last = items_.length - 1;
+
+    return {"first": first, "last": last};
   };
 
   self.focus_item = function(i)

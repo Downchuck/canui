@@ -91,6 +91,8 @@ function test_widget()
 $(function()
 {
   set_image_dir("../src/images");
+
+  //logical_compare("item 1", "item 1");
   
   g_rp = ui.create_root_panel("rp");
 
@@ -111,13 +113,15 @@ $(function()
   g_rp.add(p);*/
 
   //g_rp.add(new ui.textbox());
-
+  
   var l = new ui.list();
   l.add_column("col 1");
   l.add_column("col 2");
 
-  for (var i=0; i<20; ++i)
+  l.frozen(true);
+  for (var i=0; i<210; ++i)
     l.add_item(["item " + i, "col " + to_int(Math.random() * 20)]);
+  l.frozen(false);
 
   g_rp.add(l, ui.sides.center);
 });

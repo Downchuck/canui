@@ -553,14 +553,9 @@ function is_number(v)
 function isdigit(c)
 {
   assert(c != undefined && c.length == 1);
-  switch(c)
-  {
-    case "0": case "1": case "2": case "3": case "4":
-    case "5": case "6": case "7": case "8": case "9":
-      return true;
-  }
-
-  return false;
+  
+  var cc = c.charCodeAt(0);
+  return (cc >= 48 && cc <= 57);
 }
 
 // returns whether 'c' is one of space, \t, \n, \v, \f or \r
@@ -782,63 +777,35 @@ function logical_compare(a, b)
   else if (a.length > b.length)
     return 1;
 
-  var i=0;
-  for (;;)
+  var e = /(\D+)|(\d+)/g;
+
+  var r1 = a.match(e);
+  var r2 = b.match(e);
+
+  if (r1.length < r2.length)
+    return -1;
+  else if (r1.length > r2.length)
+    return 1;
+
+  for (var i=0; i<r1.length; ++i)
   {
-    if (i >= b.length)
-      return 1;
-
-    if (i >= a.length)
-      break;
-
-    if (isdigit(a[i]))
+    if (isdigit(r1[i][0]))
     {
-      if (!isdigit(b[i]))
+      var i1 = to_int(r1[i]);
+      var i2 = to_int(r2[i]);
+
+      if (i1 < i2)
         return -1;
-
-      var n1 = "";
-      var n2 = "";
-
-      while (i < a.length && i < b.length)
-      {
-        if (isdigit(a[i]) && isdigit(b[i]))
-        {
-          n1 += a[i];
-          n2 += b[i];
-        }
-        else if (isdigit(a[i]))
-        {
-          return -1;
-        }
-        else
-        {
-          return 1;
-        }
-
-        ++i;
-      }
-
-      if (to_int(n1) < to_int(n2))
-        return -1;
-      else if (to_int(n1) > to_int(n2))
+      else if (i1 > i2)
         return 1;
-    }
-    else if (isdigit(b[i]))
-    {
-      return 1;
     }
     else
     {
-      var c1 = a[i].toLowerCase();
-      var c2 = b[i].toLowerCase();
-
-      if (c1 < c2)
+      if (r1[i] < r2[i])
         return -1;
-      else if (c1 > c2)
+      else if (r1[i] > r2[i])
         return 1;
     }
-
-    ++i;
   }
 
   return 0;
