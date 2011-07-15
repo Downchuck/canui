@@ -99,7 +99,7 @@ menu
 list
   Todo: column resize/move, item drag/drop, keyboard nav, other views
         (icon, etc.), icon in column, allow any control (editable
-        list), sort, tooltips, horizontal scroll, always draws all
+        list), tooltips, horizontal scroll, always draws all
         items
 Bugs: none
 
