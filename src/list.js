@@ -422,6 +422,9 @@ dragger: function(c)
 //    the item under the mouse will be automatically selected without
 //    having to click
 //
+//  multiple (true/false), default: true
+//    whether multiple items can be selected
+//
 list: function(opts)
 {
   ui.inherit_container(this,
@@ -474,6 +477,7 @@ list: function(opts)
       column_resize: "auto",
       show_header: true,
       expand_header: true,
+      multiple: true,
       item_scroll: false,
       track: false,
       padding: 5
@@ -844,6 +848,9 @@ list: function(opts)
   //
   self.select_only = function(s)
   {
+    if (s.length > 1 && !self.option("multiple"))
+      s = [s[0]];
+
     for (var i in selected_items_)
       items_[selected_items_[i]].selected(false);
 
@@ -870,6 +877,9 @@ list: function(opts)
   //
   self.select = function(s)
   {
+    if (s.length > 1 && !self.option("multiple"))
+      s = [s[0]];
+
     var changed = false;
 
     for (var i in s)
@@ -898,6 +908,9 @@ list: function(opts)
   //
   self.select_reverse = function(s)
   {
+    if (s.length > 1 && !self.option("multiple"))
+      s = [s[0]];
+
     for (var i in s)
     {
       var b = !items_[s[i]].selected();
@@ -1146,7 +1159,7 @@ list: function(opts)
     }
     else
     {
-      if (!self.option("track"))
+      if (!self.option("track") && self.option("multiple"))
         dragger_.on_mouse_left_down(mp);
     }
 
@@ -1213,7 +1226,8 @@ list: function(opts)
     var sel = [];
     var rp = self.get_root_panel();
 
-    if (rp.key_state(ui.key_codes.shift) && focus_ != -1)
+    if (rp.key_state(ui.key_codes.shift) && focus_ != -1 &&
+        self.option("multiple"))
     {
       var a = focus_;
       var b = i;
@@ -1244,37 +1258,47 @@ list: function(opts)
   {
     var rp = self.get_root_panel();
 
-    if (rp.key_state(ui.key_codes.ctrl) || rp.key_state(ui.key_codes.shift))
+    if (!self.option("multiple"))
     {
       if (sel.length == 0)
-        return;
-    }
-
-    if ((rp.key_state(ui.key_codes.ctrl) && rp.key_state(ui.key_codes.shift)))
-    {
-      self.select(sel);
-    }
-    else if (!ctrl_reverses && (rp.key_state(ui.key_codes.ctrl) || rp.key_state(ui.key_codes.shift)))
-    {
-      self.select(sel);
-    }
-    else if (rp.key_state(ui.key_codes.ctrl))
-    {
-      self.select_reverse(sel);
-
-      if (sel.length > 0)
-        self.focus_item(sel[0]);
-    }
-    else if (rp.key_state(ui.key_codes.shift))
-    {
-      self.select_only(sel);
+        self.select_only([]);
+      else
+        self.select_only([sel[0]]);
     }
     else
     {
-      self.select_only(sel);
+      if (rp.key_state(ui.key_codes.ctrl) || rp.key_state(ui.key_codes.shift))
+      {
+        if (sel.length == 0)
+          return;
+      }
 
-      if (sel.length != 0)
-        self.focus_item(sel[0]);
+      if ((rp.key_state(ui.key_codes.ctrl) && rp.key_state(ui.key_codes.shift)))
+      {
+        self.select(sel);
+      }
+      else if (!ctrl_reverses && (rp.key_state(ui.key_codes.ctrl) || rp.key_state(ui.key_codes.shift)))
+      {
+        self.select(sel);
+      }
+      else if (rp.key_state(ui.key_codes.ctrl))
+      {
+        self.select_reverse(sel);
+
+        if (sel.length > 0)
+          self.focus_item(sel[0]);
+      }
+      else if (rp.key_state(ui.key_codes.shift))
+      {
+        self.select_only(sel);
+      }
+      else
+      {
+        self.select_only(sel);
+
+        if (sel.length != 0)
+          self.focus_item(sel[0]);
+      }
     }
 
     self.redraw();
