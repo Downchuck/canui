@@ -533,6 +533,30 @@ Options:
 This is a list of items with columns. It only supports "details" view
 for now, with single and multiple selections.
 
+Adding a large number of items works fine. In fact, adding 200k+ items
+in firefox 5 takes less than 2 seconds with the proper options.
+Chrome and IE are a lot slower with 10+ seconds. Once the items are
+loaded, scrolling and selection is instant. Sorting will of course
+always be slow.
+
+"column_resize" needs to be either "none" or "header". Setting it to
+"auto" will loop through all the items and use measureText() to find
+their width, which takes forever. The list also needs to be frozen so
+that updates are deferred.
+
+  var list = new ui.list({column_resize: "none"});
+
+  // two columns, first one has a width of 100px and the second takes
+  // the remaining space (because expand_header is set by default)
+  list.add_column("col 1", 100);
+  list.add_column("col 2");
+
+  list.frozen(true);
+  for (var i=0; i<200000; ++i)
+    list.add_item(["item " + i, "col " + to_int(Math.random() * 20)]);
+  list.frozen(false);
+
+
 Options:
   . item_height (positive integer), default: g_line_height + 4
     height in pixels of an item; the text will be vertically

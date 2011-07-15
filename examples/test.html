@@ -94,6 +94,11 @@ $(function()
 
   //logical_compare("item 1", "item 1");
   
+/*  var r = explode("item 1\nmultiline\ntest meh bleh\nline", "\n");
+  console.log(dump_array(r));
+  return;*/
+  
+
   g_rp = ui.create_root_panel("rp");
 
   //var tb = new ui.textbox({text: "case ui.key_codes.down:\n{\nif (rp.key_state(ui.key_codes.ctrl))\n{\n// noop, todo: scroll down\n}\nelse\n{\nif (rp.key_state(ui.key_codes.shift))\n{\nvar p = next_line_same_column(sel_.last);\nself.selection(sel_.first, p);\n}\nelse\n{\nvar s = Math.max(sel_.first, sel_.last);\nvar p = next_line_same_column(s);\n\nself.selection(p);\n}\n"});
@@ -114,12 +119,12 @@ $(function()
 
   //g_rp.add(new ui.textbox());
   
-  var l = new ui.list();
-  l.add_column("col 1");
+  var l = new ui.list({column_resize: "none"});
+  l.add_column("col 1", 100);
   l.add_column("col 2");
 
   l.frozen(true);
-  for (var i=0; i<210; ++i)
+  for (var i=0; i<200210; ++i)
     l.add_item(["item " + i, "col " + to_int(Math.random() * 20)]);
   l.frozen(false);
 

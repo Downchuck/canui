@@ -290,24 +290,17 @@ function explode(s, sep)
   assert(s != undefined);
   assert(sep != undefined);
   assert(s.indexOf != undefined);
-  
-  var last = 0;
-  var n = 0;
-  
-  var r = new Array();
-  for (;;)
+
+  var e = new RegExp("[^" + sep + "]*", "gm");
+  var m = s.match(e);
+
+  var r = [];
+  for (var i=0; i<m.length; ++i)
   {
-    n = s.indexOf(sep, last);
-    if (n == -1)
-    {
-      r.push(s.substring(last));
-      break;
-    }
-    
-    r.push(s.substring(last, n));
-    last = n + 1;
+    if (m[i] != "")
+      r.push(m[i]);
   }
-  
+
   return r;
 }
 

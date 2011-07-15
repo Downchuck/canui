@@ -435,6 +435,9 @@ list: function(opts)
 
   // an array of list_item objects
   var items_ = [];
+
+  // internal list so that selection is faster on large lists
+  var selected_items_ = [];
   
   // an array of list_column objects
   var cols_ = [];
@@ -682,6 +685,31 @@ list: function(opts)
     return ws;
   }
 
+  var calculate_none_widths = function(fill)
+  {
+    var ws = undefined;
+
+    if (fill && self.option("expand_header"))
+    {
+      var vw = viewport_bounds().w;
+      ws = [];
+
+      var total_width = 0;
+      for (var i=0; i<cols_.length - 1; ++i)
+      {
+        var w = cols_[i].width();
+        ws.push(w);
+        total_width += w;
+      }
+
+      ws.push(0);
+
+      ws[ws.length - 1] = vw - total_width;
+    }
+
+    return ws;
+  }
+
   var calculate_widths = function(fill)
   {
     if (self.option("column_resize") == "header")
@@ -690,6 +718,8 @@ list: function(opts)
       return calculate_content_widths(fill);
     else if (self.option("column_resize") == "auto")
       return calculate_auto_widths(fill);
+    else
+      return calculate_none_widths(fill);
     
     return undefined;
   }
@@ -798,26 +828,15 @@ list: function(opts)
   {
     var s = [];
 
-    for (var i in items_)
-    {
-      if (items_[i].selected())
-        s.push(items_[i]);
-    }
+    for (var i in selected_items_)
+      s.push(items_[selected_items_[i]]);
 
     return s;
   }
 
   self.selection_indices = function()
   {
-    var s = [];
-
-    for (var i=0; i<items_.length; ++i)
-    {
-      if (items_[i].selected())
-        s.push(i);
-    }
-
-    return s;
+    return clone(selected_items_);
   }
 
   // selects all the items having the given indices, unselecting
@@ -825,17 +844,17 @@ list: function(opts)
   //
   self.select_only = function(s)
   {
-    for (var i in items_)
-    {
-      assert(items_[i] != undefined)
-      items_[i].selected(false);
-    }
+    for (var i in selected_items_)
+      items_[selected_items_[i]].selected(false);
+
+    selected_items_ = [];
 
     for (var i in s)
     {
       assert(s[i] != undefined);
       assert(items_[s[i]] != undefined);
 
+      selected_items_.push(s[i]);
       items_[s[i]].selected(true);
     }
 
@@ -862,6 +881,7 @@ list: function(opts)
 
       if (!item.selected())
       {
+        selected_items_.push(s[i]);
         items_[s[i]].selected(true);
         changed = true;
       }
@@ -879,7 +899,27 @@ list: function(opts)
   self.select_reverse = function(s)
   {
     for (var i in s)
-      items_[s[i]].selected(!items_[s[i]].selected());
+    {
+      var b = !items_[s[i]].selected();
+
+      items_[s[i]].selected(b);
+
+      if (!b)
+      {
+        for (var j in selected_items_)
+        {
+          if (selected_items_[j] == i)
+          {
+            selected_items_.splice(j, 1);
+            break;
+          }
+        }
+      }
+      else
+      {
+        selected_items_.push(s[i]);
+      }
+    }
 
     self.on_item_selection.fire();
     self.redraw();
