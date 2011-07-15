@@ -181,9 +181,55 @@ system_options:
 //
 function bind(f, a1, a2, a3, a4, a5)
 {
+  assert(f != undefined && typeof(f) == "function");
   return function()
     {
       return f(a1, a2, a3, a4, a5);
+    };
+}
+
+function bind_1(f, a)
+{
+  assert(f != undefined && typeof(f) == "function");
+  return function(a2, a3, a4, a5)
+    {
+      return f(a, a2, a3, a4, a5);
+    };
+}
+
+function bind_2(f, a)
+{
+  assert(f != undefined && typeof(f) == "function");
+  return function(a1, a3, a4, a5)
+    {
+      return f(a1, a, a3, a4, a5);
+    };
+}
+
+function bind_3(f, a)
+{
+  assert(f != undefined && typeof(f) == "function");
+  return function(a1, a2, a4, a5)
+    {
+      return f(a1, a2, a, a4, a5);
+    };
+}
+
+function bind_4(f, a)
+{
+  assert(f != undefined && typeof(f) == "function");
+  return function(a1, a2, a3, a5)
+    {
+      return f(a1, a2, a3, a, a5);
+    };
+}
+
+function bind_5(f, a)
+{
+  assert(f != undefined && typeof(f) == "function");
+  return function(a1, a2, a3, a4)
+    {
+      return f(a1, a2, a3, a4, a);
     };
 }
 
@@ -192,9 +238,11 @@ function bind(f, a1, a2, a3, a4, a5)
 //
 function mem_fun(f, o)
 {
+  assert(f != undefined && o != undefined);
+  assert(o[f] != undefined && typeof(o[f]) == "function");
+  
   return function(a1, a2, a3, a4, a5)
     {
-      assert(o && o[f]);
       return o[f](a1, a2, a3, a4, a5);
     };
 }
@@ -500,6 +548,32 @@ function is_number(v)
   return true;
 }
 
+// returns whether character 'c' is a digit
+//
+function isdigit(c)
+{
+  assert(c != undefined && c.length == 1);
+  switch(c)
+  {
+    case "0": case "1": case "2": case "3": case "4":
+    case "5": case "6": case "7": case "8": case "9":
+      return true;
+  }
+
+  return false;
+}
+
+// returns whether 'c' is one of space, \t, \n, \v, \f or \r
+//
+function isspace(c)
+{
+  var ws = " \t\n\v\f\r";
+  if (ws.indexOf(c) != -1)
+    return true;
+
+  return false;
+}
+
 // returns whether 'r' is one of the elements in vs
 //
 function one_of(r, vs)
@@ -556,17 +630,6 @@ function clamp(v, a, b)
     return b;
 
   return v;
-}
-
-// returns whether 'c' is one of space, \t, \n, \v, \f or \r
-//
-function isspace(c)
-{
-  var ws = " \t\n\v\f\r";
-  if (ws.indexOf(c) != -1)
-    return true;
-
-  return false;
 }
 
 // returns the index of the next or previous word in 's' from 'from'.
@@ -709,6 +772,77 @@ function adjacent_word(s, from, forward, opts)
     return 0;
 }
 
+// returns -1, 0 or if 'a' logically comes before, is equals to or
+// comes after 'b'; this ignores case and compares digits as numbers
+//
+function logical_compare(a, b)
+{
+  if (a.length < b.length)
+    return -1;
+  else if (a.length > b.length)
+    return 1;
+
+  var i=0;
+  for (;;)
+  {
+    if (i >= b.length)
+      return 1;
+
+    if (i >= a.length)
+      break;
+
+    if (isdigit(a[i]))
+    {
+      if (!isdigit(b[i]))
+        return -1;
+
+      var n1 = "";
+      var n2 = "";
+
+      while (i < a.length && i < b.length)
+      {
+        if (isdigit(a[i]) && isdigit(b[i]))
+        {
+          n1 += a[i];
+          n2 += b[i];
+        }
+        else if (isdigit(a[i]))
+        {
+          return -1;
+        }
+        else
+        {
+          return 1;
+        }
+
+        ++i;
+      }
+
+      if (to_int(n1) < to_int(n2))
+        return -1;
+      else if (to_int(n1) > to_int(n2))
+        return 1;
+    }
+    else if (isdigit(b[i]))
+    {
+      return 1;
+    }
+    else
+    {
+      var c1 = a[i].toLowerCase();
+      var c2 = b[i].toLowerCase();
+
+      if (c1 < c2)
+        return -1;
+      else if (c1 > c2)
+        return 1;
+    }
+
+    ++i;
+  }
+
+  return 0;
+}
 
 // todo
 var g_context = undefined;

@@ -2,6 +2,26 @@
 
 namespace("ui", {
 
+list_lexicographic_sorter: function(a, b, i)
+{
+  var c1 = a.caption(i);
+  var c2 = b.caption(i);
+
+  if (c1 < c2)
+    return -1;
+  else if (c1 > c2)
+    return 1;
+  return 0;
+},
+
+list_logical_sorter: function(a, b, i)
+{
+  var c1 = a.caption(i);
+  var c2 = b.caption(i);
+
+  return logical_compare(c1, c2);
+},
+
 // an item in a list; this contains an array of captions (for the
 // columns) and the item state (such as the selection)
 //
@@ -52,9 +72,12 @@ list_item : function(caption)
 //
 list_column: function(caption, width)
 {
+  var self = this;
+
   var caption_ = caption;
   var width_ = (width == undefined ? 0 : width);
-
+  var sorter_ = ui.list_logical_sorter;
+  var sort_ = 0;
 
   // constructor
   //
@@ -62,7 +85,7 @@ list_column: function(caption, width)
   {
   };
 
-  this.caption = function(c)
+  self.caption = function(c)
   {
     if (c != undefined)
       caption_ = c;
@@ -70,13 +93,55 @@ list_column: function(caption, width)
     return caption_;
   };
 
-  this.width = function(w)
+  self.width = function(w)
   {
     if (w != undefined)
       width_ = w;
 
     return width_;
   };
+
+  self.sorter = function(s)
+  {
+    if (s != undefined)
+      sorter_ = s;
+
+    return sorter_;
+  }
+
+  self.current_sorter = function(s)
+  {
+    if (sort_ == 1)
+    {
+      return sorter_;
+    }
+    else
+    {
+      return function(a, b, i)
+        {
+          return -sorter_(a, b, i);
+        };
+    }
+  }
+
+  self.toggle_sort_direction = function()
+  {
+    if (sort_ == 1)
+      sort_ = -1;
+    else
+      sort_ = 1;
+  }
+
+  self.sort_direction = function(v)
+  {
+    if (v != undefined)
+    {
+      assert(v == -1 || v == 0 || v == 1);
+      sort_ = v;
+    }
+    
+    return sort_;
+  }
 
   init();
 },
@@ -87,6 +152,9 @@ list_header: function(parent)
 {
   ui.inherit_container(this, {layout: new ui.absolute_layout()});
   var self = this;
+
+  self.clicked = new signal();
+
 
   // list object
   var parent_ = parent;
@@ -106,6 +174,9 @@ list_header: function(parent)
   //
   self.header_width = function(i)
   {
+    if (headers_ == undefined)
+      return 0;
+
     assert(i >= 0 && i < headers_.length);
     return headers_[i].best_dimension().w
   }
@@ -130,24 +201,53 @@ list_header: function(parent)
     return -1;
   }
 
-  self.refresh = function()
+  var set_button = function(b, c)
+  {
+    var p = new ui.panel({layout: new ui.border_layout()});
+    p.add(new ui.label({caption: c.caption()}), ui.sides.center);
+
+    if (c.sort_direction() == -1)
+      p.add(new ui.image({image: load_image("up.png", "^")}), ui.sides.right);
+    else if (c.sort_direction() == 1)
+      p.add(new ui.image({image: load_image("down.png", "v")}), ui.sides.right);
+
+    b.label(p);
+  }
+
+  var recreate_buttons = function()
   {
     self.remove_all();
     headers_ = [];
-    
-    var highest = 0;
-    var total_width = 0;
-    var x = 0;
 
     for (var i=0; i<cols_.length; ++i)
     {
       var c = cols_[i];
 
-      var b = new ui.button({caption: c.caption()});
-      b.label().option("halign", "left");
+      var b = new ui.button();
+      b.clicked.add(bind(on_clicked, i));
 
       headers_.push(b);
       self.add(b);
+    }
+  }
+
+  self.refresh = function()
+  {
+    var highest = 0;
+    var total_width = 0;
+    var x = 0;
+
+    if (headers_ == undefined || (headers_.length != cols_.length))
+      recreate_buttons();
+
+    assert(headers_.length == cols_.length);
+
+    for (var i=0; i<headers_.length; ++i)
+    {
+      var b = headers_[i];
+      var c = cols_[i];
+
+      set_button(b, c);
 
       var bd = b.best_dimension();
       highest = Math.max(highest, bd.h);
@@ -171,7 +271,13 @@ list_header: function(parent)
     }
 
     self.layout().set_best_dimension(
-      new dimension(total_width, highest));  }
+      new dimension(total_width, highest));
+  }
+
+  var on_clicked = function(i)
+  {
+    self.clicked.fire(i);
+  }
 
   // creates as many buttons are there are captions; all the buttons
   // will have the height of the largest
@@ -375,6 +481,8 @@ list: function(opts)
     if (self.option("show_header"))
       self.add(header_, ui.sides.top);
 
+    header_.clicked.add(on_header_clicked);
+
     vert_scroll_.changed.add(on_vert_scroll);
     vert_scroll_.tick_size(self.option("item_height"));
 
@@ -399,6 +507,9 @@ list: function(opts)
   {
     cols_.push(new ui.list_column(name, width));
 
+    if (cols_.length == 1)
+      cols_[0].sort_direction(1);
+
     if (!frozen_)
       update();
   };
@@ -422,12 +533,44 @@ list: function(opts)
       update();
   }
 
+  var on_header_clicked = function(c)
+  {
+    assert(c >= 0 && c < cols_.length);
+
+    for (var i=0; i<cols_.length; ++i)
+    {
+      if (i == c)
+        cols_[i].toggle_sort_direction();
+      else
+        cols_[i].sort_direction(0);
+    }
+
+    self.sort();
+  }
+
+  self.sort = function()
+  {
+    if (cols_ == undefined)
+      return;
+
+    for (var i=0; i<cols_.length; ++i)
+    {
+      if (cols_[i].sort_direction() != 0)
+      {
+        items_.sort(bind_3(cols_[i].current_sorter(), i));
+        header_.refresh();
+        self.redraw();
+
+        break;
+      }
+    }
+  }
+
   var update = function()
   {
     header_.set(cols_);
+    self.sort();
     self.relayout();
-    //resize_columns();
-    //self.redraw();
   }
 
   var calculate_header_widths = function(fill)

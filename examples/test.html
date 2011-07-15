@@ -110,7 +110,16 @@ $(function()
 
   g_rp.add(p);*/
 
-  g_rp.add(new ui.textbox());
+  //g_rp.add(new ui.textbox());
+
+  var l = new ui.list();
+  l.add_column("col 1");
+  l.add_column("col 2");
+
+  for (var i=0; i<20; ++i)
+    l.add_item(["item " + i, "col " + to_int(Math.random() * 20)]);
+
+  g_rp.add(l, ui.sides.center);
 });
 </script>
 
@@ -122,7 +131,7 @@ $(function()
 <p>This is a &lt;canvas&gt; element on which several controls are
 created.
 
-<div id="rp" data-layout="new ui.vertical_layout({margin: 5})" width="300" height="300">
+<div id="rp" data-layout="new ui.border_layout({margin: 5})" width="300" height="300">
 </div>
 
 </p>

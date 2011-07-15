@@ -92,6 +92,20 @@ inherit_container: function(self, opts)
       f(children_[i]);
   };
   
+  // calls f(c) for each child, recursive
+  //
+  self.each_child_recursive = function(f)
+  {
+    for (var i in children_)
+    {
+      var c = children_[i];
+      f(c);
+      
+      if (c.children_count() > 0)
+        c.each_child_recursive(f);
+    }
+  }
+
   // asks the layout manager for this container's best dimensions
   //
   self.container__best_dimension = function()

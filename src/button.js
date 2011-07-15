@@ -145,9 +145,6 @@ inherit_clickable: function(self, opts)
     if (lb != undefined)
     {
       assert(lb.internal_is_a_control);
-
-      // events will go to the button, not the label
-      lb.transparent(true);
     
       if (label_ != undefined)
         label_.remove();
@@ -155,6 +152,12 @@ inherit_clickable: function(self, opts)
       label_ = lb;
     
       self.add(label_, ui.sides.center);
+
+      // events will go to the button, not the label
+      self.each_child_recursive(function(c)
+      {
+        c.transparent(true);
+      });
     }
 
     return label_;
