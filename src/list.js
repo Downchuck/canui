@@ -441,6 +441,10 @@ list: function(opts)
 
   // internal list so that selection is faster on large lists
   var selected_items_ = [];
+
+  // while selecting the keyboard, the original item that had the
+  // focus
+  var pivot_ = -1;
   
   // an array of list_column objects
   var cols_ = [];
@@ -484,6 +488,7 @@ list: function(opts)
     });
 
     self.borders({"all": 1});
+    self.needs_focus(true);
 
     if (self.option("show_header"))
       self.add(header_, ui.sides.top);
@@ -1099,7 +1104,12 @@ list: function(opts)
   self.focus_item = function(i)
   {
     assert(i >= -1 && i < items_.length);
-    focus_ = i;
+
+    if (focus_ != i)
+    {
+      focus_ = i;
+      self.redraw();
+    }
   }
 
   var on_dragging = function(r)
@@ -1129,7 +1139,7 @@ list: function(opts)
         s.push(i);
     }
 
-    handle_selection(s, false);
+    handle_mouse_selection(s, false);
     /*self.select_only(s);
 
     if (a != -1)
@@ -1221,6 +1231,60 @@ list: function(opts)
     return true;
   }
 
+  self.on_keydown = function(code)
+  {
+    switch(code)
+    {
+      case ui.key_codes.up:
+      {
+        if (focus_ > 0)
+        {
+          if (pivot_ == -1)
+            pivot_ = focus_;
+
+          handle_keyboard_selection(focus_ - 1);
+        }
+        break;
+      }
+
+      case ui.key_codes.down:
+      {
+        if (focus_ < (items_.length - 1))
+        {
+          if (pivot_ == -1)
+            pivot_ = focus_;
+
+          handle_keyboard_selection(focus_ + 1);
+        }
+
+        break;
+      }
+
+      case " ".charCodeAt(0):
+      {
+        var rp = self.get_root_panel();
+
+        if (rp.key_state(ui.key_codes.ctrl))
+        {
+          if (rp.key_state(ui.key_codes.shift))
+            self.select(range(pivot_, focus_));
+          else
+            self.select_reverse([focus_]);
+
+          pivot_ = focus_;
+        }
+        else
+        {
+          self.select([focus_]);
+        }
+
+        break;
+      }
+    }
+
+    return true;
+  };
+
   var handle_click_selection = function(i)
   {
     var sel = [];
@@ -1251,19 +1315,73 @@ list: function(opts)
         sel = [i];
     }
 
-    handle_selection(sel, true);
+    handle_mouse_selection(sel, true);
   }
 
-  var handle_selection = function(sel, ctrl_reverses)
+  var handle_keyboard_selection = function(sel)
+  {
+    var rp = self.get_root_panel();
+
+    if (!self.option("multiple"))
+    {
+      if (sel == -1)
+      {
+        self.select_only([]);
+      }
+      else
+      {
+        self.select_only([sel]);
+        self.focus_item(sel);
+      }
+
+      pivot_ = -1;
+    }
+    else
+    {
+      //todo: ??
+      if (sel.length == 0)
+        return;
+
+      if (rp.key_state(ui.key_codes.shift) && rp.key_state(ui.key_codes.ctrl))
+      {
+        self.select(range(pivot_, sel));
+        self.focus_item(sel);
+        pivot_ = sel;        
+      }
+      else if (rp.key_state(ui.key_codes.shift))
+      {
+        self.select_only(range(pivot_, sel));
+        self.focus_item(sel);
+      }
+      else if (rp.key_state(ui.key_codes.ctrl))
+      {
+        self.focus_item(sel);
+      }
+      else
+      {
+        self.select_only([sel]);
+        self.focus_item(sel);
+
+        pivot_ = -1;
+      }
+    }
+  }
+
+  var handle_mouse_selection = function(sel, ctrl_reverses)
   {
     var rp = self.get_root_panel();
 
     if (!self.option("multiple"))
     {
       if (sel.length == 0)
+      {
         self.select_only([]);
+      }
       else
+      {
         self.select_only([sel[0]]);
+        self.focus_item(sel[0]);
+      }
     }
     else
     {

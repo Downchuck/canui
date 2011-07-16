@@ -956,3 +956,21 @@ function error_message(s)
 {
   console.err(s);
 }
+
+function range(first, last)
+{
+  var r = [];
+
+  if (first < last)
+  {
+    for (var i=first; i<=last; ++i)
+      r.push(i);
+  }
+  else
+  {
+    for (var i=first; i>=last; --i)
+      r.push(i);
+  }
+
+  return r;
+}
