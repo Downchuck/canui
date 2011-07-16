@@ -152,6 +152,15 @@ root_panel: function(opts)
   //
   var on_blur_event = function()
   {
+    // if a key is pressed, focus is lost and the key is released, the
+    // internal state won't be updated; there is no way of capturing
+    // the keyboard to receive the keyup event
+    //
+    // therefore, all the states are reset when focus is lost; this is
+    // not perfect, but it avoids some bugs
+    for (var i in key_states_)
+      key_states_[i] = false;
+
     self.set_focus(undefined);
   };
 
