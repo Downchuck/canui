@@ -97,9 +97,9 @@ menu
 
 
 list
-  Todo: column resize/move, item drag/drop, keyboard nav, other views
-        (icon, etc.), icon in column, allow any control (editable
-        list), tooltips, horizontal scroll
+  Todo: column resize/move, item drag/drop, other views (icon, etc.),
+        icon in column, allow any control (editable list), tooltips,
+        horizontal scroll
 Bugs: none
 
 

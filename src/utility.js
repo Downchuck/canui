@@ -7,7 +7,8 @@ key_codes:
 {
   left: 37, up: 38, right: 39, down: 40,
   home: 36, end: 35, back: 8, del: 46,
-  shift: 16, ctrl: 17, alt: 18, enter: 13
+  shift: 16, ctrl: 17, alt: 18, enter: 13,
+  page_down: 34, page_up: 33
 },
 
 // represents a font, can be used to construct css strings

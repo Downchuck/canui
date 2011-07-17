@@ -1103,21 +1103,52 @@ list: function(opts)
     return r;
   }
 
-  var visible_items = function()
+  var visible_items = function(complete)
   {
+    if (complete == undefined)
+      complete = false;
+
     if (items_.length == 0)
       return {first: 0, last: 0};
 
     var r = viewport_bounds();
+    var before = 0;
+    var after = 0;
     
+    var hidden_pixels = -origin_.y;
+
+    var h = hidden_pixels % self.option("item_height");
+    if (h > 0)
+    {
+      h = self.option("item_height") - h;
+      ++before;
+    }
+
+    hidden_pixels += h;
+
     var hidden_count =
-      to_int(-origin_.y / self.option("item_height"));
+      to_int(hidden_pixels / self.option("item_height"));
+
+    var visible_pixels = r.h - (hidden_pixels + origin_.y);
+    
+    var v = visible_pixels % self.option("item_height");
+    if (v > 0)
+    {
+      visible_pixels -= (v - 1);
+      ++after;
+    }
 
     var visible_count =
-      to_int(r.h / self.option("item_height")) + 1;
+      to_int(visible_pixels / self.option("item_height"));
 
     var first = hidden_count;
-    var last = hidden_count + visible_count;
+    var last = hidden_count + visible_count - 1;
+
+    if (!complete)
+    {
+      first -= before;
+      last += after;
+    }
 
     if (last >= (items_.length - 1))
       last = items_.length - 1;
@@ -1415,7 +1446,37 @@ list: function(opts)
 
         break;
       }
+      
+      case ui.key_codes.page_up:
+      {
+        var vi = visible_items(true);
+        var c = vi.last - vi.first;
 
+        var f = vi.first;
+        if (focus_ == vi.first)
+          f = vi.first - c;
+        
+        f = clamp(f, 0, items_.length - 1);
+
+        handle_keyboard_selection(f);
+        break;
+      }
+
+      case ui.key_codes.page_down:
+      {
+        var vi = visible_items(true);
+        var c = vi.last - vi.first;
+
+        var f = vi.last;
+        if (focus_ == vi.last)
+          f = vi.last + c;
+        
+        f = clamp(f, 0, items_.length - 1);
+
+        handle_keyboard_selection(f);
+        break;
+      }
+      
       case " ".charCodeAt(0):
       {
         var rp = self.get_root_panel();
