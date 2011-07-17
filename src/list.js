@@ -897,7 +897,7 @@ list: function(opts)
         rect_.w, rect_.h);
 
       fill_rect(context, new color(0.03, 0.14, 0.41, 0.2), dr);
-      outline_rect(context, new color(0.83, 0.14, 0.41), dr);
+      outline_rect(context, new color(0.03, 0.14, 0.41), dr);
     }
 
     context.restore();
@@ -1393,10 +1393,10 @@ list: function(opts)
 
     var x = -origin_.x + mp.x;
     
-    var y = 0;
+    var y = -origin_.y + mp.y;
     if (drag_by_.vertical < 0)
       y = -origin_.y + vp.y - 1;
-    else
+    else if (drag_by_.vertical > 0)
       y = -origin_.y + vp.y + vp.h + 1;
 
     var dx = x - drag_start_.x;
