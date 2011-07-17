@@ -1423,7 +1423,7 @@ control.
   called when a key on the keyboard is released; 'c' is the key code.
   This is called for all keys.
 
-  on_mouse_scroll(v)
+  on_mouse_scroll(mp, v)
   called when the mouse wheel is turned over a control, or anywhere
   if the control has captured the mouse; 'v' is a normalized value
   where 1 is a full tick.

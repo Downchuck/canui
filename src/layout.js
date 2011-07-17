@@ -758,7 +758,7 @@ border_layout: function(opts)
     {
       // bottom uses its preferred height and all the available width
       h = c.best_dimension().h;
-      bottom = new rectangle(x0, usable_h - h, usable_w, h);
+      bottom = new rectangle(x0, y0 + usable_h - h, usable_w, h);
       
       center.h -= h;
 
@@ -788,7 +788,7 @@ border_layout: function(opts)
     {
       // right uses its preferred width and all the remaining height
       w = c.best_dimension().w;
-      right = new rectangle(usable_w - w, center.y, w, center.h);
+      right = new rectangle(x0 + usable_w - w, center.y, w, center.h);
       
       center.w -= w;
 

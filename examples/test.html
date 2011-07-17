@@ -129,6 +129,21 @@ $(function()
   l.frozen(false);
 
   g_rp.add(l, ui.sides.center);
+
+  var p = new ui.panel({layout: new ui.horizontal_layout()});
+  var t = new ui.textbox();
+  var b = new ui.button({caption: "goto"});
+  b.clicked.add(function()
+    {
+      var i = to_int(t.text());
+      if (i >= 0 && i < l.item_count())
+        l.scroll_to_item(i, "center");
+    });
+
+  p.add(t);
+  p.add(b);
+
+  g_rp.add(p, ui.sides.bottom);
 });
 </script>
 
@@ -140,7 +155,7 @@ $(function()
 <p>This is a &lt;canvas&gt; element on which several controls are
 created.
 
-<div id="rp" data-layout="new ui.border_layout({margin: 5})" width="300" height="300">
+<div id="rp" data-layout="new ui.border_layout({margin: 5, padding: 3})" width="300" height="300">
 </div>
 
 </p>

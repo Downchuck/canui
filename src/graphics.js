@@ -705,14 +705,14 @@ function text_dimension(s, font)
   assert(font != undefined);
   assert(font.internal_is_a_font);
 
-  var context = get_context();
-  context.save();
-  context.font = font.string();
-
   // getting an array of lines
   var lines = explode(s, "\n");
   if (lines.length === 0)
     return new dimension(0, 0);
+
+  var context = get_context();
+  context.save();
+  context.font = font.string();
 
   // widest line
   var w = 0;

@@ -248,14 +248,19 @@ root_panel: function(opts)
 
   // called when the mouse scrolls over the canvas
   //
-  var on_scroll_event = function(event, delta)
+  var on_scroll_event = function(ev, delta)
   {
+    // mouse coordinates relative to the canvas
+    var mp = mouse_pos(ev); 
+    
+    set_last_mouse(mp);
+
     var c = active_control();
     if (!c)
       return;
 
-    if (c.on_mouse_scroll(delta))
-      event.preventDefault();
+    if (c.on_mouse_scroll(c.absolute_to_local(mp), delta))
+      ev.preventDefault();
   }
 
   // called when the mouse moves over the canvas (or anywhere if

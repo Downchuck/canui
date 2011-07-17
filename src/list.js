@@ -299,92 +299,6 @@ list_header: function(parent)
   init();
 },
 
-dragger: function(c)
-{
-  var self = this;
-
-  self.on_dragging = new signal();
-
-  var control_ = c;
-  var origin_ = undefined;
-  var tentative_drag_ = false;
-  var dragging_ = false;
-  var tentative_delta_ = 5;
-  var rect_ = undefined;
-
-
-  self.dragging = function()
-  {
-    return dragging_;
-  }
-
-  self.rect = function()
-  {
-    return rect_;
-  }
-
-  self.on_mouse_left_down = function(mp)
-  {
-    origin_ = mp;
-    tentative_drag_ = true;
-    control_.capture_mouse();
-
-    return true;
-  }
-
-  self.on_mouse_left_up = function(mp)
-  {
-    var handled = dragging_;
-
-    if (tentative_drag_ || dragging_)
-    {
-      control_.release_mouse();
-      tentative_drag_ = false;
-      dragging_ = false;
-      rect_ = undefined;
-
-      return true;
-    }
-
-    return handled;
-  }
-
-  self.on_mouse_move = function(mp)
-  {
-    if (!dragging_ && !tentative_drag_)
-      return;
-
-    var dx = mp.x - origin_.x;
-    var dy = mp.y - origin_.y;
-
-    if (tentative_drag_)
-    {
-      var d = Math.sqrt(dx*dx + dy*dy);
-      if (d > tentative_delta_)
-      {
-        tentative_drag_ = false;
-        dragging_ = true;
-      }
-    }
-
-    if (dragging_)
-    {
-      rect_ = new rectangle(
-        origin_.x, origin_.y, dx, dy);
-
-      normalize_rectangle(rect_);
-      self.on_dragging.fire(rect_);
-
-      return true;
-    }
-    
-    if (tentative_drag_ || dragging_)
-      return true;
-
-    return false;
-  }
-},
-
 // scollable list of items and a clickable header
 //
 // the list can be frozen so that columns won't be resized immediately
@@ -464,7 +378,13 @@ list: function(opts)
   // focused item
   var focus_ = -1;
 
-  var dragger_ = new ui.dragger(self);
+  var drag_start_ = undefined;
+  var tentative_drag_ = false;
+  var dragging_ = false;
+  var tentative_delta_ = 5;
+  var rect_ = undefined;
+  var drag_timer_ = undefined;
+  var drag_by_ = {horizontal: 0, vertical: 0};
 
   // an item is selected on list button down when the mouse is over
   // the caption, otherwise on button up; this is set to true on
@@ -497,8 +417,6 @@ list: function(opts)
 
     vert_scroll_.changed.add(on_vert_scroll);
     vert_scroll_.tick_size(self.option("item_height"));
-
-    dragger_.on_dragging.add(on_dragging);
   };
   
   // adds an item to the list
@@ -525,6 +443,13 @@ list: function(opts)
     if (!frozen_)
       update();
   };
+
+  // returns the number of items in the list
+  //
+  self.item_count = function()
+  {
+    return items_.length;
+  }
 
   // returns an array of list_item objects
   //
@@ -565,8 +490,6 @@ list: function(opts)
     if (cols_ == undefined)
       return;
 
-    var now = new Date().getTime();
-
     for (var i=0; i<cols_.length; ++i)
     {
       if (cols_[i].sort_direction() != 0)
@@ -578,8 +501,6 @@ list: function(opts)
         break;
       }
     }
-
-    console.log(new Date().getTime() - now);
   }
 
   var update = function()
@@ -969,14 +890,117 @@ list: function(opts)
 
     draw_items(context, r);
 
-    if (dragger_.dragging())
+    if (rect_ != undefined)
     {
-      fill_rect(context, new color(0.03, 0.14, 0.41, 0.2), dragger_.rect());
-      outline_rect(context, new color(0.03, 0.14, 0.41), dragger_.rect());
+      var dr = new rectangle(
+        rect_.x + origin_.x, rect_.y + origin_.y,
+        rect_.w, rect_.h);
+
+      fill_rect(context, new color(0.03, 0.14, 0.41, 0.2), dr);
+      outline_rect(context, new color(0.83, 0.14, 0.41), dr);
     }
 
     context.restore();
   };
+
+  // makes sure the given item index is visible in the viewport;
+  // 'where' can be:
+  //   "bottom": the given item will be at the bottom of the viewport;
+  //   "top": the given item will be at the top of the viewport;
+  //   "center": the given item will be at the center of the viewport;
+  //   "auto": the given item will be at the top or bottom depending
+  //           on the current scroll position; the list won't be
+  //           scrolled if the item is already visible
+  //
+  // if 'where' is undefined, it defaults to "auto"
+  //
+  self.scroll_to_item = function(i, where)
+  {
+    assert(i >= 0 && i <items_.length);
+
+    if (where == undefined)
+      where = "auto";
+
+    if (where == "auto")
+    {
+      var b = self.item_bounds(i);
+      var vr = visible_list_bounds();
+
+      if (b.y < vr.y)
+        scroll_to_item_impl(i, "top");
+      else if ((b.y + b.h) > (vr.y + vr.h))
+        scroll_to_item_impl(i, "bottom");
+      else
+        return;
+    }
+    else
+    {
+      scroll_to_item_impl(i, where);
+    }
+  }
+
+  var scroll_to_item_impl = function(i, where)
+  {
+    assert(i >= 0 && i <items_.length);
+
+    var b = self.item_bounds(i);
+    var y = undefined;
+
+    var vp = viewport_bounds();
+    var ld = list_dimension();
+
+    if (where == "bottom")
+    {
+      y = (b.y + b.h) - vp.h;
+    }
+    else if (where == "top")
+    {
+      y = b.y;
+    }
+    else if (where == "center")
+    {
+      y = b.y - vp.h/2 + b.h/2;
+    }
+
+    assert(y != undefined);
+    
+    if ((y + vp.h) > ld.h)
+      y = ld.h - vp.h;
+
+    if (y < 0)
+      y = 0;
+
+    vert_scroll_.scroll_to(y);
+    self.redraw();
+  }
+
+  // returns whether the given item index is visible; if 'complete'
+  // is true, will return false unless the item's height is
+  // completely in the viewport
+  //
+  self.item_visible = function(i, complete)
+  {
+    var r = self.item_bounds(i);
+    var vr = visible_list_bounds();
+    
+    if (r.y >= vp.y && (r.y + r.h) < (vp.y + vp.h))
+      return true;
+
+    return false;
+  }
+
+  // returns the bounds of the given item index relative to the top-
+  // left of the origin of the list; the width of the rectangle is the
+  // viewport width
+  //
+  self.item_bounds = function(i)
+  {
+    assert(i >= 0 && i < items_.length);
+
+    return new rectangle(
+      0, i * self.option("item_height"),
+      viewport_bounds().w, self.option("item_height"));
+  }
 
   // draws all the items in the given rectangle
   //
@@ -1101,6 +1125,13 @@ list: function(opts)
     return {"first": first, "last": last};
   };
 
+  var visible_list_bounds = function()
+  {
+    return new rectangle(
+      -origin_.x, -origin_.y,
+      viewport_bounds().w, viewport_bounds().h);
+  };
+
   self.focus_item = function(i)
   {
     assert(i >= -1 && i < items_.length);
@@ -1108,52 +1139,25 @@ list: function(opts)
     if (focus_ != i)
     {
       focus_ = i;
+
+      if (focus_ != -1)
+        self.scroll_to_item(focus_);
+
       self.redraw();
     }
   }
 
-  var on_dragging = function(r)
-  {
-    var hta = self.hit_test(new point(r.x, r.y));
-    var htb = self.hit_test(new point(r.x + r.w - 1, r.y + r.h - 1));
-    var a = -1, b = -1;
-
-    if (hta.column != -1)
-    {
-      if (hta.part == "above")
-        a = 0;
-      else
-        a = hta.item;
-    }
-
-    if (htb.part == "below")
-      b = items_.length - 1;
-    else
-      b = htb.item;
-
-    var s = [];
-
-    if (a != -1 && b != -1)
-    {
-      for (var i=a; i<=b; ++i)
-        s.push(i);
-    }
-
-    handle_mouse_selection(s, false);
-    /*self.select_only(s);
-
-    if (a != -1)
-      self.focus_item(a);
-      */
-    self.redraw();
-  }
-
   // scrolls the list
   //
-  self.on_mouse_scroll = function(delta)
+  self.on_mouse_scroll = function(mp, delta)
   {
     if (vert_scroll_.parent() != undefined)
+    {
       vert_scroll_.scroll_by(-delta * self.option("item_height"));
+
+      if (tentative_drag_ || dragging_)
+        check_drag(mp);
+    }
 
     return true;
   }
@@ -1170,7 +1174,13 @@ list: function(opts)
     else
     {
       if (!self.option("track") && self.option("multiple"))
-        dragger_.on_mouse_left_down(mp);
+      {
+        drag_start_ = new point(
+          -origin_.x + mp.x, -origin_.y + mp.y);
+
+        tentative_drag_ = true;
+        self.capture_mouse();
+      }
     }
 
     return true;
@@ -1183,7 +1193,7 @@ list: function(opts)
     var i = self.find_item(mp);
     assert(i != undefined);
 
-    if (!dragger_.dragging())
+    if (!dragging_)
     {
       if (!selection_handled_)
         handle_click_selection(i);
@@ -1192,11 +1202,50 @@ list: function(opts)
         self.on_item_clicked.fire(items_[i]);
     }
 
+    if (dragging_ || tentative_drag_)
+    {
+      self.release_mouse();
+      tentative_drag_ = false;
+      dragging_ = false;
+      rect_ = undefined;
+
+      if (drag_timer_ != undefined)
+      {
+        clearInterval(drag_timer_);
+        drag_timer_ = undefined;
+      }
+    }
+
     selection_handled_ = false;
-    dragger_.on_mouse_left_up(mp);
     self.redraw();
 
     return true;
+  }
+
+  var on_dragging = function()
+  {
+    var hta = self.hit_test(new point(rect_.x + origin_.x, rect_.y + origin_.y));
+    var htb = self.hit_test(new point(rect_.x + origin_.x + rect_.w - 1, rect_.y + origin_.y + rect_.h - 1));
+    var a = -1, b = -1;
+
+    if (hta.part == "above")
+      a = 0;
+    else if (hta.part == "below")
+      a = items_.length - 1;
+    else
+      a = hta.item;
+
+    if (htb.part == "above")
+      b = 0;
+    else if (htb.part == "below")
+      b = items_.length - 1;
+    else
+      b = htb.item;
+
+    handle_mouse_selection(range(a, b), false);
+    //self.scroll_to_item(b);
+
+    self.redraw();
   }
 
   self.on_mouse_move = function(mp)
@@ -1215,11 +1264,118 @@ list: function(opts)
         self.select_only([]);
       }
     }
-    else
+    else if (dragging_ || tentative_drag_)
     {
-      return dragger_.on_mouse_move(mp);
+      check_drag(mp);
+
+      if (tentative_drag_ || dragging_)
+        return true;
     }
   }
+  
+  var check_drag = function(mp)
+  {       
+    var p = new point(
+        -origin_.x + mp.x, -origin_.y + mp.y);
+
+    var dx = p.x - drag_start_.x;
+    var dy = p.y - drag_start_.y;
+
+    if (tentative_drag_)
+    {
+      var d = Math.sqrt(dx*dx + dy*dy);
+      if (d > tentative_delta_)
+      {
+        tentative_drag_ = false;
+        dragging_ = true;
+      }
+    }
+
+    if (dragging_)
+    {
+      rect_ = new rectangle(
+        drag_start_.x, drag_start_.y, dx, dy);
+
+      if (drag_timer_ == undefined)
+        on_dragging();
+
+      check_outside_drag(mp);
+    }
+  };
+
+  var check_outside_drag = function(mp)
+  {
+    var r = viewport_bounds();
+
+    var hor = 0;
+    if (mp.x < r.x)
+      hor = mp.x - r.x;
+    else if (mp.x >= (r.x + r.w))
+      hor = mp.x - (r.x + r.w);
+
+    var vert = 0;
+    if (mp.y < r.y)
+      vert = mp.y - r.y;
+    else if (mp.y >= (r.y + r.h))
+      vert = mp.y - (r.y + r.h);
+
+    var inside = (hor == 0 && vert == 0);
+
+    if (inside)
+    {
+      if (drag_timer_ != undefined)
+      {
+        clearInterval(drag_timer_);
+        drag_timer_ = undefined;
+      }
+
+      return;
+    }
+
+    if (inside)
+      return;
+
+    if (hor > 0 && hor < 5)
+      hor = 5;
+    else if (hor < 0 && hor > -5)
+      hor = -5;
+
+    if (vert > 0 && vert < 5)
+      vert = 5;
+    else if (vert < 0 && vert > -5)
+      vert = -5;
+
+    drag_by_ = {horizontal: hor, vertical: vert};
+
+    if (drag_timer_ == undefined)
+      drag_timer_ = setInterval(auto_scroll, 100);
+  }
+  
+  var auto_scroll = function()
+  {
+    var mp = self.get_root_panel().current_mouse_pos();
+    mp = self.absolute_to_local(mp);
+
+    vert_scroll_.scroll_by(drag_by_.vertical);
+
+    var vp = viewport_bounds();
+
+    var x = -origin_.x + mp.x;
+    
+    var y = 0;
+    if (drag_by_.vertical < 0)
+      y = -origin_.y + vp.y - 1;
+    else
+      y = -origin_.y + vp.y + vp.h + 1;
+
+    var dx = x - drag_start_.x;
+    var dy = y - drag_start_.y;
+
+    rect_ = new rectangle(
+      drag_start_.x, drag_start_.y, dx, dy);
+
+    on_dragging();
+  };
 
   self.on_double_click = function(mp)
   {

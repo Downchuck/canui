@@ -212,6 +212,13 @@ scrollbar: function(opts)
     thumb_.value(thumb_.value() + d);
   }
 
+  // scrolls to the given position
+  //
+  self.scroll_to = function(p)
+  {
+    thumb_.value(p);
+  }
+
   // either a click on the up button or that button is held down
   //
   var on_up = function()

@@ -710,7 +710,7 @@ inherit_control: function(self, opts)
   // fired when the mouse wheel is scrolled over this control; return
   // true if the event is consumed
   //
-  self.control__on_mouse_scroll = function(delta)
+  self.control__on_mouse_scroll = function(mp, delta)
   {
     // noop
 
