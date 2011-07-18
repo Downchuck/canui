@@ -67,8 +67,6 @@ inherit_label: function(self, opts)
   //
   self.label__draw = function(context)
   {
-    self.control__draw(context);
-
     if (caption_ == "")
       return;
 
@@ -92,6 +90,8 @@ inherit_label: function(self, opts)
       c = ui.theme.disabled_text_color();
       
     draw_text(context, caption_, c, b, self.font());
+
+    self.control__draw(context);
   };
   
   // debug: returns the caption

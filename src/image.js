@@ -240,8 +240,6 @@ image: function(opts)
   //
   self.draw = function(context)
   {
-    self.control__draw(context);
-
     var i = current_image();
     var o = current_overlay();
 
@@ -257,6 +255,8 @@ image: function(opts)
       r = make_overlay_bounds(r, o);
       draw_image(context, o, r, self.option("alpha"));
     }
+
+    self.control__draw(context);
   };
 
   self.typename = function()

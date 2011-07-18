@@ -188,8 +188,6 @@ separator: function(opts)
   //
   self.draw = function(context)
   {
-    self.control__draw(context);
-    
     var r = new rectangle(
       self.position().x + self.option("margin"),
       self.position().y + self.option("margin"),
@@ -208,6 +206,8 @@ separator: function(opts)
     
     context.fillStyle = self.option("color").string();
     context.fillRect(r.x, r.y, r.w, r.h);
+
+    self.control__draw(context);
   };
   
   // debug: returns this control's name
@@ -272,11 +272,6 @@ link: function(opts)
       check_tooltip();
 
     return r;
-  }
-
-  self.draw = function(context)
-  {
-    self.label__draw(context);
   }
 
   self.on_mouse_left_up = function(mp)
@@ -350,8 +345,6 @@ progress: function(opts)
   
   self.draw = function(context)
   {
-    self.control__draw(context);
-
     //todo
     var r = self.bounds();
     deflate(r, 1);
@@ -367,6 +360,8 @@ progress: function(opts)
     }
 
     fill_rect(context, ui.theme.selected_text_background(), r);
+
+    self.control__draw(context);
   };
 
   var start_indeterminate = function()

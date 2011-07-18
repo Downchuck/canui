@@ -198,8 +198,6 @@ inherit_textbox: function(self, opts)
   //
   self.textbox__draw = function(context)
   {
-    self.control__draw(context);
-
     // todo: this is a larger problem: borders are often not taken
     // into account, needs a more generic way
     fill_rect(context, self.option("background"), deflate(self.bounds(), 1));
@@ -282,6 +280,8 @@ inherit_textbox: function(self, opts)
     }
 
     draw_caret(context);
+
+    self.control__draw(context);
   };
 
   // returns the y position of the top of the string (where the caret

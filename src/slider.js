@@ -188,14 +188,14 @@ slider: function(opts)
   //
   self.draw = function(context)
   {
-    self.basic_panel__draw(context);
-
     // the area will be darker when the control is actually scrolling;
     if ((scrolling_ || tentative_scrolling_) && !scrolling_wait_)
     {
       var r = valid_scroll_rectangle();
       fill_rect(context, ui.theme.page_scroll_color(), r);
     }
+
+    self.basic_panel__draw(context);
   }
 
   // returns the size of this control minus the size of the thumb:

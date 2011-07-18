@@ -151,6 +151,8 @@ menu_button: function(parent, caption)
     }
 
     draw_text(context, caption_, c, r, self.font());
+
+    self.control__draw(context);
   };
   
   // debug: returns this control's name

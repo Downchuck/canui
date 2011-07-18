@@ -32,12 +32,27 @@ function rectangle(x, y, w, h)
   this.h = h;
 }
 
+// returns a copy of rectangle 'r' offset by x and y
+//
+function offset_rect(r, x, y)
+{
+  assert(valid_bounds(r));
+  assert(is_number(x) && is_number(y));
+
+  var rr = clone(r);
+
+  rr.x += x;
+  rr.y += y;
+
+  return rr;
+}
+
 // returns whether 'p' is in 'r'
 //
 function in_rectangle(p, r)
 {
   assert(p != undefined && p.internal_is_a_point);
-  assert(r != undefined && r.internal_is_a_rectangle);
+  assert(valid_bounds(r));
 
   if (p.x >= r.x && p.x < (r.x + r.w))
     if (p.y >= r.y && p.y < (r.y + r.h))

@@ -121,8 +121,7 @@ inherit_container: function(self, opts)
   //
   self.container__draw = function(context)
   {
-    self.control__draw(context);
-
+    context.save();
     clip(context, self.bounds());
     
     // offseting
@@ -139,6 +138,10 @@ inherit_container: function(self, opts)
         context.restore();
       }
     }
+
+    context.restore();
+
+    self.control__draw(context);
   };
   
   // sets the layout manager for this container if 'ly' is not

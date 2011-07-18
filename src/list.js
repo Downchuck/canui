@@ -870,9 +870,9 @@ list: function(opts)
   {
     assert(items_ != undefined);
 
-    self.container__draw(context);
-
-    var r = viewport_bounds();
+    var r = offset_rect(
+      viewport_bounds(),
+      self.position().x, self.position().y);
 
     context.save();
     clip(context, r);
@@ -893,14 +893,16 @@ list: function(opts)
     if (rect_ != undefined)
     {
       var dr = new rectangle(
-        rect_.x + origin_.x, rect_.y + origin_.y,
+        self.position().x + rect_.x + origin_.x + 1,
+        self.position().y + rect_.y + origin_.y + 1,
         rect_.w, rect_.h);
 
-      fill_rect(context, new color(0.03, 0.14, 0.41, 0.2), dr);
+      fill_rect(context, new color(0.03, 0.14, 0.41, 0.3), dr);
       outline_rect(context, new color(0.03, 0.14, 0.41), dr);
     }
 
     context.restore();
+    self.container__draw(context);
   };
 
   // makes sure the given item index is visible in the viewport;
@@ -1083,13 +1085,13 @@ list: function(opts)
 
   var usable_bounds = function()
   {
-    var y = 1;
+    var y = 0;
 
     if (self.option("show_header"))
       y += header_.height();
 
     return new rectangle(
-      1, y,
+      1, 1 + y,
       self.width()-2, self.height() - y - 2);
   }
 
