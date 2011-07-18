@@ -305,6 +305,18 @@ function explode(s, sep)
   return r;
 }
 
+// merges the elements of the array with the given separator between
+// the elements
+//
+function implode(a, sep)
+{
+  assert(a != undefined);
+  assert(sep != undefined);
+  assert(sep.indexOf != undefined);
+
+  return a.join(sep);
+}
+
 // returns whether 's' starts with 'w')
 //
 function starts_with(s, w)
@@ -394,6 +406,21 @@ function dump_array(a)
   }
   
   return "{" + opts + "}";
+}
+
+// returns a string representing the flags set
+//
+function dump_bitset(v, values)
+{
+  var s = [];
+
+  for (var i in values)
+  {
+    if (v & values[i])
+      s.push(i);
+  }
+
+  return implode(s, " | ");
 }
 
 // does a deep copy of the given object

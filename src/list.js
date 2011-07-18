@@ -2,6 +2,44 @@
 
 namespace("ui", {
 
+// hit test parts
+//
+list_parts:
+{
+  // the point is above the first item (such as between the header and
+  // the first item)
+  above: 0x01,
+
+  // the point is below the last item
+  below: 0x02,
+
+  // the point is in the margin before the start of the item (up to
+  // the start of the focus ring)
+  before: 0x04,
+
+  // the point is on the caption of an item (that is, there is text
+  // under the cursor)
+  caption: 0x08,
+
+  // the point is inside a column, but not over a caption (such as in
+  // the space between two captions on the same line)
+  nowhere: 0x10,
+  
+  // the point is after the last column
+  after:   0x20,
+
+  
+  // combines above, below, before and after; not on an item
+  not_on_item: 0x01 | 0x02 | 0x04 | 0x20,
+
+  // combines caption and nowhere; on an item
+  on_item: 0x08 | 0x10,
+
+  // combines before, caption, nowhere and after; there is an item on
+  // this line
+  on_item_line: 0x04 | 0x08 | 0x10 | 0x20
+},
+
 list_lexicographic_sorter: function(a, b, i)
 {
   var c1 = a.caption(i);
@@ -1222,7 +1260,7 @@ list: function(opts)
   {
     var ht = self.hit_test(mp);
 
-    if (ht.part == "caption")
+    if (ht.part == ui.list_parts.caption)
     {
       handle_click_selection(ht.item);
       selection_handled_ = true;
@@ -1284,23 +1322,44 @@ list: function(opts)
     var htb = self.hit_test(new point(rect_.x + origin_.x + rect_.w - 1, rect_.y + origin_.y + rect_.h - 1));
     var a = -1, b = -1;
 
-    if (hta.part == "above")
+    if (hta.part & ui.list_parts.above)
       a = 0;
-    else if (hta.part == "below")
+    else if (hta.part & ui.list_parts.below)
       a = items_.length - 1;
     else
       a = hta.item;
 
-    if (htb.part == "above")
+    if (htb.part & ui.list_parts.above)
       b = 0;
-    else if (htb.part == "below")
+    else if (htb.part & ui.list_parts.below)
       b = items_.length - 1;
     else
       b = htb.item;
 
-    handle_mouse_selection(range(a, b), false);
-    //self.scroll_to_item(b);
+    var r = range(a, b);
 
+    if ((hta.part & ui.list_parts.below) && 
+        (htb.part & ui.list_parts.below))
+    {
+      r = [];
+    }
+    else if ((hta.part & ui.list_parts.before) && 
+             (htb.part & ui.list_parts.before))
+    {
+      r = [];
+    }
+    else if ((hta.part & ui.list_parts.after) && 
+             (htb.part & ui.list_parts.after))
+    {
+      r = [];
+    }
+    else if ((hta.part & ui.list_parts.above) && 
+             (htb.part & ui.list_parts.above))
+    {
+      r = [];
+    }
+
+    handle_mouse_selection(r, false);
     self.redraw();
   }
 
@@ -1310,8 +1369,7 @@ list: function(opts)
     {
       var ht = self.hit_test(mp);
 
-      if (ht.part == "before" || ht.part == "caption" ||
-          ht.part == "nowhere" || ht.part == "after")
+      if ((ht.part & ui.list_parts.on_item_line) && ht.item >= 0)
       {
         self.select_only([ht.item]);
       }
@@ -1674,25 +1732,14 @@ list: function(opts)
   //     column: the index of the column, -1 if none; this is set
   //             even if the cursor is not over an item
   //
-  //     part: one of:
-  //       above:   the point is above the first item (such as between
-  //                the header and the first item)
-  //       below:   the point is below the last item
-  //       before:  the point is in the margin before the start of the
-  //                item (up to the start of the focus ring)
-  //       caption: the point is on the caption of an item (that is,
-  //                there is text under the cursor)
-  //       nowhere: the point is inside a column, but not over a
-  //                caption (such as in the space between two captions
-  //                on the same line)
-  //       after:   the point is after the last column
+  //     part: a combination of list_parts values
   //  }
   //  
   self.hit_test = function(p)
   {
     assert(p != undefined && p.internal_is_a_point);
 
-    var ht = {item: -1, column: -1, part: ""};
+    var ht = {item: -1, column: -1, part: 0};
     var rp = new point(p.x, p.y);
 
     // skip the header
@@ -1711,11 +1758,9 @@ list: function(opts)
     else
     {
       if (i < 0)
-        ht.part = "above";
+        ht.part |= ui.list_parts.above;
       else
-        ht.part = "below";
-
-      return ht;
+        ht.part |= ui.list_parts.below;
     }
 
     var cx = 0;
@@ -1730,37 +1775,43 @@ list: function(opts)
         var crp = new point(rp.x - cr.x, rp.y - cr.y);
         ht.column = c;
 
-        if (crp.x < self.option("padding"))
+        if (c == 0 && crp.x < self.option("padding"))
         {
-          ht.part = "before";
-          return ht;
+          ht.part |= ui.list_parts.before;
+        }
+        else
+        {
+          crp.x -= self.option("padding");
+
+          if (crp.x < self.option("padding"))
+          {
+            ht.part |= ui.list_parts.nowhere;
+          }
+          else if (ht.item >= 0)
+          {
+            crp.x -= self.option("padding");
+
+            var cw = text_dimension(items_[i].caption(c), self.font()).w;
+            if (crp.x < cw)
+            {
+              ht.part |= ui.list_parts.caption;
+            }
+            else
+            {
+              ht.part |= ui.list_parts.nowhere;
+            }
+          }
         }
 
-        crp.x -= self.option("padding");
-
-        if (crp.x < self.option("padding"))
-        {
-          ht.part = "nowhere";
-          return ht;
-        }
-
-        crp.x -= self.option("padding");
-
-        var cw = text_dimension(items_[i].caption(c), self.font()).w;
-        if (crp.x < cw)
-        {
-          ht.part = "caption";
-          return ht;
-        }
-
-        ht.part = "nowhere";
-        return ht
+        break;
       }
 
       cx += cr.w;
     }
 
-    ht.part = "after";
+    if (ht.column == -1)
+      ht.part |= ui.list_parts.after;
+
     return ht;
   }
 
@@ -1787,7 +1838,7 @@ list: function(opts)
     var ht = self.hit_test(p);
     assert(ht.item != undefined);
 
-    if (ht.part == "nowhere" || ht.part == "caption")
+    if (ht.part & ui.list_parts.on_item)
       return ht.item;
 
     return -1;
