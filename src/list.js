@@ -366,8 +366,10 @@ list: function(opts)
   // header buttons
   var header_ = new ui.list_header(self);
 
-  // vertical scroll bar
-  var vert_scroll_ = new ui.scrollbar();
+  // scroll bars
+  var scroller_ = new ui.scroller({empty: true});
+  //var vert_scroll_ = new ui.scrollbar();
+  //var hor_scroll_ = new ui.scrollbar({orientation: "horizontal"});
 
   // scroll offset
   var origin_ = new point(0, 0);
@@ -413,10 +415,12 @@ list: function(opts)
     if (self.option("show_header"))
       self.add(header_, ui.sides.top);
 
+    self.add(scroller_);
+
     header_.clicked.add(on_header_clicked);
 
-    vert_scroll_.changed.add(on_vert_scroll);
-    vert_scroll_.tick_size(self.option("item_height"));
+    scroller_.vscroll.add(on_vert_scroll);
+    scroller_.hscroll.add(on_hor_scroll);
   };
   
   // adds an item to the list
@@ -617,22 +621,18 @@ list: function(opts)
 
   var calculate_none_widths = function(fill)
   {
-    var ws = undefined;
+    var ws = [];
+
+    for (var i=0; i<cols_.length; ++i)
+      ws.push(cols_[i].width());
 
     if (fill && self.option("expand_header"))
     {
       var vw = viewport_bounds().w;
-      ws = [];
 
       var total_width = 0;
       for (var i=0; i<cols_.length - 1; ++i)
-      {
-        var w = cols_[i].width();
-        ws.push(w);
-        total_width += w;
-      }
-
-      ws.push(0);
+        total_width += cols_[i].width();
 
       ws[ws.length - 1] = vw - total_width;
     }
@@ -689,6 +689,18 @@ list: function(opts)
     self.redraw();
   };
 
+  // on horizontal scroll
+  //
+  var on_hor_scroll = function(v)
+  {
+    origin_.x = -v;
+
+    //todo
+    //self.on_bounds_changed();
+    header_.position(new point(1 + origin_.x, header_.position().y));
+    //self.redraw();
+  };
+
   // resizes the columns to fit the list
   //
   self.on_bounds_changed = function()
@@ -703,31 +715,39 @@ list: function(opts)
     var ub = usable_bounds();
     var ld = list_dimension();
 
+    scroller_.bounds(new rectangle(
+      1, 1, self.width() - 2, self.height() - 2));
+
     if (ld.h > ub.h)
-    {
-      if (vert_scroll_.parent() == undefined)
-        self.add(vert_scroll_);
-
-      vert_scroll_.bounds(new rectangle(
-        self.width() - vert_scroll_.best_dimension().w - 1, 1,
-        vert_scroll_.best_dimension().w, self.height() - 2));
-
-      vert_scroll_.limits(0, ld.h - ub.h);
-      vert_scroll_.page_size(viewport_bounds().h - self.option("item_height")*2);
-
-      self.relayout();
-    }
+      scroller_.vbar().limits(0, 1);
     else
+      scroller_.vbar().limits(0, 0);
+    
+    if (ld.w > ub.w)
+      scroller_.hbar().limits(0, 1);
+    else
+      scroller_.hbar().limits(0, 0);
+
+    var vp = viewport_bounds();
+    
+    if (scroller_.vbar().visible())
     {
-      if (vert_scroll_.parent() != undefined)
-        self.remove_child(vert_scroll_);
+      scroller_.vbar().limits(0, ld.h - vp.h);
+      scroller_.vbar().page_size(
+          vp.h - self.option("item_height")*2);
+    }
+
+    if (scroller_.hbar().visible())
+    {
+      scroller_.hbar().limits(0, ld.w - vp.w);
+      scroller_.hbar().page_size(0.90 * vp.w);
     }
 
     header_.set(cols_);
     resize_columns();
 
     var header_r = new rectangle(
-      1, 1, header_.best_dimension().w, header_.best_dimension().h);
+      1 + origin_.x, 1, header_.best_dimension().w, header_.best_dimension().h);
     header_.bounds(header_r);
   }
 
@@ -744,8 +764,8 @@ list: function(opts)
     if (self.option("show_header"))
       ld.h += header_.height();
 
-    if (vert_scroll_.parent() != undefined)
-      ld.w += vert_scroll_.best_dimension().w;
+    if (scroller_.vbar().visible())
+      ld.w += scroller_.vbar().best_dimension().w;
 
     // todo: why? border?
     ld.w += 2;
@@ -972,7 +992,7 @@ list: function(opts)
     if (y < 0)
       y = 0;
 
-    vert_scroll_.scroll_to(y);
+    scroller_.scroll_to(0, y);
     self.redraw();
   }
 
@@ -1099,8 +1119,11 @@ list: function(opts)
   {
     var r = usable_bounds();
 
-    if (vert_scroll_.parent() != undefined)
-      r.w -= vert_scroll_.width();
+    if (scroller_.vbar().visible())
+      r.w -= scroller_.vbar().width();
+
+    if (scroller_.hbar().visible())
+      r.h -= scroller_.hbar().height();
 
     return r;
   }
@@ -1184,9 +1207,9 @@ list: function(opts)
   //
   self.on_mouse_scroll = function(mp, delta)
   {
-    if (vert_scroll_.parent() != undefined)
+    if (scroller_.vbar().visible())
     {
-      vert_scroll_.scroll_by(-delta * self.option("item_height"));
+      scroller_.scroll_by(0, -delta * self.option("item_height"));
 
       if (tentative_drag_ || dragging_)
         check_drag(mp);
@@ -1389,7 +1412,7 @@ list: function(opts)
     var mp = self.get_root_panel().current_mouse_pos();
     mp = self.absolute_to_local(mp);
 
-    vert_scroll_.scroll_by(drag_by_.vertical);
+    scroller_.scroll_by(drag_by_.horizontal, drag_by_.vertical);
 
     var vp = viewport_bounds();
 

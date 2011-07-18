@@ -119,9 +119,9 @@ $(function()
 
   //g_rp.add(new ui.textbox());
   
-  var l = new ui.list({column_resize: "none"});
+  var l = new ui.list({column_resize: "none", expand_header: false});
   l.add_column("col 1", 100);
-  l.add_column("col 2");
+  l.add_column("col 2", 400);
 
   l.frozen(true);
   for (var i=0; i<50; ++i)
@@ -155,7 +155,7 @@ $(function()
 <p>This is a &lt;canvas&gt; element on which several controls are
 created.
 
-<div id="rp" data-layout="new ui.border_layout({margin: 5, padding: 3})" width="300" height="300">
+<div id="rp" data-layout="new ui.border_layout({margin: 5, padding: 3})" width="800" height="600">
 </div>
 
 </p>

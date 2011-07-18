@@ -127,6 +127,10 @@ slider: function(opts)
   // fired when the thumb has moved
   self.changed = new signal();
 
+  // fired when the limits have changed
+  self.limits_changed = new signal();
+
+
   // the thumb that moves around
   var thumb_ = new ui.slider_thumb(self);
 
@@ -232,6 +236,8 @@ slider: function(opts)
     {
       limits_ = {"min": Math.min(min, max), "max": Math.max(min, max)};
       set_value(value_);
+
+      self.limits_changed.fire();
     }
 
     return limits_;
