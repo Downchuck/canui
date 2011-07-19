@@ -459,6 +459,7 @@ list: function(opts)
 
     header_.clicked.add(on_header_clicked);
 
+    scroller_.z_order("topmost");
     scroller_.vscroll.add(on_vert_scroll);
     scroller_.hscroll.add(on_hor_scroll);
   };

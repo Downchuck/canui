@@ -129,7 +129,7 @@ inherit_container: function(self, opts)
       to_int(self.position().x + force_padding_.w),
       to_int(self.position().y + force_padding_.h));
     
-    for (var i in children_)
+    for (var i=children_.length-1; i>=0; --i)
     {
       if (children_[i].visible())
       {
@@ -169,6 +169,23 @@ inherit_container: function(self, opts)
   self.container__remove_child = function(c)
   {
     assert(c.internal_is_a_control);
+
+    var rp = self.get_root_panel();
+
+    if (rp != undefined)
+    {
+      if (c.internal_is_a_container)
+      {
+        c.each_child_recursive(function(cc)
+          {
+            rp.notify_remove(cc);
+          });
+      }
+      else
+      {
+        rp.notify_remove(cc);
+      }
+    }
     
     for (var i in children_)
     {
@@ -183,6 +200,31 @@ inherit_container: function(self, opts)
         break;
       }
     }
+  };
+
+  self.container__internal_set_zorder = function(c, z)
+  {
+    assert(z == "top" || z == "bottom");
+    assert(self.has_child(c));
+
+    // not implemented
+    assert(z != "bottom");
+
+    var cs = [];
+    cs.push(c);
+
+    for (var i=0; i<children_.length; ++i)
+    {
+      if (children_[i] != c)
+      {
+        if (children_[i].z_order().s == "topmost")
+          cs.unshift(children_[i]);
+        else
+          cs.push(children_[i]);
+      }
+    }
+
+    children_ = cs;
   };
   
   // fires the detached signal on this container and all its children
@@ -264,7 +306,7 @@ inherit_container: function(self, opts)
       return undefined;
     
     // looking for a child that has the point
-    for (var i=children_.length-1; i>=0; --i)
+    for (var i=0; i<children_.length; ++i)
     {
       var c = children_[i].find_control(lp, include_transparent);
       if (c)
@@ -341,20 +383,21 @@ inherit_container: function(self, opts)
 
   
   // vtable
-  self.is_dirty           = self.container__is_dirty;
-  self.best_dimension     = self.container__best_dimension;
-  self.draw               = self.container__draw;
-  self.layout             = self.container__layout;
-  self.do_layout          = self.container__do_layout;
-  self.remove_child       = self.container__remove_child;
-  self.remove_all         = self.container__remove_all;
-  self.trigger_detached   = self.container__trigger_detached;
-  self.children_count     = self.container__children_count;
-  self.find_id            = self.container__find_id;
-  self.add                = self.container__add;
-  self.find_control       = self.container__find_control;
-  self.has_child          = self.container__has_child;
-  self.dump               = self.container__dump;
+  self.is_dirty             = self.container__is_dirty;
+  self.best_dimension       = self.container__best_dimension;
+  self.draw                 = self.container__draw;
+  self.layout               = self.container__layout;
+  self.do_layout            = self.container__do_layout;
+  self.remove_child         = self.container__remove_child;
+  self.remove_all           = self.container__remove_all;
+  self.internal_set_zorder  = self.container__internal_set_zorder;
+  self.trigger_detached     = self.container__trigger_detached;
+  self.children_count       = self.container__children_count;
+  self.find_id              = self.container__find_id;
+  self.add                  = self.container__add;
+  self.find_control         = self.container__find_control;
+  self.has_child            = self.container__has_child;
+  self.dump                 = self.container__dump;
 },
 
 // base class for a simple panel (basically, a container with a

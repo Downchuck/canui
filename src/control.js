@@ -78,6 +78,8 @@ inherit_control: function(self, opts)
   // control-dependent options
   var opts_ = (opts == undefined ? {} : opts);
 
+  // z-order flags ("topmost" or "bottommost")
+  var zorder_ = "";
 
   // constructor
   //
@@ -259,6 +261,68 @@ inherit_control: function(self, opts)
       self.trigger_detached();
   };
   
+  // if 'v' is not undefined, sets the z order of this control; 'v'
+  // can be one of:
+  //   "top":        brings this control to the top of its parent's
+  //                 hierarchy
+  //   "bottom":     sends this control to the bottom of its parent's
+  //                 hierarchy
+  //   "topmost":    brings this control to the top of its parent's
+  //                 hierarchy and makes sure it stays there
+  //   "bottommost": sends this control to the bottom of its parent's
+  //                 hiererachy and makes sure it stays there
+  //
+  // in any case returns returns the current z-order, an object with
+  // {z: z-value (integer), s: "topmost"/"bottommost"/""}
+  //
+  self.control__z_order = function(v)
+  {
+    if (v != undefined)
+    {
+      assert(one_of(v, ["top", "bottom", "topmost", "bottommost"]));
+
+      // not implemented
+      assert(z != "bottommost");
+
+      if (v == "topmost")
+      {
+        zorder_ = "topmost";
+        v = "top";
+      }
+      else if (v == "bottommost")
+      {
+        zorder_ = "bottommost";
+        v = "bottom";
+      }
+      else if (v === "")
+      {
+        zorder_ = "";
+      }
+
+      if (self.internal_parent_ != undefined)
+      {
+        if (v == "top")
+          self.internal_parent_.internal_set_zorder(self, "top");
+        else if (v == "bottom")
+          self.internal_parent_.internal_set_zorder(self, "bottom");
+      }
+    }
+
+    var z = 0;
+    var i = 0;
+    if (self.internal_parent_ != undefined)
+    {
+      self.internal_parent_.each_child(function(c)
+        {
+          if (c == self)
+            z = i;
+          ++i;
+        });
+    }
+
+    return {z: z, s: zorder_};
+  };
+
   // fires the detached signal
   //
   self.control__trigger_detached = function()
@@ -915,6 +979,7 @@ inherit_control: function(self, opts)
   self.borders              = self.control__borders;
   self.parent               = self.control__parent;
   self.remove               = self.control__remove;
+  self.z_order              = self.control__z_order;
   self.is_hovered           = self.control__is_hovered;
   self.is_focused           = self.control__is_focused;
   self.focus                = self.control__focus;

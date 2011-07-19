@@ -245,18 +245,20 @@ inherit_clickable: function(self, opts)
       self.pressed(false);
     }
     
-    self.up.fire();
-
-    if (do_click)
-    {
-      if (self.is_hovered())
-        self.clicked.fire();
-    }
-
     if (captured_)
     {
       captured_ = false;
       self.release_mouse();
+    }
+
+    self.up.fire();
+
+    var hovered = self.is_hovered();
+
+    if (do_click)
+    {
+      if (hovered)
+        self.clicked.fire();
     }
 
     self.on_released(mp);

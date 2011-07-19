@@ -150,8 +150,24 @@ $(function()
   d.add(l, ui.sides.center);
   d.dimension(d.best_dimension());
 
+  d.closed.add(function()
+    {
+      d.remove();
+    });
+
   g_rp.add_floating(d, false);
 
+
+  d = new ui.dialog({position: new point(10, 10), layout: new ui.border_layout()});
+  d.add(new ui.textbox({multiline: true}), ui.sides.center);
+  d.dimension(d.best_dimension());
+
+  d.closed.add(function()
+    {
+      d.remove();
+    });
+
+  g_rp.add_floating(d, false);
 });
 </script>
 

@@ -395,7 +395,7 @@ root_panel: function(opts)
     context.restore();
 
     // drawing the floating controls
-    for (var i in floating_)
+    for (var i=floating_.length-1; i>=0; --i)
     {
       var f = floating_[i];
 
@@ -523,6 +523,68 @@ root_panel: function(opts)
     return self.container__find_control(mp, include_transparent);
   };
   
+  // makes sure the given control is not being captured or hovered
+  // or whatever
+  //
+  self.notify_remove = function(c)
+  {
+    if (captured_ == c)
+      self.release_mouse(c);
+
+    if (hovered_ == c)
+    {
+      hovered_ = undefined;
+      //handle_mouse_move(self.current_mouse_pos());
+    }
+
+    if (focused_ == c)
+    {
+      focused_ = undefined;
+    }
+  };
+
+  self.internal_set_zorder = function(c, z)
+  {
+    assert(z == "top" || z == "bottom");
+
+    // not implemented
+    assert(z != "bottom");
+
+    var cs = [];
+
+    var cf = undefined;
+    for (var i=0; i<floating_.length; ++i)
+    {
+      if (floating_[i].control == c)
+      {
+        cf = floating_[i];
+        break;
+      }
+    }
+
+    if (cf != undefined)
+    {
+      cs.push(cf);
+
+      for (var i=0; i<floating_.length; ++i)
+      {
+        if (floating_[i].control != c)
+        {
+          if (floating_[i].control.z_order().s == "topmost")
+            cs.unshift(floating_[i]);
+          else
+            cs.push(floating_[i]);
+        }
+      }
+
+      floating_ = cs;
+    }
+    else
+    {
+      self.container__internal_set_zorder(c, z);
+    }
+  };
+
   // remove_child handles both floating and regular controls
   //
   self.remove_child = function(c)
@@ -532,6 +594,18 @@ root_panel: function(opts)
     {
       if (floating_[i].control == c)
       {
+        if (floating_[i].control.internal_is_a_container)
+        {
+          floating_[i].control.each_child_recursive(function(cc)
+            {
+              self.notify_remove(cc);
+            });
+        }
+        else
+        {
+          self.notify_remove(cc);
+        }
+
         floating_.splice(i, 1);
         c.internal_set_parent(undefined);
         self.redraw();
@@ -628,6 +702,13 @@ root_panel: function(opts)
     var c = active_control();
     if (!c)
       return;
+
+    var p = c;
+    while (p != self)
+    {
+      p.z_order("top");
+      p = p.parent();
+    }
 
     self.set_focus(c);
     c.on_mouse_left_down(c.absolute_to_local(mp));
