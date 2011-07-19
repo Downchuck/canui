@@ -17,6 +17,10 @@ titlebar: function(d, opts)
   var self = this;
   self.internal_is_a_titlebar = true;
 
+  self.minimize = new signal();
+  self.restore = new signal();
+  self.close = new signal();
+
   var dialog_ = d;
   var caption_ = new ui.label();
 
@@ -46,14 +50,26 @@ titlebar: function(d, opts)
     minimize_.option("small", true);
     minimize_.layout().option("margin", 2);
     minimize_.label(new ui.image({image: load_image("minimize.png", "_")}));
+    minimize_.clicked.add(function()
+      {
+        self.minimize.fire();
+      });
 
     restore_.option("small", true);
     restore_.layout().option("margin", 2);
     restore_.label(new ui.image({image: load_image("maximize.png", "M")}));
+    restore_.clicked.add(function()
+      {
+        self.restore.fire();
+      });
 
     close_.option("small", true);
     close_.layout().option("margin", 2);
     close_.label(new ui.image({image: load_image("close.png", "x")}));
+    close_.clicked.add(function()
+      {
+        self.close.fire();
+      });
 
     buttons_ = new ui.panel({
       layout: new ui.horizontal_layout({padding: 2}),
@@ -92,11 +108,11 @@ titlebar: function(d, opts)
   {
     buttons_.remove_all();
 
-    if (self.option("minimizable"))
-      buttons_.add(minimize_);
+    //if (self.option("minimizable"))
+    //  buttons_.add(minimize_);
 
-    if (self.option("maximizable"))
-      buttons_.add(restore_);
+    //if (self.option("maximizable"))
+    //  buttons_.add(restore_);
 
     if (self.option("closable"))
       buttons_.add(close_);
@@ -157,15 +173,20 @@ titlebar: function(d, opts)
 //  maximizable (true/false), default: true
 //  whether the maximize/restore button is displayed on the titlebar
 //
-//  minimizable (true/false, default: true
+//  minimizable (true/false), default: true
 //  whether the minimize button is displayed on the titlebar
+//
+//  resizable (true/false), default: true
+//  whether the borders can be dragged to resize the dialog
 //
 inherit_dialog: function(self, opts)
 {
   ui.inherit_container(self, merge(opts, {
-    layout: new ui.border_layout({margin: 4})}));
+    layout: new ui.border_layout({margin: 4, padding: 1})}));
 
   self.internal_is_a_dialog = true;
+
+  self.closed = new signal();
 
   var title_ = new ui.titlebar(self, {caption: "test"});
   var pane_ = new ui.panel();
@@ -180,12 +201,26 @@ inherit_dialog: function(self, opts)
     self.set_default_options({
       closable: true,
       maximizable: true,
-      minimizable: true
+      minimizable: true,
+      resizable: true
     });
 
     title_.option("closable", self.option("closable"));
     title_.option("maximizable", self.option("maximizable"));
     title_.option("minimizable", self.option("minimizable"));
+    
+    title_.close.add(function()
+      {
+        self.closed.fire();
+      });
+
+    title_.restore.add(function()
+      {
+      });
+
+    title_.minimize.add(function()
+      {
+      });
 
     self.container__add(title_, ui.sides.top);
     self.container__add(pane_, ui.sides.center);
@@ -332,6 +367,9 @@ inherit_dialog: function(self, opts)
   var hit_test = function(mp)
   {
     var r = 0;
+
+    if (!self.option("resizable"))
+      return 0;
 
     var top = new rectangle(0, 0, self.width(), border_);
     var right = new rectangle(self.width() - border_ - 1, 0, border_, self.height());
