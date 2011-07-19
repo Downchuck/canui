@@ -969,9 +969,12 @@ function merge(o, m)
 {
   if (o == undefined)
     o = {};
+  else
+    o = clone(o);
 
   for (var i in m)
     o[i] = m[i];
+
   return o;
 }
 

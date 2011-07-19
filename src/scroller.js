@@ -277,6 +277,7 @@ scrollbar: function(opts)
 //
 // todo: this overrides some member functions so that children are
 // added/removed from the internal panel, but some are missing
+// todo: same thing with dialog
 //
 // todo: can't this use a border_layout instead of moving the
 // children around? the child is already in the internal panel, which

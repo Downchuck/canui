@@ -342,7 +342,7 @@ root_panel: function(opts)
   {
     for (var i in floating_)
     {
-      if (floating_[i].is_dirty())
+      if (floating_[i].control.is_dirty())
         return true;
     }
     
@@ -364,8 +364,11 @@ root_panel: function(opts)
 
       for (var i in floating_)
       {
-        floating_[i].dimension(floating_[i].best_dimension());
-        floating_[i].do_layout();
+        var f = floating_[i];
+        if (f.manage)
+          f.control.dimension(floating_[i].best_dimension());
+
+        f.control.do_layout();
       }
 
       // because the position of the controls might have changed, the
@@ -396,12 +399,15 @@ root_panel: function(opts)
     {
       var f = floating_[i];
 
-      // making sure the floating controls are not outside this
-      // panel
-      check_floating_position(f);
+      if (f.manage)
+      {
+        // making sure the floating controls are not outside this
+        // panel
+        check_floating_position(f);
+      }
 
       context.save();
-      f.draw(context);
+      f.control.draw(context);
       context.restore();
     }
     
@@ -507,7 +513,7 @@ root_panel: function(opts)
   {
     for (var i in floating_)
     {
-      var f = floating_[i];
+      var f = floating_[i].control;
 
       var c = f.find_control(mp);
       if (c != undefined)
@@ -524,7 +530,7 @@ root_panel: function(opts)
     // if this is a floating control, remove it
     for (var i=0; i<floating_.length; ++i)
     {
-      if (floating_[i] == c)
+      if (floating_[i].control == c)
       {
         floating_.splice(i, 1);
         c.internal_set_parent(undefined);
@@ -547,7 +553,7 @@ root_panel: function(opts)
     
     for (var i in floating_)
     {
-      if (floating_[i].has_child(ct))
+      if (floating_[i].control.has_child(ct))
         return true;
     }
     
@@ -557,13 +563,16 @@ root_panel: function(opts)
   
   // adds the given control as floating
   //
-  self.add_floating = function(c)
+  self.add_floating = function(c, manage)
   {
     assert(c.internal_is_a_control);
     assert(c.parent() == undefined);
+
+    if (manage == undefined)
+      manage = true;
     
     c.internal_set_parent(self);
-    floating_.push(c);
+    floating_.push({control: c, manage: manage});
 
     self.relayout();
   };
@@ -729,7 +738,7 @@ root_panel: function(opts)
     var s = self.container__dump(0) + "\n";
 
     for (var i in floating_)
-      s += "floating: " + floating_[i].dump(0) + "\n";
+      s += "floating: " + floating_[i].control.dump(0) + "\n";
 
     return s;
   };

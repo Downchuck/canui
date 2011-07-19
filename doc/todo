@@ -72,7 +72,7 @@ scrollbar
 
 scroller
   Todo: mouse wheel, keyboard
-  Bugs: none
+  Bugs: problems with interaction between h and v while resizing stuff
 
 
 slider

@@ -2,6 +2,14 @@
 
 namespace("ui", {
 
+dialog_borders:
+{
+  top:    0x01,
+  right:  0x02,
+  bottom: 0x04,
+  left:   0x08
+},
+
 titlebar: function(d, opts)
 {
   ui.inherit_container(this, merge(opts, {
@@ -11,6 +19,9 @@ titlebar: function(d, opts)
 
   var dialog_ = d;
   var caption_ = new ui.label();
+  var dragging_ = false;
+  var drag_start_ = undefined;
+  var original_ = undefined;
 
   var init = function()
   {
@@ -37,6 +48,46 @@ titlebar: function(d, opts)
     self.container__draw(context);
   };
 
+  self.on_mouse_left_down = function(mp)
+  {
+    self.control__on_mouse_left_down(mp);
+
+    assert(!dragging_);
+    dragging_ = true;
+    drag_start_ = self.local_to_absolute(mp);
+    original_ = dialog_.position();
+
+    self.capture_mouse();
+  };
+
+  self.on_mouse_left_up = function(mp)
+  {
+    self.control__on_mouse_left_up(mp);
+
+    if (dragging_)
+    {
+      self.release_mouse();
+      dragging_ = false;
+      drag_start_ = undefined;
+      original_ = undefined;
+    }
+  };
+
+  self.on_mouse_move = function(mp)
+  {
+    if (dragging_)
+    {
+      var p = self.local_to_absolute(mp);
+
+      var dx = p.x - drag_start_.x;
+      var dy = p.y - drag_start_.y;
+
+      dialog_.position(new point(original_.x + dx, original_.y + dy));
+    }
+
+    self.control__on_mouse_move(mp);
+  };
+
   self.typename = function()
   {
     return "titlebar";
@@ -48,20 +99,25 @@ titlebar: function(d, opts)
 inherit_dialog: function(self, opts)
 {
   ui.inherit_container(self, merge(opts, {
-    layout: new ui.border_layout({margin: 1})}));
+    layout: new ui.border_layout({margin: 4})}));
 
   self.internal_is_a_dialog = true;
 
   var title_ = new ui.titlebar(self, {caption: "test"});
   var pane_ = new ui.panel();
+  var border_ = 4;
 
+  var resizing_ = 0;
+  var original_bounds_ = undefined;
+  var original_mouse_ = undefined;
 
   var init = function()
   {
-    self.borders({all: 1});
-
     self.container__add(title_, ui.sides.top);
     self.container__add(pane_, ui.sides.center);
+
+    if (opts.layout != undefined)
+      pane_.layout(opts.layout);
   };
 
   self.dialog__best_dimension = function()
@@ -69,11 +125,142 @@ inherit_dialog: function(self, opts)
     return new dimension(300, 300);
   };
 
+  self.dialog__add = function(c, w)
+  {
+    return pane_.add(c, w);
+  }
+
+  self.dialog__remove_child = function(c)
+  {
+    return pane_.remove(c);
+  }
+
+  self.dialog__remove_all = function()
+  {
+    return pane_.remove_all();
+  }
+
   self.dialog__draw = function(context)
   {
-    fill_rect(context, ui.theme.face_color(), self.bounds());
+    fill_3d_rect(context, true, false, self.bounds())
 
     self.container__draw(context);
+  };
+
+  self.dialog__on_mouse_move = function(mp)
+  {
+    self.control__on_mouse_move(mp);
+
+    if (resizing_ != 0)
+    {
+      mp.x += self.position().x;
+      mp.y += self.position().y;
+
+      var b = resized_bounds(mp);
+      self.bounds(b);
+    }
+    else
+    {
+      var h = hit_test(mp);
+      self.cursor(make_cursor(h));
+    }
+  };
+
+  self.dialog__on_mouse_left_down = function(mp)
+  {
+    self.control__on_mouse_left_down(mp);
+
+    assert(resizing_ == 0);
+
+    resizing_ = hit_test(mp);
+    if (resizing_ == 0)
+      return;
+
+    self.capture_mouse();
+    original_bounds_ = self.bounds();
+    original_mouse_ = mp;
+    original_mouse_.x += self.position().x;
+    original_mouse_.y += self.position().y;
+  };
+
+  self.dialog__on_mouse_left_up = function(mp)
+  {
+    self.control__on_mouse_left_up(mp);
+
+    if (resizing_)
+    {
+      resizing_ = 0;
+      self.release_mouse();
+      original_bounds_ = undefined;
+      original_mouse_ = undefined;
+    }
+  };
+
+  var resized_bounds = function(mp)
+  {
+    assert(resizing_ != 0);
+
+    var top=0, right=0, bottom=0, left=0;
+
+    if (resizing_ & ui.dialog_borders.top)
+      top = mp.y - original_mouse_.y;
+    else if (resizing_ & ui.dialog_borders.bottom)
+      bottom = mp.y - original_mouse_.y;
+
+    if (resizing_ & ui.dialog_borders.left)
+      left = mp.x - original_bounds_.x;
+    else if (resizing_ & ui.dialog_borders.right)
+      right = mp.x - original_mouse_.x;
+
+    return new rectangle(
+      original_bounds_.x + left, original_bounds_.y + top,
+      original_bounds_.w - left + right,
+      original_bounds_.h - top + bottom);
+  };
+
+  var make_cursor = function(h)
+  {
+    if ((h == (ui.dialog_borders.top | ui.dialog_borders.left)) ||
+        (h == (ui.dialog_borders.bottom | ui.dialog_borders.right)))
+    {
+      return "nw-resize";
+    }
+    else if ((h == (ui.dialog_borders.top | ui.dialog_borders.right)) ||
+             (h == (ui.dialog_borders.bottom | ui.dialog_borders.left)))
+    {
+      return "ne-resize";
+    }
+    else if (h & (ui.dialog_borders.top | ui.dialog_borders.bottom))
+    {
+      return "n-resize";
+    }
+    else if (h & (ui.dialog_borders.left | ui.dialog_borders.right))
+    {
+      return "e-resize";
+    }
+
+    return "default";
+  };
+
+  var hit_test = function(mp)
+  {
+    var r = 0;
+
+    var top = new rectangle(0, 0, self.width(), border_);
+    var right = new rectangle(self.width() - border_ - 1, 0, border_, self.height());
+    var bottom = new rectangle(0, self.height() - border_ - 1, self.width(), border_);
+    var left = new rectangle(0, 0, border_, self.height());
+
+    if (in_rectangle(mp, top))
+      r |= ui.dialog_borders.top;
+    if (in_rectangle(mp, right))
+      r |= ui.dialog_borders.right;
+    if (in_rectangle(mp, bottom))
+      r |= ui.dialog_borders.bottom;
+    if (in_rectangle(mp, left))
+      r |= ui.dialog_borders.left;
+
+    return r;
   };
 
   self.typename = function()
@@ -82,8 +269,14 @@ inherit_dialog: function(self, opts)
   }
 
 
-  self.best_dimension   = self.dialog__best_dimension;
-  self.draw             = self.dialog__draw;
+  self.best_dimension       = self.dialog__best_dimension;
+  self.draw                 = self.dialog__draw;
+  self.on_mouse_move        = self.dialog__on_mouse_move;
+  self.on_mouse_left_down   = self.dialog__on_mouse_left_down;
+  self.on_mouse_left_up     = self.dialog__on_mouse_left_up;
+  self.add                  = self.dialog__add;
+  self.remove_child         = self.dialog__remove_child;
+  self.remove_all           = self.dialog__remove_all;
 
   init();
 },

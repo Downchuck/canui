@@ -485,26 +485,26 @@ function fill_3d_rect(context, up, lighter, r, fill)
 
   fill_rect(context, fill, r);
 
-  draw_line(context, lightest, new rectangle(
+  draw_line(context, light, new rectangle(
     r.x, r.y, 1, r.h));
 
-  draw_line(context, lightest, new rectangle(
+  draw_line(context, light, new rectangle(
     r.x, r.y, r.w, 1));
 
 
   draw_line(context, darkest, new rectangle(
-    r.x + r.w - 1, r.y, 1, r.h + 1));
+    r.x + r.w - 1, r.y, 1, r.h));
 
   draw_line(context, darkest, new rectangle(
-    r.x, r.y + r.h - 1, r.w + 1, 1));
+    r.x, r.y + r.h - 1, r.w, 1));
 
 
   deflate(r, 1);
 
-  draw_line(context, light, new rectangle(
+  draw_line(context, lightest, new rectangle(
     r.x, r.y, 1, r.h));
 
-  draw_line(context, light, new rectangle(
+  draw_line(context, lightest, new rectangle(
     r.x, r.y, r.w, 1));
 
 

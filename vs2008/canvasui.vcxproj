@@ -70,6 +70,7 @@
     <None Include="..\src\container.js" />
     <None Include="..\src\control.js" />
     <None Include="..\src\controls.js" />
+    <None Include="..\src\dialog.js" />
     <None Include="..\src\geo.js" />
     <None Include="..\src\graphics.js" />
     <None Include="..\src\html.js" />

@@ -453,7 +453,7 @@ inherit_basic_panel: function(self, opts)
 
       if (bs.top > 0)
       {
-        draw_line(
+        fill_rect(
           context, new color().black(),
           new rectangle(r.x, r.y, caption_margin_, bs.top));
 
@@ -461,7 +461,7 @@ inherit_basic_panel: function(self, opts)
           caption_margin_ + caption_padding_ +
           text_dimension(caption_, self.font()).w + caption_padding_;
 
-        draw_line(
+        fill_rect(
           context, new color().black(),
           new rectangle(r.x + x, r.y, r.w - x, bs.top));
 

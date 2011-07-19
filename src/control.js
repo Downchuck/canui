@@ -744,28 +744,28 @@ inherit_control: function(self, opts)
 
     if (bs.left > 0)
     {
-      draw_line(
+      fill_rect(
         context, new color().black(),
         new rectangle(b.x, b.y, bs.left, b.h));
     }
 
     if (bs.top > 0)
     {
-      draw_line(
+      fill_rect(
         context, new color().black(),
         new rectangle(b.x, b.y, b.w, bs.top));
     }
 
     if (bs.right > 0)
     {
-      draw_line(
+      fill_rect(
         context, new color().black(),
         new rectangle(b.x+b.w-1, b.y, bs.right, b.h));
     }
 
     if (bs.bottom > 0)
     {
-      draw_line(
+      fill_rect(
         context, new color().black(),
         new rectangle(b.x, b.y+b.h-1, b.w, bs.bottom));
     }
