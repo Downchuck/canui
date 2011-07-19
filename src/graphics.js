@@ -460,24 +460,51 @@ function make_rect_path(context, r)
 // gradient when the button is pressed, 'lighter' is used when
 // hovered)
 //
-function fill_3d_rect(context, up, lighter, r, fill)
+function fill_3d_rect(context, up, lighter, r, fill, small)
 {
   assert(valid_bounds(r));
 
-  var lightest = new color().white();
-  var light = new color(0.82, 0.81, 0.78);
-  var dark = new color(0.50, 0.50, 0.50);
-  var darkest = new color(0.25, 0.25, 0.25);
+  var light = undefined;
+  var lightest = undefined;
+  var dark = undefined;
+  var darkest = undefined;
 
   if (fill == undefined)
     fill = ui.theme.face_color();
 
-  if (!up)
+  if (up)
   {
-    lightest = new color().black();
-    darkest = new color().white();
-    light = new color(0.50, 0.50, 0.50);
-    dark = new color(0.82, 0.81, 0.78)
+    if (small)
+    {
+      light = new color().white();
+      lightest = fill;
+      dark = new color(0.50, 0.50, 0.50);
+      darkest = new color(0.25, 0.25, 0.25);
+    }
+    else
+    {
+      light = new color(0.82, 0.81, 0.78);
+      lightest = new color().white();
+      dark = new color(0.50, 0.50, 0.50);
+      darkest = new color(0.25, 0.25, 0.25);
+    }
+  }
+  else
+  {
+    if (small)
+    {
+      light = new color().black();
+      lightest = new color(0.50, 0.50, 0.50);
+      dark = fill;
+      darkest = new color().white();
+    }
+    else
+    {
+      lightest = new color().black();
+      darkest = new color().white();
+      light = new color(0.50, 0.50, 0.50);
+      dark = new color(0.82, 0.81, 0.78)
+    }
   }
 
   if (lighter)

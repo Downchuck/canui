@@ -107,18 +107,6 @@ inherit_clickable: function(self, opts)
     return captured_;
   }
 
-  // make sure the button has enough width so that the rounded
-  // rectangle still looks okay
-  //
-  self.clickable__best_dimension = function()
-  {
-    var d = self.container__best_dimension();
-    //if (d.w < 25)
-     // d.w = 25;
-
-    return d;
-  }
-
   // forward to the label
   //
   self.clickable__font = function(f)
@@ -321,7 +309,6 @@ inherit_clickable: function(self, opts)
   };
 
 
-  self.best_dimension       = self.clickable__best_dimension;
   self.font                 = self.clickable__font;
   self.caption              = self.clickable__caption;
   self.label                = self.clickable__label;
@@ -343,6 +330,10 @@ inherit_clickable: function(self, opts)
 
 // see inherit_clickable
 //
+// options:
+//   small (true/false), default: false
+//   reduces the size of the 3d border for small buttons
+//
 inherit_button: function(self, opts)
 {
   ui.inherit_clickable(self, opts);
@@ -351,6 +342,10 @@ inherit_button: function(self, opts)
   
   var init = function()
   {
+    self.set_default_options({
+      small: false
+    });
+
     self.layout().option("margin", 5);
   };
   
@@ -378,7 +373,7 @@ inherit_button: function(self, opts)
       h = true;
 
     if (!self.option("flat") || self.is_hovered() || self.pressed())
-      fill_3d_rect(context, !p, h, self.bounds());
+      fill_3d_rect(context, !p, h, self.bounds(), undefined, self.option("small"));
     
     self.container__draw(context);
   };

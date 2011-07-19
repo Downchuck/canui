@@ -13,12 +13,18 @@ dialog_borders:
 titlebar: function(d, opts)
 {
   ui.inherit_container(this, merge(opts, {
-    layout: new ui.border_layout({margin: 3})}));
+    layout: new ui.border_layout({margin: 2})}));
   var self = this;
   self.internal_is_a_titlebar = true;
 
   var dialog_ = d;
   var caption_ = new ui.label();
+
+  var buttons_ = undefined;
+  var close_ = new ui.button();
+  var restore_ = new ui.button();
+  var minimize_ = new ui.button();
+
   var dragging_ = false;
   var drag_start_ = undefined;
   var original_ = undefined;
@@ -26,17 +32,38 @@ titlebar: function(d, opts)
   var init = function()
   {
     self.set_default_options({
-      caption: ""
+      caption: "",
+      closable: true,
+      maximizable: true,
+      minimizable: true
     });
 
+    caption_.transparent(true);
     caption_.font().bold(true);
-
     caption_.caption(self.option("caption"));
     caption_.option("color", ui.theme.selected_text_color());
 
-    self.add(caption_, ui.sides.left);
-  };
+    minimize_.option("small", true);
+    minimize_.layout().option("margin", 2);
+    minimize_.label(new ui.image({image: load_image("minimize.png", "_")}));
 
+    restore_.option("small", true);
+    restore_.layout().option("margin", 2);
+    restore_.label(new ui.image({image: load_image("maximize.png", "M")}));
+
+    close_.option("small", true);
+    close_.layout().option("margin", 2);
+    close_.label(new ui.image({image: load_image("close.png", "x")}));
+
+    buttons_ = new ui.panel({
+      layout: new ui.horizontal_layout({padding: 2}),
+      background: new color().transparent()});
+    buttons_.transparent(true);
+
+    self.add(caption_, ui.sides.left);
+    self.add(buttons_, ui.sides.right);
+  };
+  
   self.best_dimension = function()
   {
     return new dimension(0, 18);
@@ -46,6 +73,33 @@ titlebar: function(d, opts)
   {
     fill_rect(context, ui.theme.selected_text_background(), self.bounds());
     self.container__draw(context);
+  };
+
+  self.option = function(n, v)
+  {
+    var r = self.control__option(n, v);
+
+    if (v != undefined)
+    {
+      if (n == "closable" || n == "maximizable" || n == "minimizable")
+        set_buttons();
+    }
+
+    return r;
+  };
+
+  var set_buttons = function()
+  {
+    buttons_.remove_all();
+
+    if (self.option("minimizable"))
+      buttons_.add(minimize_);
+
+    if (self.option("maximizable"))
+      buttons_.add(restore_);
+
+    if (self.option("closable"))
+      buttons_.add(close_);
   };
 
   self.on_mouse_left_down = function(mp)
@@ -96,6 +150,16 @@ titlebar: function(d, opts)
   init();
 },
 
+// options:
+//  closable (true/false), default: true
+//  whether the close button is displayed on the titlebar
+//
+//  maximizable (true/false), default: true
+//  whether the maximize/restore button is displayed on the titlebar
+//
+//  minimizable (true/false, default: true
+//  whether the minimize button is displayed on the titlebar
+//
 inherit_dialog: function(self, opts)
 {
   ui.inherit_container(self, merge(opts, {
@@ -113,12 +177,35 @@ inherit_dialog: function(self, opts)
 
   var init = function()
   {
+    self.set_default_options({
+      closable: true,
+      maximizable: true,
+      minimizable: true
+    });
+
+    title_.option("closable", self.option("closable"));
+    title_.option("maximizable", self.option("maximizable"));
+    title_.option("minimizable", self.option("minimizable"));
+
     self.container__add(title_, ui.sides.top);
     self.container__add(pane_, ui.sides.center);
 
     if (opts.layout != undefined)
       pane_.layout(opts.layout);
   };
+
+  self.dialog__option = function(n, v)
+  {
+    var r = self.control__option(n, v);
+
+    if (v != undefined)
+    {
+      if (n == "closable" || n == "maximizable" || n == "minimizable")
+        title_.option(n, v);
+    }
+
+    return r;
+  }
 
   self.dialog__best_dimension = function()
   {
@@ -269,6 +356,7 @@ inherit_dialog: function(self, opts)
   }
 
 
+  self.option               = self.dialog__option
   self.best_dimension       = self.dialog__best_dimension;
   self.draw                 = self.dialog__draw;
   self.on_mouse_move        = self.dialog__on_mouse_move;
