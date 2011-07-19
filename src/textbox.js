@@ -103,7 +103,7 @@ inherit_textbox: function(self, opts)
   {
     self.set_default_options({
       text: "",
-      margin: 2,
+      margin: 4,
       multiline: false,
       text_color: ui.theme.text_color(),
       background: new color().white(),
@@ -327,7 +327,7 @@ inherit_textbox: function(self, opts)
       c = new color(0.95, 0.85, 0.58);
 
     draw_line(context, c, new rectangle(
-      p.x, p.y, 1, g_line_height));
+      p.x, p.y - 1, 1, g_line_height + 2));
   }
 
   // if first is not undefined, selects the given range (clamped to

@@ -241,8 +241,10 @@ list_header: function(parent)
 
   var set_button = function(b, c)
   {
-    var p = new ui.panel({layout: new ui.border_layout()});
-    p.add(new ui.label({caption: c.caption()}), ui.sides.center);
+    var p = new ui.panel({layout: new ui.border_layout({padding: 5})});
+    p.add(new ui.label({caption: c.caption()}), ui.sides.left);
+
+    p.add(new ui.spacer({size: new dimension(1, 1)}), ui.sides.center);
 
     if (c.sort_direction() == -1)
       p.add(new ui.image({image: load_image("up.png", "^")}), ui.sides.right);
@@ -437,7 +439,7 @@ list: function(opts)
   {
     self.set_default_options({
       text_color: ui.theme.text_color(),
-      item_height: g_line_height + 4,
+      item_height: g_line_height + 6,
       column_resize: "auto",
       show_header: true,
       expand_header: true,

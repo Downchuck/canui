@@ -27,6 +27,8 @@ spacer: function(opts)
       size: new dimension(0, 0)
     });
 
+    assert(valid_dimension(self.option("size")));
+
     self.transparent(true);
   };
 

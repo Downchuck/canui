@@ -3,11 +3,11 @@
 // height in pixels of a line text
 // todo: this is crap, depends on font, dpi, etc. but measureText()
 // doesn't give the height
-var g_line_height = 16;
+var g_line_height = 13;
 
 // space between two consecutive lines of text (todo: also crap, but
 // less crap)
-var g_line_spacing = 3;
+var g_line_spacing = 2;
 
 
 function pretty_image_src(image)

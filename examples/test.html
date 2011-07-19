@@ -24,6 +24,7 @@
   <script type="text/javascript" src="../src/image.js"></script>
   <script type="text/javascript" src="../src/combobox.js"></script>
   <script type="text/javascript" src="../src/menu.js"></script>
+  <script type="text/javascript" src="../src/dialog.js"></script>
   <script type="text/javascript" src="../src/html.js"></script>
   <script type="text/javascript" src="../src/layout.js"></script>
 </head>
@@ -118,7 +119,7 @@ $(function()
   g_rp.add(p);*/
 
   //g_rp.add(new ui.textbox());
-  
+  /*
   var l = new ui.list({column_resize: "none", expand_header: false});
   l.add_column("col 1", 100);
   l.add_column("col 2", 400);
@@ -143,7 +144,11 @@ $(function()
   p.add(t);
   p.add(b);
 
-  g_rp.add(p, ui.sides.bottom);
+  g_rp.add(p, ui.sides.bottom);*/
+
+  var d = new ui.dialog({position: new point(10, 10)});
+  g_rp.add_floating(d);
+
 });
 </script>
 
@@ -155,7 +160,7 @@ $(function()
 <p>This is a &lt;canvas&gt; element on which several controls are
 created.
 
-<div id="rp" data-layout="new ui.border_layout({margin: 5, padding: 3})" width="300" height="300">
+<div id="rp" data-layout="new ui.border_layout({margin: 5, padding: 3})" width="500" height="500">
 </div>
 
 </p>

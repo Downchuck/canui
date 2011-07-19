@@ -33,7 +33,7 @@ font: function(opts)
   {
     set_default(opts_, {
       name: "sans-serif",
-      size: "11pt",
+      size: "10pt",
       italic: false,
       bold: false,
       underlined: false

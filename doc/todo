@@ -95,11 +95,9 @@ menu
   Todo: separators, keybindings?, icons, disabled, customize, close on
         click elsewhere, timers, checkboxes/radios
 
-
 list
   Todo: column resize/move, item drag/drop, other views (icon, etc.),
-        icon in column, allow any control (editable list), tooltips,
-        horizontal scroll
+        icon in column, allow any control (editable list), tooltips
 Bugs: none
 
 
