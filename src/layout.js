@@ -743,7 +743,7 @@ border_layout: function(opts)
       h = c.best_dimension().h;
       top = new rectangle(x0, y0, usable_w, h);
       
-      center.y = h;
+      center.y = y0 + h;
       center.h -= h;
 
       if (controls_[ui.sides.center])
@@ -773,7 +773,7 @@ border_layout: function(opts)
       w = c.best_dimension().w;
       left = new rectangle(x0, center.y, w, center.h);
       
-      center.x += w;
+      center.x += x0 + w;
       center.w -= w;
 
       if (controls_[ui.sides.center])

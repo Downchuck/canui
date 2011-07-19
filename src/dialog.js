@@ -48,7 +48,7 @@ titlebar: function(d, opts)
 inherit_dialog: function(self, opts)
 {
   ui.inherit_container(self, merge(opts, {
-    layout: new ui.border_layout()}));
+    layout: new ui.border_layout({margin: 1})}));
 
   self.internal_is_a_dialog = true;
 
