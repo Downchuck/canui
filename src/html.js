@@ -173,16 +173,20 @@ parse_impl: function(parent, node)
   }
 },
 
-create_root_panel: function(r)
+create_root_panel: function(n)
 {
   var root = undefined;
   var rp = undefined;
   
+  var r = n;
   if (r.getAttribute == undefined)
-    r = document.getElementById(r);
+    r = document.getElementById(n);
 
   //try
   {
+    if (r == undefined)
+      throw "root panel '" + n + "' not found";
+
     r.setAttribute("data-type", "root_panel");
 
     rp = ui.create_ui(r);

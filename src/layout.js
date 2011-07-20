@@ -620,48 +620,52 @@ border_layout: function(opts)
   //  
   self.best_dimension = function(cont)
   {
-    var d = new dimension(0, 0);
     var c = undefined, bd = undefined;
+
+    var lr = new dimension(0, 0);
+    var tb = new dimension(0, 0);
 
     c = controls_[ui.sides.left];
     if (c)
     {
       bd = c.best_dimension();
-      d.w += bd.w;
-      d.h = Math.max(d.h, bd.h);
+      lr.w += bd.w;
+      lr.h = Math.max(lr.h, bd.h);
     }
     
     c = controls_[ui.sides.right];
     if (c)
     {
       bd = c.best_dimension();
-      d.w += bd.w;
-      d.h = Math.max(d.h, bd.h);
+      lr.w += bd.w;
+      lr.h = Math.max(lr.h, bd.h);
     }
 
     c = controls_[ui.sides.top];
     if (c)
     {
       bd = c.best_dimension();
-      d.w = Math.max(d.w, bd.w);
-      d.h += bd.h;
+      tb.w = Math.max(tb.w, bd.w);
+      tb.h += bd.h;
     }
 
     c = controls_[ui.sides.bottom];
     if (c)
     {
       bd = c.best_dimension();
-      d.w = Math.max(d.w, bd.w);
-      d.h += bd.h;
+      tb.w = Math.max(tb.w, bd.w);
+      tb.h += bd.h;
     }
+
+    var d = new dimension(0, 0);
 
     c = controls_[ui.sides.center];
     if (c)
     {
-      
       bd = c.best_dimension();
-      d.w += bd.w;
-      d.h = Math.max(d.h, bd.h);
+      
+      d.w = Math.max(lr.w + bd.w, Math.max(tb.w, bd.w));
+      d.h = Math.max(tb.h + bd.h, Math.max(lr.h, bd.h));
       
       if (controls_[ui.sides.left])
         d.w += self.option("padding");
@@ -672,6 +676,11 @@ border_layout: function(opts)
         d.h += self.option("padding");
       if (controls_[ui.sides.bottom])
         d.h += self.option("padding");
+    }
+    else
+    {
+      d.w = Math.max(lr.w, tb.w);
+      d.h = lr.h + tb.h;
     }
 
     d.w += self.option("margin")*2;

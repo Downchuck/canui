@@ -225,7 +225,8 @@ inherit_dialog: function(self, opts)
     self.container__add(title_, ui.sides.top);
     self.container__add(pane_, ui.sides.center);
 
-    if (opts.layout != undefined)
+    //todo
+    if (opts != undefined && opts.layout != undefined)
       pane_.layout(opts.layout);
   };
 
@@ -244,7 +245,11 @@ inherit_dialog: function(self, opts)
 
   self.dialog__best_dimension = function()
   {
-    return new dimension(300, 300);
+    var d = self.container__best_dimension();
+    d.w = Math.max(d.w, 60);
+    d.h = Math.max(d.h, 20);
+
+    return d;
   };
 
   self.dialog__add = function(c, w)

@@ -359,6 +359,8 @@ root_panel: function(opts)
     {
       needs_layout_ = false;
 
+//      console.log("layout");
+
       self.do_layout();
       self.redraw();
 
@@ -380,6 +382,8 @@ root_panel: function(opts)
     // don't redraw if the root panel ain't dirty
     if (!self.is_dirty())
       return false;
+
+//      console.log("draw");
 
     context.save();
 
