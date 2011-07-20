@@ -78,8 +78,11 @@ inherit_control: function(self, opts)
   // control-dependent options
   var opts_ = (opts == undefined ? {} : opts);
 
-  // z-order flags ("topmost" or "bottommost")
-  var zorder_ = "";
+  // z-order index
+  var zorder_ = 0;
+  
+  // z-order flags
+  var zflag_ = "";
 
   // constructor
   //
@@ -264,63 +267,63 @@ inherit_control: function(self, opts)
   // if 'v' is not undefined, sets the z order of this control; 'v'
   // can be one of:
   //   "top":        brings this control to the top of its parent's
-  //                 hierarchy
+  //                 hierarchy (same as passing 0)
   //   "bottom":     sends this control to the bottom of its parent's
-  //                 hierarchy
+  //                 hierarchy (same as passing child_count() - 1)
   //   "topmost":    brings this control to the top of its parent's
   //                 hierarchy and makes sure it stays there
   //   "bottommost": sends this control to the bottom of its parent's
   //                 hiererachy and makes sure it stays there
   //
+  // or an integer that represents the order in the children list. 'v'
+  // is clamped to [0, child_count() - 1].
+  //
   // in any case returns returns the current z-order, an object with
   // {z: z-value (integer), s: "topmost"/"bottommost"/""}
   //
-  self.control__z_order = function(v)
+  self.control__zorder = function(v)
   {
     if (v != undefined)
     {
-      assert(one_of(v, ["top", "bottom", "topmost", "bottommost"]));
+      assert(self.internal_parent_);
 
-      // not implemented
-      assert(z != "bottommost");
-
-      if (v == "topmost")
+      if (v === "topmost")
       {
-        zorder_ = "topmost";
-        v = "top";
+        zflag_ = "topmost";
+        v = 0;
       }
-      else if (v == "bottommost")
+      else if (v === "bottommost")
       {
-        zorder_ = "bottommost";
-        v = "bottom";
+        // not implemented
+        assert(false);
+        //zorder_ = "bottommost";
+        //v = child_count() - 1;
+      }
+      else if (v === "top")
+      {
+        v = 0;
+      }
+      else if (v === "bottom")
+      {
+        v = child_count() - 1;
       }
       else if (v === "")
       {
-        zorder_ = "";
+        zflag_ = "";
+        v = zorder_;
       }
 
-      if (self.internal_parent_ != undefined)
-      {
-        if (v == "top")
-          self.internal_parent_.internal_set_zorder(self, "top");
-        else if (v == "bottom")
-          self.internal_parent_.internal_set_zorder(self, "bottom");
-      }
+      self.internal_parent_.internal_set_child_zorder(self, v);
     }
 
-    var z = 0;
-    var i = 0;
-    if (self.internal_parent_ != undefined)
-    {
-      self.internal_parent_.each_child(function(c)
-        {
-          if (c == self)
-            z = i;
-          ++i;
-        });
-    }
+    return {z: zorder_, s: zflag_};
+  };
 
-    return {z: z, s: zorder_};
+  self.internal_set_zorder = function(v)
+  {
+    assert(is_number(v));
+    zorder_ = v;
+    self.redraw();
   };
 
   // fires the detached signal
@@ -979,7 +982,7 @@ inherit_control: function(self, opts)
   self.borders              = self.control__borders;
   self.parent               = self.control__parent;
   self.remove               = self.control__remove;
-  self.z_order              = self.control__z_order;
+  self.zorder               = self.control__zorder;
   self.is_hovered           = self.control__is_hovered;
   self.is_focused           = self.control__is_focused;
   self.focus                = self.control__focus;

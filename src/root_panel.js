@@ -395,9 +395,10 @@ root_panel: function(opts)
     context.restore();
 
     // drawing the floating controls
-    for (var i=floating_.length-1; i>=0; --i)
+    var sf = sorted_floating();
+    for (var i=sf.length-1; i>=0; --i)
     {
-      var f = floating_[i];
+      var f = sf[i];
 
       if (f.manage)
       {
@@ -511,9 +512,10 @@ root_panel: function(opts)
   //
   self.find_control = function(mp, include_transparent)
   {
-    for (var i in floating_)
+    var sf = sorted_floating();
+    for (var i in sf)
     {
-      var f = floating_[i].control;
+      var f = sf[i].control;
 
       var c = f.find_control(mp);
       if (c != undefined)
@@ -543,52 +545,60 @@ root_panel: function(opts)
     }
   };
 
-  self.internal_set_zorder = function(c, z)
+  self.internal_set_child_zorder = function(c, z)
   {
-    assert(z == "top" || z == "bottom");
+    assert(is_number(z));
+    assert(self.has_child(c));
 
-    // not implemented
-    assert(z != "bottom");
-
-    var cs = [];
-
-    var cf = undefined;
-    for (var i=0; i<floating_.length; ++i)
+    if (self.has_floating(c))
     {
-      if (floating_[i].control == c)
-      {
-        cf = floating_[i];
-        break;
-      }
-    }
+      var sf = sorted_floating();
+      assert(z >= 0 && z < sf.length);
 
-    if (cf != undefined)
-    {
-      cs.push(cf);
-
-      for (var i=0; i<floating_.length; ++i)
-      {
-        if (floating_[i].control != c)
-        {
-          if (floating_[i].control.z_order().s == "topmost")
-            cs.unshift(floating_[i]);
-          else
-            cs.push(floating_[i]);
-        }
-      }
-
-      floating_ = cs;
+      var t = c.zorder().z;
+      c.internal_set_zorder(z);
+      sf[z].control.internal_set_zorder(t);
     }
     else
     {
-      self.container__internal_set_zorder(c, z);
+      self.container__internal_set_child_zorder(c, z);
     }
   };
+
+  var sorted_floating = function()
+  {
+    var sf = floating_.concat([]);
+    sf.sort(function(a, b)
+      {
+        var ac = a.control;
+        var bc = b.control;
+
+        if (ac.zorder().z < bc.zorder().z)
+          return -1;
+        else if (ac.zorder().z > bc.zorder().z)
+          return 1;
+        return 0;
+      });
+    
+    return sf;
+  }
 
   // remove_child handles both floating and regular controls
   //
   self.remove_child = function(c)
   {
+    var sf = sorted_floating();
+    for (var i=0; i<sf.length; ++i)
+    {
+      if (sf[i] == c)
+      {
+        for (var j=i+1; j<sf.length; ++j)
+          sf[j].internal_set_zorder(j - 1);
+
+        break;
+      }
+    }
+
     // if this is a floating control, remove it
     for (var i=0; i<floating_.length; ++i)
     {
@@ -603,7 +613,7 @@ root_panel: function(opts)
         }
         else
         {
-          self.notify_remove(cc);
+          self.notify_remove(c);
         }
 
         floating_.splice(i, 1);
@@ -625,15 +635,21 @@ root_panel: function(opts)
     if (self.container__has_child(ct))
       return true;
     
-    for (var i in floating_)
-    {
-      if (floating_[i].control.has_child(ct))
-        return true;
-    }
-    
-    return false;
+    return self.has_floating(ct);
   };
 
+  // returns whether this root panel has the given floating control
+  //
+  self.has_floating = function(c)
+  {
+    for (var i in floating_)
+    {
+      if (floating_[i].control.has_child(c))
+        return true;
+    }
+
+    return false;
+  };
   
   // adds the given control as floating
   //
@@ -646,6 +662,7 @@ root_panel: function(opts)
       manage = true;
     
     c.internal_set_parent(self);
+    c.internal_set_zorder(floating_.length);
     floating_.push({control: c, manage: manage});
 
     self.relayout();
@@ -703,10 +720,14 @@ root_panel: function(opts)
     if (!c)
       return;
 
+    c.zorder("top");
+
     var p = c;
     while (p != self)
     {
-      p.z_order("top");
+      if (p.internal_is_a_dialog)
+        p.zorder("top");
+      
       p = p.parent();
     }
 

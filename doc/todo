@@ -98,6 +98,8 @@ testing or features, or bugs.
 menu
   Todo: separators, keybindings?, icons, disabled, customize, close on
         click elsewhere, timers, checkboxes/radios
+  Bugs: submenu items stay selected
+
 
 list
   Todo: column resize/move, item drag/drop, other views (icon, etc.),

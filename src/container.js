@@ -129,12 +129,15 @@ inherit_container: function(self, opts)
       to_int(self.position().x + force_padding_.w),
       to_int(self.position().y + force_padding_.h));
     
-    for (var i=children_.length-1; i>=0; --i)
+    var sc = sorted_children();
+    for (var i=sc.length-1; i>=0; --i)
     {
-      if (children_[i].visible())
+      var c = sc[i];
+
+      if (c.visible())
       {
         context.save();
-        children_[i].draw(context);
+        c.draw(context);
         context.restore();
       }
     }
@@ -187,12 +190,25 @@ inherit_container: function(self, opts)
       }
     }
     
-    for (var i in children_)
+    var sc = sorted_children();
+    for (var i=0; i<sc.length; ++i)
+    {
+      if (sc[i] == c)
+      {
+        for (var j=i+1; j<sc.length; ++j)
+          sc[j].internal_set_zorder(j - 1);
+
+        break;
+      }
+    }
+
+    for (var i=0; i<children_.length; ++i)
     {
       if (children_[i] == c)
       {
         c.internal_set_parent(undefined);
         children_.splice(i, 1);
+
         layout_.remove(c);        
         
         self.redraw();
@@ -202,29 +218,44 @@ inherit_container: function(self, opts)
     }
   };
 
-  self.container__internal_set_zorder = function(c, z)
+  var sorted_children = function()
   {
-    assert(z == "top" || z == "bottom");
+    var sc = children_.concat([]);
+    sc.sort(function(a, b)
+      {
+        if (a.zorder().z < b.zorder().z)
+          return -1;
+        else if (a.zorder().z > b.zorder().z)
+          return 1;
+        return 0;
+      });
+    
+    return sc;
+  };
+
+  self.container__internal_set_child_zorder = function(c, z)
+  {
+    assert(is_number(z));
     assert(self.has_child(c));
 
-    // not implemented
-    assert(z != "bottom");
+    var sc = sorted_children();
 
-    var cs = [];
-    cs.push(c);
-
-    for (var i=0; i<children_.length; ++i)
+    if (sc[z].zorder().s == "topmost")
     {
-      if (children_[i] != c)
+      for (var i=z; i<sc.length; ++i)
       {
-        if (children_[i].z_order().s == "topmost")
-          cs.unshift(children_[i]);
-        else
-          cs.push(children_[i]);
+        z = i;
+
+        if (sc[i].zorder().s != "topmost")
+          break;
       }
     }
 
-    children_ = cs;
+    assert(z >= 0 && z < sc.length);
+
+    var t = c.zorder().z;
+    c.internal_set_zorder(z);
+    sc[z].internal_set_zorder(t);
   };
   
   // fires the detached signal on this container and all its children
@@ -264,7 +295,10 @@ inherit_container: function(self, opts)
     assert(!self.has_child(c));
     assert(!c.has_child(self));
     
+    assert(c.internal_set_zorder != undefined);
+
     c.internal_set_parent(self);
+    c.internal_set_zorder(children_.length);
     
     children_.push(c);
     layout_.add(c, w);
@@ -306,9 +340,10 @@ inherit_container: function(self, opts)
       return undefined;
     
     // looking for a child that has the point
-    for (var i=0; i<children_.length; ++i)
+    var sc = sorted_children();
+    for (var i in sc)
     {
-      var c = children_[i].find_control(lp, include_transparent);
+      var c = sc[i].find_control(lp, include_transparent);
       if (c)
         return c;
     }
@@ -330,9 +365,10 @@ inherit_container: function(self, opts)
     if (c != undefined)
       return c;
 
-    for (var i in children_)
+    var sc = sorted_children();
+    for (var i in sc)
     {
-      c = children_[i].find_id(id);
+      c = sc[i].find_id(id);
       if (c != undefined)
         return c;
     }
@@ -388,9 +424,9 @@ inherit_container: function(self, opts)
   self.draw                 = self.container__draw;
   self.layout               = self.container__layout;
   self.do_layout            = self.container__do_layout;
+  self.internal_set_child_zorder = self.container__internal_set_child_zorder;
   self.remove_child         = self.container__remove_child;
   self.remove_all           = self.container__remove_all;
-  self.internal_set_zorder  = self.container__internal_set_zorder;
   self.trigger_detached     = self.container__trigger_detached;
   self.children_count       = self.container__children_count;
   self.find_id              = self.container__find_id;

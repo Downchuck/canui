@@ -76,7 +76,8 @@ list_item : function(caption)
   //
   var init = function(captions)
   {
-    captions_ = caption;
+    for (var i in caption)
+      captions_.push("" + caption);
   };
 
   // if b is not undefined, sets the selected state; in any case
@@ -459,7 +460,7 @@ list: function(opts)
 
     header_.clicked.add(on_header_clicked);
 
-    scroller_.z_order("topmost");
+    scroller_.zorder("topmost");
     scroller_.vscroll.add(on_vert_scroll);
     scroller_.hscroll.add(on_hor_scroll);
   };
@@ -675,7 +676,8 @@ list: function(opts)
       for (var i=0; i<cols_.length - 1; ++i)
         total_width += cols_[i].width();
 
-      ws[ws.length - 1] = vw - total_width;
+      if (total_width < vw)
+        ws[ws.length - 1] = vw - total_width;
     }
 
     return ws;
@@ -1069,6 +1071,9 @@ list: function(opts)
   //
   var draw_items = function(context, r)
   {
+    if (items_.length == 0)
+      return;
+
     var v = visible_items();
     var p = new point(r.x, r.y + (v.first * self.option("item_height")));
 
