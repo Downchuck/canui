@@ -213,7 +213,7 @@ attributes are allowed as long as they start with "data-", such as
 "data-type".
 
 Browsers are supposed to implement a 'dataset' property for element
-objects, but most do not at the moment. Therefore, canui uses the
+objects, but some do not at the moment. Therefore, canui uses the
 simple getAttribute() when 'dataset' is undefined.
 
 The tag name of the element matters not, as long as it can have
@@ -227,23 +227,20 @@ files.
 
 Ids may be assigned to controls and used with root_panel.find_id():
 
-  <div id="ui">
-    <div data-type="root_panel" width="200" height="200">
-      <div id="label" data-type="label"></div>
-    </div>
+  <div id="ui" width="200" height="200">
+    <div id="label" data-type="label"></div>
   </div>
 
   // ...
   function f()
   {
-    var rp = ui.create_root_panel(document.getElementById("ui"));
+    var rp = ui.create_root_panel("ui");
     rp.find_id("label").caption("this is a label");
   }
 
-The root element, here named "ui", serves only as a top level. Its
-id is irrelevant; I called it "ui" as a visual cue. After creating the
-structure, canui will remove that element (and its children) from the
-dom and replace it with a canvas element.
+The root element, here named "ui", serves as the root panel. After
+creating the structure, canui will remove that element (and its
+children) from the dom and replace it with a canvas element.
 
 When errors are found in the structure (such as having a child element
 inside a control that is not a container), the top level element (here
@@ -263,13 +260,13 @@ These are the recognized attributes:
   This string is eval'd and passed to container.layout(). Invalid if
   the control is not a container.
 
-  data-layout-info
+  data-layoutinfo
   This string is eval'd and passed to container.add() when adding the
   control to its parent. This is used when the parent's layout need
   additional information, such as for a border layout:
 
     <div data-type="panel" data-layout="new u.border_layout()">
-      <div data-type="button" data-layout-info="ui.sides.top">
+      <div data-type="button" data-layoutinfo="ui.sides.top">
       </div>
     </div>
 

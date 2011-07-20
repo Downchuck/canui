@@ -157,7 +157,7 @@ parse_impl: function(parent, node)
             "container, yet it has a nested element '" + type + "'";
     }
     
-    var lyis = ui.get_data(e, "layout-info");
+    var lyis = ui.get_data(e, "layoutinfo");
     var lyi = undefined;
     if (lyis != undefined)
       lyi = eval(lyis);

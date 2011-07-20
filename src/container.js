@@ -183,7 +183,7 @@ inherit_container: function(self, opts)
       }
       else
       {
-        rp.notify_remove(cc);
+        rp.notify_remove(c);
       }
     }
     

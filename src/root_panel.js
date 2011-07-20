@@ -366,7 +366,7 @@ root_panel: function(opts)
       {
         var f = floating_[i];
         if (f.manage)
-          f.control.dimension(floating_[i].best_dimension());
+          f.control.dimension(f.control.best_dimension());
 
         f.control.do_layout();
       }
@@ -403,7 +403,7 @@ root_panel: function(opts)
       {
         // making sure the floating controls are not outside this
         // panel
-        check_floating_position(f);
+        check_floating_position(f.control);
       }
 
       context.save();

@@ -85,6 +85,10 @@ textbox
   Bugs: double-click select and moving sometimes unselect original
         word; multiline selection + replace sometimes corrupts content
 
+dialog
+  Todo: none
+  Bugs: none
+
 
 3 Controls in progress
 ======================================================================
@@ -112,7 +116,6 @@ list
   . color
   . file picker?
   . collapsible panel
-  . windows/dialogs
 
 
 5 Others

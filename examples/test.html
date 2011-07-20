@@ -25,6 +25,7 @@
   <script type="text/javascript" src="../src/combobox.js"></script>
   <script type="text/javascript" src="../src/menu.js"></script>
   <script type="text/javascript" src="../src/dialog.js"></script>
+  <script type="text/javascript" src="../src/tree.js"></script>
   <script type="text/javascript" src="../src/html.js"></script>
   <script type="text/javascript" src="../src/layout.js"></script>
 </head>
@@ -146,28 +147,20 @@ $(function()
 
   g_rp.add(p, ui.sides.bottom);*/
 
-  var d = new ui.dialog({position: new point(10, 10), layout: new ui.border_layout()});
-  d.add(l, ui.sides.center);
-  d.dimension(d.best_dimension());
+  var d1 = new ui.dialog({position: new point(10, 10), layout: new ui.border_layout()});
 
-  d.closed.add(function()
+  var t = new ui.tree();
+  d1.add(t, ui.sides.center);
+  
+  d1.dimension(d1.best_dimension());
+
+  d1.closed.add(function()
     {
-      d.remove();
+      d1.remove();
     });
 
-  g_rp.add_floating(d, false);
+  g_rp.add_floating(d1, false);
 
-
-  d = new ui.dialog({position: new point(10, 10), layout: new ui.border_layout()});
-  d.add(new ui.textbox({multiline: true}), ui.sides.center);
-  d.dimension(d.best_dimension());
-
-  d.closed.add(function()
-    {
-      d.remove();
-    });
-
-  g_rp.add_floating(d, false);
 });
 </script>
 
