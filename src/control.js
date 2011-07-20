@@ -183,8 +183,11 @@ inherit_control: function(self, opts)
 
     if (v != undefined)
     {
-      opts_[n] = v;
-      self.relayout();
+      if (opts_[n] != v)
+      {
+        opts_[n] = v;
+        self.relayout();
+      }
     }
 
     return opts_[n];
@@ -374,7 +377,8 @@ inherit_control: function(self, opts)
     if (v != undefined)
     {
       visible_ = v;
-      self.redraw();
+      if (self.internal_parent_ != undefined)
+        self.internal_parent_.redraw();
     }
 
     return visible_;
@@ -391,7 +395,7 @@ inherit_control: function(self, opts)
   //
   self.control__is_dirty = function()
   {
-    return dirty_;
+    return self.visible() && dirty_;
   };
   
   // returns whether this control is currently hovered; this only

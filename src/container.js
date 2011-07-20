@@ -50,8 +50,11 @@ inherit_container: function(self, opts)
     {
       assert(p.internal_is_a_dimension);
 
-      force_padding_ = p;
-      self.redraw();
+      if (force_padding_.w != p.w || force_padding_.h != p.h)
+      {
+        force_padding_ = p;
+        self.redraw();
+      }
     }
 
     return force_padding_;
@@ -61,12 +64,16 @@ inherit_container: function(self, opts)
   //
   self.container__is_dirty = function()
   {
+    if (!self.visible())
+      return false;
+
     if (self.control__is_dirty())
       return true;
-    
+
     for (var i in children_)
     {
-      if (children_[i].is_dirty())
+      var c = children_[i];
+      if (c.is_dirty())
         return true;
     }
     

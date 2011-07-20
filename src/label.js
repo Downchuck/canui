@@ -67,29 +67,29 @@ inherit_label: function(self, opts)
   //
   self.label__draw = function(context)
   {
-    if (caption_ == "")
-      return;
+    if (caption_ != "")
+    {
+      var b = self.bounds();
+      var d = text_dimension(caption_, self.font());
 
-    var b = self.bounds();
-    var d = text_dimension(caption_, self.font());
-
-    if (self.option("halign") == "center")
-      b.x = b.x + b.w/2 - d.w/2;
-    else if (self.option("halign") == "right")
-      b.x = b.x + b.w - d.w;
+      if (self.option("halign") == "center")
+        b.x = b.x + b.w/2 - d.w/2;
+      else if (self.option("halign") == "right")
+        b.x = b.x + b.w - d.w;
       
-    if (self.option("valign") == "center")
-      b.y = b.y + b.h/2 - d.h/2;
-    else if (self.option("valign") == "bottom")
-      b.y = b.y + b.h - d.h;
+      if (self.option("valign") == "center")
+        b.y = b.y + b.h/2 - d.h/2;
+      else if (self.option("valign") == "bottom")
+        b.y = b.y + b.h - d.h;
 
-    // when disabled, the label will gray the text
+      // when disabled, the label will gray the text
 
-    var c = self.option("color");
-    if (!self.enabled())
-      c = ui.theme.disabled_text_color();
+      var c = self.option("color");
+      if (!self.enabled())
+        c = ui.theme.disabled_text_color();
       
-    draw_text(context, caption_, c, b, self.font());
+      draw_text(context, caption_, c, b, self.font());
+    }
 
     self.control__draw(context);
   };

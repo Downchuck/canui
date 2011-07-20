@@ -285,7 +285,8 @@ inherit_clickable: function(self, opts)
     if (!self.enabled())
       return;
       
-    self.redraw();
+    if (self.option("hover_feedback") || captured_)
+      self.redraw();
   };
   
   // removes the highlight and unpresses the button if pressed
@@ -297,7 +298,8 @@ inherit_clickable: function(self, opts)
     if (!self.enabled())
       return;
       
-    self.redraw();
+    if (self.option("hover_feedback") || captured_)
+      self.redraw();
   };
   
   // debug: returns this control's name
@@ -314,7 +316,6 @@ inherit_clickable: function(self, opts)
   self.font                 = self.clickable__font;
   self.caption              = self.clickable__caption;
   self.label                = self.clickable__label;
-  self.draw                 = self.clickable__draw;
   self.pressed              = self.clickable__pressed;
   self.on_mouse_left_down   = self.clickable__on_mouse_left_down;
   self.on_mouse_left_up     = self.clickable__on_mouse_left_up;
@@ -399,7 +400,8 @@ button: function(opts)
 //
 checkbox: function(opts)
 {
-  ui.inherit_clickable(this, merge(opts, {toggle: true}));
+  ui.inherit_clickable(this, merge(opts, {
+    toggle: true, hover_feedback: false}));
   
   var self = this;
   self.internal_is_a_checkbox = true;
@@ -465,7 +467,8 @@ checkbox: function(opts)
 
 radio: function(opts)
 {
-  ui.inherit_clickable(this, merge(opts, {toggle: true}));
+  ui.inherit_clickable(this, merge(opts, {
+    toggle: true, hover_feedback: false}));
 
   var self = this;
   self.internal_is_a_radio = true;

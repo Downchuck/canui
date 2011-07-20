@@ -49,7 +49,7 @@ $(function()
   set_image_dir("../src/images");
 
   ui.create_root_panel("button-example");
-    /*
+    
   var combobox = ui.create_root_panel("combobox-example");
   for (var i=0; i<2; ++i)
   {
@@ -57,11 +57,7 @@ $(function()
     combobox.find_id("cb2").add_item("item " + (i + 1));
   }
 
-  var image = ui.create_root_panel("image-example");
-  image.find_id("image").image(load_external_image("example.png"));
-
   var dialog = ui.create_root_panel("dialog-example");
-  
   var d = new ui.dialog();
   d.add(new ui.button({caption: "button"}));
 
@@ -69,6 +65,8 @@ $(function()
   d.dimension(new dimension(100, 80));
   dialog.add_floating(d, false);
 
+  var image = ui.create_root_panel("image-example");
+  image.find_id("image").image(load_external_image("example.png"));
 
   ui.create_root_panel("label-example");
   ui.create_root_panel("menu-example");
@@ -80,7 +78,8 @@ $(function()
   list.add_column("col2");
   for (var i=0; i<10; ++i)
     list.add_item([i, "sub" + i]);
-    
+      /*
+
   var progress = ui.create_root_panel("progress-example");
   progress.find_id("progress1").value(-1);
   setInterval(function()
@@ -91,12 +90,12 @@ $(function()
 
       p.value(p.value() + 2);
     }, 500);
-
+    */
   ui.create_root_panel("textbox-example");
-
+  
   var tooltip = ui.create_root_panel("tooltip-example");
-  tooltip.find_id("label").tooltip(new ui.tooltip({caption: "tooltip"}));*/
-  /*
+  tooltip.find_id("label").tooltip(new ui.tooltip({caption: "tooltip"}));
+  
   
   var rp = ui.create_root_panel("layout-example");
   g_rp = rp;
@@ -128,7 +127,7 @@ $(function()
     list.add_item(["item " + i, "col " + i]);
     
   // resize the columns
-  list.frozen(false);*/
+  list.frozen(false);
 });
 </script>
 

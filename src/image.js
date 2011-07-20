@@ -243,17 +243,17 @@ image: function(opts)
     var i = current_image();
     var o = current_overlay();
 
-    if (i == undefined)
-      return;
-      
-    // drawing main image
-    var r = make_image_bounds(i);
-    draw_image(context, i, r);
-
-    if (o != undefined)
+    if (i != undefined)
     {
-      r = make_overlay_bounds(r, o);
-      draw_image(context, o, r, self.option("alpha"));
+      // drawing main image
+      var r = make_image_bounds(i);
+      draw_image(context, i, r);
+
+      if (o != undefined)
+      {
+        r = make_overlay_bounds(r, o);
+        draw_image(context, o, r, self.option("alpha"));
+      }
     }
 
     self.control__draw(context);
