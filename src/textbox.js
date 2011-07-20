@@ -236,11 +236,13 @@ inherit_textbox: function(self, opts)
         var after_w = text_dimension(after, self.font()).w;
 
         var sr = new rectangle(
-          p.x + before_w, p.y,
+          p.x + before_w, p.y - 1,
           sel_w + 1, g_line_height);
           
         if (self.option("multiline"))
           sr.h += g_line_spacing;
+        else
+          sr.h += 2;
 
         if (last - first > 0)
         {

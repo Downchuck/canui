@@ -110,6 +110,19 @@ inherit_combobox: function(self, opts)
     list_.on_item_clicked.add(on_selection);
   };
 
+  self.option = function(n, v)
+  {
+    var r = self.control__option(n, v);
+
+    if (v != undefined)
+    {
+      var e = (self.option("dropstyle") == "edit");
+      text_.option("unresponsive", !e);
+    }
+
+    return r;
+  }
+
   self.add_item = function(s)
   {
     list_.add_item([s]);

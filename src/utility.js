@@ -286,23 +286,11 @@ function array_length(a)
 // splits string 's' at all 'sep', discarding the separator and
 // returning the parts in an array
 //
+// todo: not anymore, this just calls s.split(sep)
+//
 function explode(s, sep)
 {
-  assert(s != undefined);
-  assert(sep != undefined);
-  assert(s.indexOf != undefined);
-
-  var e = new RegExp("[^" + sep + "]*", "gm");
-  var m = s.match(e);
-
-  var r = [];
-  for (var i=0; i<m.length; ++i)
-  {
-    if (m[i] != "")
-      r.push(m[i]);
-  }
-
-  return r;
+  return s.split(sep);
 }
 
 // merges the elements of the array with the given separator between

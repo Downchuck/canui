@@ -77,7 +77,7 @@ list_item : function(caption)
   var init = function(captions)
   {
     for (var i in caption)
-      captions_.push("" + caption);
+      captions_.push("" + caption[i]);
   };
 
   // if b is not undefined, sets the selected state; in any case

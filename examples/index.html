@@ -50,8 +50,11 @@ $(function()
   ui.create_root_panel("button-example");
     
   var combobox = ui.create_root_panel("combobox-example");
-  for (var i=0; i<3; ++i)
+  for (var i=0; i<2; ++i)
+  {
     combobox.find_id("cb").add_item("item " + (i + 1));
+    combobox.find_id("cb2").add_item("item " + (i + 1));
+  }
 
   var image = ui.create_root_panel("image-example");
   image.find_id("image").image(load_external_image("example.png"));
@@ -66,7 +69,7 @@ $(function()
   list.add_column("col1");
   list.add_column("col2");
   for (var i=0; i<10; ++i)
-    list.add_item(["" + i, "sub" + i]);
+    list.add_item([i, "sub" + i]);
 
   var progress = ui.create_root_panel("progress-example");
   progress.find_id("progress1").value(-1);
@@ -139,6 +142,7 @@ $(function()
     <td>Combobox:<br>
       <div id="combobox-example" data-layout="new ui.vertical_layout({margin: 2})" width="150" height="100">
         <div id="cb" data-type="combobox"></div>
+        <div id="cb2" data-type="combobox" data-options="{dropstyle: 'edit'}"></div>
       </div>
     </td>
 

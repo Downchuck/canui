@@ -665,6 +665,8 @@ root_panel: function(opts)
     c.internal_set_zorder(floating_.length);
     floating_.push({control: c, manage: manage});
 
+    c.zorder("top");
+
     self.relayout();
   };
   
@@ -720,7 +722,8 @@ root_panel: function(opts)
     if (!c)
       return;
 
-    c.zorder("top");
+    if (c != self)
+      c.zorder("top");
 
     var p = c;
     while (p != self)

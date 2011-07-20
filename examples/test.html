@@ -163,16 +163,9 @@ $(function()
 
 
   var d2 = new ui.dialog({position: new point(50, 50), layout: new ui.border_layout()});
-  var l2 = new ui.list({column_resize: "none"});
-
-  l2.add_column("a", 300);
-  l2.add_column("b", 300);
-
-  for (var i=0; i<100; ++i)
-    l2.add_item([i, i]);
-
+  d2.add(new ui.textbox({multiline: true}), ui.sides.center);
   d2.dimension(d2.best_dimension());
-  d2.add(l2, ui.sides.center);
+
   g_rp.add_floating(d2, false);
 
 });

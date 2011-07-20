@@ -299,8 +299,10 @@ inherit_container: function(self, opts)
 
     c.internal_set_parent(self);
     c.internal_set_zorder(children_.length);
-    
     children_.push(c);
+
+    c.zorder("top");
+
     layout_.add(c, w);
     
     self.relayout();
