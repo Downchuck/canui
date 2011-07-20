@@ -317,6 +317,9 @@ scroller: function(opts)
   // coordinates be used instead?)
   var origin_ = new point(0, 0);
 
+  // added in the corner when both scrollbars are present so the
+  // events are not forwarded
+  var spacer_ = new ui.spacer();
 
   // constructor
   //
@@ -331,6 +334,8 @@ scroller: function(opts)
     // events will go through to the child
     self.transparent(true);
     panel_.transparent(true);
+
+    spacer_.transparent(false);
 
     panel_.option("background", new color().transparent());
 
@@ -577,6 +582,21 @@ scroller: function(opts)
     else
     {
       vbar_.bounds(new rectangle(0, 0, 0, 0));
+    }
+
+    if (hbar_.visible() && vbar_.visible())
+    {
+      if (spacer_.parent() != undefined)
+        spacer_.remove();
+
+      var sr = new rectangle(
+        hbar_.position().x + hbar_.width(),
+        vbar_.position().y + vbar_.height(),
+        vbar_.width(),
+        hbar_.height());
+
+      spacer_.bounds(sr);
+      self.add(spacer_);
     }
   };
 

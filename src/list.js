@@ -1266,6 +1266,19 @@ list: function(opts)
 
   self.on_mouse_left_down = function(mp)
   {
+    // skip the borders (todo)
+    if (mp.y <= 1 || mp.y >= (self.height() - 2))
+    {
+      selection_handled_ = true;
+      return;
+    }
+
+    if (mp.x <= 1 || mp.x >= (self.width() - 2))
+    {
+      selection_handled_ = true;
+      return;
+    }
+
     var ht = self.hit_test(mp);
 
     if (ht.part == ui.list_parts.caption)
