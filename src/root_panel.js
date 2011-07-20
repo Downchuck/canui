@@ -572,9 +572,18 @@ root_panel: function(opts)
       var sf = sorted_floating();
       assert(z >= 0 && z < sf.length);
 
-      var t = c.zorder().z;
+      if (z < c.zorder().z)
+      {
+        for (var i=z; i<c.zorder().z; ++i)
+          sf[i].control.internal_set_zorder(i+1);
+      }
+      else
+      {
+        for (var i=z; i<c.zorder().z; ++i)
+          sf[i].control.internal_set_zorder(i-1);
+      }
+
       c.internal_set_zorder(z);
-      sf[z].control.internal_set_zorder(t);
     }
     else
     {

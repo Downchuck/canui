@@ -260,9 +260,18 @@ inherit_container: function(self, opts)
 
     assert(z >= 0 && z < sc.length);
 
-    var t = c.zorder().z;
+    if (z < c.zorder().z)
+    {
+      for (var i=z; i<c.zorder().z; ++i)
+        sc[i].internal_set_zorder(i+1);
+    }
+    else
+    {
+      for (var i=z; i<c.zorder().z; ++i)
+        sc[i].internal_set_zorder(i-1);
+    }
+
     c.internal_set_zorder(z);
-    sc[z].internal_set_zorder(t);
   };
   
   // fires the detached signal on this container and all its children
