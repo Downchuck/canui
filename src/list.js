@@ -762,12 +762,12 @@ list: function(opts)
       1, 1, self.width() - 2, self.height() - 2));
 
     if (ld.h > ub.h)
-      scroller_.vbar().limits(0, 1);
+      scroller_.vbar().limits(0, ld.h - ub.h);
     else
       scroller_.vbar().limits(0, 0);
     
     if (ld.w > ub.w)
-      scroller_.hbar().limits(0, 1);
+      scroller_.hbar().limits(0, ld.w - ub.w);
     else
       scroller_.hbar().limits(0, 0);
 
