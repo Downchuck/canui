@@ -100,6 +100,7 @@ $(function()
   var rp = ui.create_root_panel("layout-example");
   g_rp = rp;
   
+  rp.find_id("dlg").bounds(new rectangle(50, 50, 400, 400));
   rp.find_id("tooltip-label").tooltip(new ui.tooltip({caption: "this is a tooltip"}));
   
   rp.find_id("captioned-panel").borders({all: 1});
@@ -226,74 +227,77 @@ $(function()
 </table>
 
 <p>This is a larger canvas with several controls:</p>
-<div id="layout-example" data-layout="new ui.border_layout()" width="400" height="300">
-         
-  <div data-type="menu" data-layoutinfo="ui.sides.top">
-    <div data-type="menu">
-      File
-      <div data-type="menu">New</div>
-      <div data-type="menu">Open...</div>
-      <div data-type="menu">Quit</div>
-    </div>
-      
-    <div data-type="menu">
-      Edit
-      <div data-type="menu" onclick="test">Cut</div>
-      <div data-type="menu">Copy</div>
-      <div data-type="menu">Paste</div>
-    </div>
-      
-    <div data-type="menu">
-      Test
-      <div data-type="menu">Item1</div>
-      <div data-type="menu">Item2</div>
+<div id="layout-example" data-layout="new ui.border_layout()" width="500" height="500">
+
+  <div id="dlg" data-type="dialog" data-layoutinfo="floating" data-layout="new ui.border_layout()">
+
+    <div data-type="menu" data-layoutinfo="ui.sides.top">
       <div data-type="menu">
-        Submenu
-        <div data-type="menu" onclick="test">Subitem1</div>
-        <div data-type="menu">Subitem2</div>
-        <div data-type="menu">Subitem3</div>
+        File
+        <div data-type="menu">New</div>
+        <div data-type="menu">Open...</div>
+        <div data-type="menu">Quit</div>
+      </div>
+      
+      <div data-type="menu">
+        Edit
+        <div data-type="menu" onclick="test">Cut</div>
+        <div data-type="menu">Copy</div>
+        <div data-type="menu">Paste</div>
+      </div>
+      
+      <div data-type="menu">
+        Test
+        <div data-type="menu">Item1</div>
+        <div data-type="menu">Item2</div>
         <div data-type="menu">
-          Submenu2
-          <div data-type="menu">Subsubitem1</div>
-          <div data-type="menu">Subsubitem2</div>
+          Submenu
+          <div data-type="menu" onclick="test">Subitem1</div>
+          <div data-type="menu">Subitem2</div>
+          <div data-type="menu">Subitem3</div>
+          <div data-type="menu">
+            Submenu2
+            <div data-type="menu">Subsubitem1</div>
+            <div data-type="menu">Subsubitem2</div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
   
-  <div id="panel"
-       data-type="panel"
-       data-layout="new ui.border_layout({margin: 2, expand: true})"
-       data-layoutinfo="ui.sides.center"
-       data-options="{background: ui.theme.panel_color()}">
-
-
-    <div id="left-panel"
-          data-type="panel"
-          data-layoutinfo="ui.sides.left"
-          data-layout="new ui.vertical_layout({margin: 2, padding: 5, expand: true})">
-      <div id="image" data-type="image"></div>
-      <div data-type="textbox">this is a textbox</div>
-      <div data-type="label">this is a label</div>
-      <div data-type="button" onclick="test">this is a button</div>
-      <div data-type="separator"></div>
-      <div id="captioned-panel" data-type="panel">
-        panel caption
-        <div data-type="label">this is a label in a panel</div>
-      </div>
-      <div id="tooltip-label" data-type="label">this is a label with a tooltip</div>
-      <div id="slider" data-type="slider"></div>
-      <div id="slider-value" data-type="label"></div>
-    </div>
-      
-    <div id="right-panel"
+    <div id="panel"
          data-type="panel"
+         data-layout="new ui.border_layout({margin: 2, expand: true})"
          data-layoutinfo="ui.sides.center"
-         data-layout="new ui.border_layout()">
-      <div id="list"
-            data-type="list"
-            data-layoutinfo="ui.sides.center"
-            data-options="{item_scroll: false}">
+         data-options="{background: ui.theme.panel_color()}">
+
+
+      <div id="left-panel"
+            data-type="panel"
+            data-layoutinfo="ui.sides.left"
+            data-layout="new ui.vertical_layout({margin: 2, padding: 5, expand: true})">
+        <div id="image" data-type="image"></div>
+        <div data-type="textbox">this is a textbox</div>
+        <div data-type="label">this is a label</div>
+        <div data-type="button" onclick="test">this is a button</div>
+        <div data-type="separator"></div>
+        <div id="captioned-panel" data-type="panel">
+          panel caption
+          <div data-type="label">this is a label in a panel</div>
+        </div>
+        <div id="tooltip-label" data-type="label">this is a label with a tooltip</div>
+        <div id="slider" data-type="slider"></div>
+        <div id="slider-value" data-type="label"></div>
+      </div>
+      
+      <div id="right-panel"
+           data-type="panel"
+           data-layoutinfo="ui.sides.center"
+           data-layout="new ui.border_layout()">
+        <div id="list"
+              data-type="list"
+              data-layoutinfo="ui.sides.center"
+              data-options="{item_scroll: false}">
+        </div>
       </div>
     </div>
   </div>

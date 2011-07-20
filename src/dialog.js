@@ -252,6 +252,11 @@ inherit_dialog: function(self, opts)
     return d;
   };
 
+  self.dialog__layout = function(ly)
+  {
+    return pane_.layout(ly);
+  };
+
   self.dialog__add = function(c, w)
   {
     return pane_.add(c, w);
@@ -401,6 +406,7 @@ inherit_dialog: function(self, opts)
 
   self.option               = self.dialog__option
   self.best_dimension       = self.dialog__best_dimension;
+  self.layout               = self.dialog__layout;
   self.draw                 = self.dialog__draw;
   self.on_mouse_move        = self.dialog__on_mouse_move;
   self.on_mouse_left_down   = self.dialog__on_mouse_left_down;

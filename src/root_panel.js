@@ -349,6 +349,23 @@ root_panel: function(opts)
     return self.container__is_dirty();
   };
 
+  // also searches floating controls
+  //
+  self.find_id = function(id)
+  {
+    assert(id != undefined);
+
+    for (var i in floating_)
+    {
+      var c = floating_[i].control;
+
+      var r = c.find_id(id);
+      if (r != undefined)
+        return r;
+    }
+
+    return self.container__find_id(id);
+  };
 
   // called when the draw timer fires
   //
@@ -358,8 +375,6 @@ root_panel: function(opts)
     if (needs_layout_)
     {
       needs_layout_ = false;
-
-    //  console.log("layout");
 
       self.do_layout();
       self.redraw();
@@ -382,8 +397,6 @@ root_panel: function(opts)
     // don't redraw if the root panel ain't dirty
     if (!self.is_dirty())
       return false;
-//
-      console.log("draw");
 
     context.save();
 

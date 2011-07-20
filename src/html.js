@@ -159,17 +159,24 @@ parse_impl: function(parent, node)
     
     var lyis = ui.get_data(e, "layoutinfo");
     var lyi = undefined;
-    if (lyis != undefined)
+
+    if (lyis != undefined && lyis != "floating")
       lyi = eval(lyis);
 
-    var u = ui.create_ui(e, lyi);
+    var u = ui.create_ui(e);
+    ui.parse_impl(u, e);
     
     if (u.internal_is_a_menu && parent.internal_is_a_menu)
+    {
       parent.add_menu(u);
+    }
     else
-      parent.add(u, lyi);
-    
-    ui.parse_impl(u, e);
+    {
+      if (lyis == "floating")
+        parent.get_root_panel().add_floating(u, false);
+      else
+        parent.add(u, lyi);
+    }
   }
 },
 

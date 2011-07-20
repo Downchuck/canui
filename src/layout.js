@@ -664,8 +664,8 @@ border_layout: function(opts)
     {
       bd = c.best_dimension();
       
-      d.w = Math.max(lr.w + bd.w, Math.max(tb.w, bd.w));
-      d.h = Math.max(tb.h + bd.h, Math.max(lr.h, bd.h));
+      d.w = Math.max(lr.w + tb.w, lr.w + bd.w);
+      d.h = Math.max(tb.h + lr.h, tb.h + bd.h);
       
       if (controls_[ui.sides.left])
         d.w += self.option("padding");
