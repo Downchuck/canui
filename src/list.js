@@ -693,8 +693,6 @@ list: function(opts)
       return calculate_auto_widths(fill);
     else
       return calculate_none_widths(fill);
-    
-    return undefined;
   }
 
   // resizes each column depending on the resize option
