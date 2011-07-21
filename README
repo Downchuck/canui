@@ -47,19 +47,19 @@ function f()
 ======================================================================
 Include canui.js and set the image path, wherever they are:
 
-<html>
-<head>
-  <script type="text/javascript" src="canui/canui.js"></script>
-</head>
+  <html>
+  <head>
+    <script type="text/javascript" src="canui/canui.js"></script>
+  </head>
 
-<script type="text/javascript">
-$(function()
-{
-  set_image_dir("canui/images");
-  // you're all set
-}
+  <script type="text/javascript">
+  $(function()
+  {
+    set_image_dir("canui/images");
+    // you're all set
+  }
 
-</html>
+  </html>
 
 
 eof

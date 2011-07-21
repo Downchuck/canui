@@ -1,3 +1,5 @@
+rem $Id$
+
 @echo off
 
 set compiler=D:\dev\cc\compiler.jar
