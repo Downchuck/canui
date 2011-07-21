@@ -1,0 +1,65 @@
+// $Id$
+
+1 Introduction
+======================================================================
+
+canui (canvas UI) is a generic user interface library with several
+predefined widgets and layout managers.
+
+Interfaces can be created with javascript:
+
+function f()
+{
+  var rp = new ui.root_panel({
+    canvas: $("#canvas-id"),
+    dimension: new dimension(200, 200),
+    layout: new ui.horizontal_layout()
+  });
+
+  rp.add(new ui.label({caption: "Name:"}));
+  rp.add(new ui.textbox({text: "here"}));
+}
+
+This assumes there's a canvas tag somewhere:
+
+<canvas id="canvas-id"></canvas>
+
+
+A combination of html tags and javascript can also be used:
+
+<div id="ui"
+     data-layout="new ui.horizontal_layout()"
+     width="200" height="200">
+  
+  <div data-type="label">Name:</div>
+  <div data-type="textbox">here</div>
+</div>
+
+Put this somewhere:
+
+function f()
+{
+  var rp = ui.create_root_panel("ui");
+}
+
+
+2 Usage
+======================================================================
+Include canui.js and set the image path, wherever they are:
+
+<html>
+<head>
+  <script type="text/javascript" src="canui/canui.js"></script>
+</head>
+
+<script type="text/javascript">
+$(function()
+{
+  set_image_dir("canui/images");
+  // you're all set
+}
+
+</html>
+
+
+eof
