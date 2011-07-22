@@ -80,6 +80,10 @@ create_ui: function(e)
   
   u.id(ui.get_attr(e, "id", ""));
 
+  var w = ui.get_attr(e, "width", 0);
+  var h = ui.get_attr(e, "height", 0);
+  u.dimension(new dimension(to_int(w), to_int(h)));
+
   var layout = ui.get_data(e, "layout");
   if (layout != undefined)
   {

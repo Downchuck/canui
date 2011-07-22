@@ -57,8 +57,10 @@ $(function()
 <p>This is a &lt;canvas&gt; element on which several controls are
 created.
 
-<div id="rp" data-layout="new ui.border_layout({margin: 5, padding: 3})" width="500" height="500">
-  <div data-type="tree" data-layoutinfo="ui.sides.center"></div>
+<div id="rp" data-layout="new ui.border_layout({margin: 5, padding: 3})" width="500" height="400">
+  <div data-type="dialog" data-layout="new ui.border_layout()" data-layoutinfo="floating" width="400" height="350">
+    <div data-type="tree" data-layoutinfo="ui.sides.center"></div>
+  </div>
 </div>
 
 </p>
