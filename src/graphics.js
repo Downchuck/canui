@@ -68,7 +68,6 @@ function image_holder(i, f)
 
   var image_ = undefined;
   
-  var notified_ = false;
   var loaded_ = false;
   var working_ = false;
 
@@ -126,7 +125,7 @@ function image_holder(i, f)
 
   self.notify = function()
   {
-    if (notified_)
+    if (loaded_)
       self.on_load.fire(working_);
   }
 
@@ -135,7 +134,6 @@ function image_holder(i, f)
     loaded_ = true;
     working_ = b;
 
-    notified_ = true;
     self.notify();
   }
 
@@ -165,7 +163,7 @@ function load_external_image(src, alt, f)
     if (alt != undefined)
       i.alt = alt;
 
-    h = new image_holder(i);
+    h = new image_holder(i, f);
     i.src = src;
 
     if (!g_image_cache.hasOwnProperty(src))
@@ -293,6 +291,38 @@ function draw_line(context, c, r)
   context.stroke();
 }
 
+// draws a dotted line, this can only draw horizontal or vertical
+// see draw_dotted_rect()
+function draw_dotted_line(context, c, r)
+{
+  assert(c != undefined && c.internal_is_a_color);
+  assert(r != undefined && r.internal_is_a_rectangle && valid_bounds(r));
+  assert(r.w == 1 || r.h == 1);
+
+  context.fillStyle = c.string();
+  
+  var b=true;
+
+  if (r.w == 1)
+  {
+    for (var y=r.y; y<r.y+r.h; ++y)
+    {
+      if (b)
+        context.fillRect(to_int(r.x), to_int(y), 1, 1);
+      b = !b;
+    }
+  }
+  else
+  {
+    for (var x=r.x; x<r.x+r.w; ++x)
+    {
+      if (b)
+        context.fillRect(to_int(x), to_int(r.y), 1, 1);
+      b = !b;
+    }
+  }
+}
+
 // outlines the given rectangle using the given color
 //
 function outline_rect(context, c, r)
@@ -337,7 +367,7 @@ function fill_rect(context, c, r)
 
 // outlines a dotted rectangle
 //
-function dotted_rect(context, c, r)
+function draw_dotted_rect(context, c, r)
 {
   assert(c != undefined && c.internal_is_a_color);
   assert(r != undefined && r.internal_is_a_rectangle && valid_bounds(r));
@@ -352,14 +382,15 @@ function dotted_rect(context, c, r)
   // to be antialiased or something, I can't get odd pixels only to
   // light up; 2) but anyways get/putImageData() do not use the
   // current transformation and since 'r' is relative to the parent
-  // container, dotted_rect() would either need absolute coordinates
-  // or a reference to the control so that the coordinates may be
-  // offset (both are ugly)
+  // container, draw_dotted_rect() would either need absolute
+  // coordinates or a reference to the control so that the coordinates
+  // may be offset (both are ugly)
   //
   // therefore, a series of 1x1 rectangles are filled; this is
   // probably the most inefficient implementation of a dotted line,
   // but hey
   //
+  
   context.fillStyle = c.string();
   
   var b=true;

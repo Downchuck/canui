@@ -5,7 +5,6 @@
 <html>
 <head>
   <title>canui: example</title>
-  <!--
   <script type="text/javascript" src="../libs/jquery-1.5.1.min.js"></script>
   <script type="text/javascript" src="../libs/jquery.mousewheel.min.js"></script>
   <script type="text/javascript" src="../libs/namespace.js"></script>
@@ -29,8 +28,6 @@
   <script type="text/javascript" src="../src/tree.js"></script>
   <script type="text/javascript" src="../src/html.js"></script>
   <script type="text/javascript" src="../src/layout.js"></script>
-  -->
-  <script type="text/javascript" src="../src/canui.js"></script>
 </head>
 
 <script type="text/javascript">
@@ -44,133 +41,11 @@ function dump()
   w.document.write("</pre></body></html>");
 }
 
-function test()
-{
-  alert("hello");
-}
-
-function slider_changed(v)
-{
-  assert(g_rp != undefined);
-  g_rp.find_id("slider-value").caption(
-    "slider value: " + to_int(v));
-}
-
-function test_widget()
-{
-  ui.inherit_control(this);
-
-  this.w = 100;
-  this.h = 100;
-
-  this.best_dimension = function()
-  {
-    return new dimension(this.w, this.h);
-  }
-
-  this.draw = function(context)
-  {
-    this.control__draw(context);
-
-    var b = this.bounds();
-
-    var w = this.width();
-    var h = this.height();
-
-    w -= text_dimension("10", this.font()).w
-    h -= text_dimension("10", this.font()).h
-
-    outline_rect(context, new color().red(), this.bounds());
-
-    for (var x=0; x<=10; ++x)
-    {
-      for (var y=0; y<=10; ++y)
-      {
-        var r = new rectangle(b.x + (x/10)*w, b.y + (y/10)*h, 50, 50);
-        draw_text(context, "" + x, new color().black(), r, this.font());
-      }
-    }
-  }
-}
-
 $(function()
 {
   set_image_dir("../src/images");
 
-  //logical_compare("item 1", "item 1");
-  
-/*  var r = explode("item 1\nmultiline\ntest meh bleh\nline", "\n");
-  console.log(dump_array(r));
-  return;*/
-  
-
   g_rp = ui.create_root_panel("rp");
-
-  //var tb = new ui.textbox({text: "case ui.key_codes.down:\n{\nif (rp.key_state(ui.key_codes.ctrl))\n{\n// noop, todo: scroll down\n}\nelse\n{\nif (rp.key_state(ui.key_codes.shift))\n{\nvar p = next_line_same_column(sel_.last);\nself.selection(sel_.first, p);\n}\nelse\n{\nvar s = Math.max(sel_.first, sel_.last);\nvar p = next_line_same_column(s);\n\nself.selection(p);\n}\n"});
-  //g_rp.add(tb, ui.sides.center);
-
-  /*var p = new ui.progress();
-  p.value(-1);
-
-  setTimeout(function()
-    {
-      setInterval(function()
-      {
-        p.value(p.value() + 1);
-      }, 500);
-    }, 5000);
-
-  g_rp.add(p);*/
-
-  //g_rp.add(new ui.textbox());
-  
-  var l = new ui.list({column_resize: "none", expand_header: false});
-  l.add_column("col 1", 100);
-  l.add_column("col 2", 100);
-
-  l.frozen(true);
-  for (var i=0; i<10; ++i)
-    l.add_item(["item " + i, "col " + to_int(Math.random() * 20)]);
-  l.frozen(false);
-  /*
-  g_rp.add(l, ui.sides.center);
-
-  var p = new ui.panel({layout: new ui.horizontal_layout()});
-  var t = new ui.textbox();
-  var b = new ui.button({caption: "goto"});
-  b.clicked.add(function()
-    {
-      var i = to_int(t.text());
-      if (i >= 0 && i < l.item_count())
-        l.scroll_to_item(i, "center");
-    });
-
-  p.add(t);
-  p.add(b);
-
-  g_rp.add(p, ui.sides.bottom);*/
-
-  var d1 = new ui.dialog({position: new point(10, 10), layout: new ui.border_layout()});
-
-  var t = new ui.tree();
-  d1.add(t, ui.sides.center);
-  
-  d1.dimension(d1.best_dimension());
-
-  d1.closed.add(function()
-    {
-      d1.remove();
-    });
-
-  g_rp.add_floating(d1, false);
-
-
-  var d2 = new ui.dialog({position: new point(50, 50), layout: new ui.border_layout()});
-  d2.add(new ui.textbox({multiline: true}), ui.sides.center);
-  d2.dimension(d2.best_dimension());
-
-  g_rp.add_floating(d2, false);
-
 });
 </script>
 
@@ -183,6 +58,7 @@ $(function()
 created.
 
 <div id="rp" data-layout="new ui.border_layout({margin: 5, padding: 3})" width="500" height="500">
+  <div data-type="tree" data-layoutinfo="ui.sides.center"></div>
 </div>
 
 </p>

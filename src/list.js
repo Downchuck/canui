@@ -1109,7 +1109,7 @@ list: function(opts)
       else
         fc = new color().black();
 
-      dotted_rect(context, fc, r);
+      draw_dotted_rect(context, fc, r);
     }
 
     var x = r.x;
