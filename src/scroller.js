@@ -8,13 +8,17 @@ namespace("ui", {
 // the user clicks the button or continuously at intervals if the
 // button is held down
 //
-scroll_button: function(opts)
+scroll_button: function(sb, opts)
 {
   ui.inherit_button(this, opts);
   var self = this;
 
   // fired then the button is clicked or held down
   this.tick = new signal();
+
+
+  // parent scrollbar
+  var parent_ = sb;
 
   // icon on the button
   var image_ = undefined;
@@ -60,6 +64,15 @@ scroll_button: function(opts)
     ticker_.stop();
   };
 
+  // forwards to scrollbar
+  //
+  self.on_mouse_scroll = function(mp, delta)
+  {
+    return parent_.on_mouse_scroll(new point(
+      mp.x + self.position().x, mp.y + self.position().y),
+      delta);
+  }
+
   // temporarily stops the tick timer
   //
   self.on_mouse_leave = function()
@@ -82,7 +95,7 @@ scroll_button: function(opts)
 
   // fires tick()
   //
-  var on_tick = function(v)
+  var on_tick = function()
   {
     self.tick.fire();
   };
@@ -156,8 +169,8 @@ scrollbar: function(opts)
 
     if (self.option("orientation") == "vertical")
     {
-      up_ = new ui.scroll_button({image: "up.png", caption: "^"});
-      down_ = new ui.scroll_button({image: "down.png", caption: "v"});
+      up_ = new ui.scroll_button(self, {image: "up.png", caption: "^"});
+      down_ = new ui.scroll_button(self, {image: "down.png", caption: "v"});
       thumb_ = new ui.slider({orientation: "vertical", proportional: true});
 
       self.add(up_, ui.sides.top);
@@ -166,8 +179,8 @@ scrollbar: function(opts)
     }
     else
     {
-      up_ = new ui.scroll_button({image: "left.png", caption: "<"});
-      down_ = new ui.scroll_button({image: "right.png", caption: ">"});
+      up_ = new ui.scroll_button(self, {image: "left.png", caption: "<"});
+      down_ = new ui.scroll_button(self, {image: "right.png", caption: ">"});
       thumb_ = new ui.slider({orientation: "horizontal", proportional: true});
       
       self.add(up_, ui.sides.left);
@@ -187,7 +200,7 @@ scrollbar: function(opts)
   self.tick_size = function(v)
   {
     self.option("tick_size", v);
-    //thumb_.tick_size(v);
+    thumb_.option("tick_size", v);
   }
 
   // sets the scroll amount when the slider is paged
@@ -248,6 +261,14 @@ scrollbar: function(opts)
   self.scroll_to = function(p)
   {
     thumb_.value(p);
+  }
+
+  // scrolls the thumb
+  //
+  self.on_mouse_scroll = function(mp, delta)
+  {
+    thumb_.value(thumb_.value() - delta * self.option("tick_size"));
+    return true;
   }
 
   // either a click on the up button or that button is held down

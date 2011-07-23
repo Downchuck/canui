@@ -72,6 +72,15 @@ slider_thumb: function(parent)
     }
   },
 
+  // forwards to slider
+  //
+  self.on_mouse_scroll = function(mp, delta)
+  {
+    return parent_.on_mouse_scroll(new point(
+      mp.x + self.position().x, mp.y + self.position().y),
+      delta);
+  }
+
   // left button is down, remembers the mouse and thumb position
   //
   self.on_pressed = function(mp)
@@ -113,6 +122,9 @@ slider_thumb: function(parent)
 //   page_size (positive integer), default: 1
 //     the value increment while the mouse is held down in the empty
 //     space
+//
+//   tick_size (positive integer), default: 1
+//     the value increment when the mouse wheel is turned
 //
 //   proportional (true/false), default: false
 //     whether the thumb size should be proportional to the limits
@@ -175,6 +187,7 @@ slider: function(opts)
     self.set_default_options({
       orientation: "horizontal",
       outside_limit: 130,
+      tick_size: 1,
       proportional: false,
       page_size: 1}); 
     
@@ -540,6 +553,14 @@ slider: function(opts)
       self.value(value_ + self.option("page_size"));
 
     self.redraw();
+  }
+
+  // scrolls the thumb
+  //
+  self.on_mouse_scroll = function(mp, delta)
+  {
+    self.value(value_ - delta * self.option("tick_size"));
+    return true;
   }
   
   // width/height of the thumb

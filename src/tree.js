@@ -169,6 +169,16 @@ inherit_tree: function(self, opts)
     return new dimension(100, 100);
   };
 
+  // scrolls the tree
+  //
+  self.on_mouse_scroll = function(mp, delta)
+  {
+    if (scroller_.vbar().visible())
+      scroller_.scroll_by(0, -delta * self.option("item_height"));
+
+    return true;
+  }
+
   self.tree__on_bounds_changed = function()
   {
     scroller_.bounds(new rectangle(
@@ -179,6 +189,7 @@ inherit_tree: function(self, opts)
     if (td.h > self.height())
     {
       scroller_.vbar().limits(0, td.h - self.height());
+      scroller_.vbar().tick_size(self.option("item_height"));
     }
   };
 
