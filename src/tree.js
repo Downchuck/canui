@@ -429,6 +429,8 @@ inherit_tree: function(self, opts)
   {
     var ht = {node: undefined, indent: -1, part: 0};
 
+    p.y -= origin_.y;
+
     if (p.y < self.option("margin"))
     {
       ht.part |= ui.tree_parts.above;

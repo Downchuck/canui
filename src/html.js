@@ -31,10 +31,13 @@ get_text: function(e)
   var s = "";
   for (var i=0; i<e.childNodes.length; ++i)
   {
-    if (e.childNodes[i].nodeValue != undefined &&
-        e.childNodes[i].nodeValue != "")
+    var n = e.childNodes[i];
+
+    if (n.nodeValue != undefined &&
+        n.nodeValue != "" &&
+        n.nodeType == Node.TEXT_NODE)
     {
-      s += e.childNodes[i].nodeValue;
+      s += n.nodeValue;
     }
   }
     
@@ -193,7 +196,7 @@ create_root_panel: function(n)
   if (r.getAttribute == undefined)
     r = document.getElementById(n);
 
-  //try
+  try
   {
     if (r == undefined)
       throw "root panel '" + n + "' not found";
@@ -205,14 +208,14 @@ create_root_panel: function(n)
     
     root = rp.canvas()[0];
   }
-  /*catch(error)
+  catch(error)
   {
     var e = $(document.createElement("div"));
     e.attr("style", "font-size: 19px; font-weight: bold; color: red");
     e.text("canui: " + error);
     
     root = e[0];
-  }*/
+  }
 
   r.parentNode.replaceChild(root, r);
 

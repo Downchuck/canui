@@ -192,14 +192,17 @@ slider: function(opts)
   //
   self.draw = function(context)
   {
+    self.basic_panel__draw(context);
+
     // the area will be darker when the control is actually scrolling;
     if ((scrolling_ || tentative_scrolling_) && !scrolling_wait_)
     {
       var r = valid_scroll_rectangle();
+      r.x += self.position().x;
+      r.y += self.position().y;
+
       fill_rect(context, ui.theme.page_scroll_color(), r);
     }
-
-    self.basic_panel__draw(context);
   }
 
   // returns the size of this control minus the size of the thumb:
@@ -491,12 +494,12 @@ slider: function(opts)
       {
         // mouse had previously left the valid rectangle
 
+        // resumes scrolling
+        scrolling_wait_ = false;
+
         // restarts the tick timer without the longer initial delay
         // because the user is already scrolling
         ticker_.start_no_delay(on_tick);
-
-        // resumes scrolling
-        scrolling_wait_ = false;
       }
     }
     else

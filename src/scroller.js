@@ -137,6 +137,23 @@ scrollbar: function(opts)
       orientation: "vertical"
     });
 
+    set();
+  };
+
+  self.option = function(n, v)
+  {
+    var r = self.control__option(n, v);
+
+    if (v != undefined && n == "orientation")
+      set();
+
+    return r;
+  };
+
+  var set = function()
+  {
+    self.remove_all();
+
     if (self.option("orientation") == "vertical")
     {
       up_ = new ui.scroll_button({image: "up.png", caption: "^"});
