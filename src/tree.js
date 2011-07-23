@@ -18,11 +18,18 @@ tree_node: function(caption)
   var self = this;
 
   var tree_ = undefined;
+  var parent_ = undefined;
   var caption_ = caption;
   var expanded_ = false;
   var children_ = [];
   var selected_ = false;
 
+  self.internal_set_parent = function(p)
+  {
+    assert(parent_ == undefined);
+    parent_ = p;
+  }
+  
   self.caption = function(c)
   {
     if (c != undefined)
@@ -38,7 +45,15 @@ tree_node: function(caption)
   self.selected = function(b)
   {
     if (b != undefined)
-      selected_ = b;
+    {
+      if (selected_ != b)
+      {
+        if (tree_ != undefined)
+          tree_.redraw();
+      
+        selected_ = b;
+      }
+    }
 
     return selected_;
   };
@@ -46,27 +61,42 @@ tree_node: function(caption)
   self.expanded = function(b)
   {
     if (b != undefined)
-      expanded_ = b;
+    {
+      if (expanded_ != b)
+      {
+        expanded_ = b;
+
+        if (tree_ != undefined)
+          tree_.internal_on_node_toggled();
+      }
+    }
 
     return expanded_;
   };
 
-  self.expand_all = function()
+  self.internal_set_expanded_all = function(b)
   {
-    expanded_ = true;
+    expanded_ = b;
     self.each_node(function(n)
       {
-        n.expand_all();
+        n.internal_set_expanded_all(b);
       });
+  }
+
+  self.expand_all = function()
+  {
+    self.internal_set_expanded_all(true);
+
+    if (tree_ != undefined)
+      tree_.internal_on_node_toggled();
   };
 
   self.collapse_all = function()
   {
-    expanded_ = false;
-    self.each_node(function(n)
-      {
-        n.collapse_all();
-      });
+    self.internal_set_expanded_all(false);
+
+    if (tree_ != undefined)
+      tree_.internal_on_node_toggled();
   };
 
   self.toggle = function()
@@ -77,6 +107,19 @@ tree_node: function(caption)
   self.add = function(n)
   {
     children_.push(n);
+    n.internal_set_parent(self);
+
+    if (tree_ != undefined)
+      n.internal_set_tree(tree_);
+  };
+
+  self.internal_set_tree = function(t)
+  {
+    tree_ = t;
+    self.each_node_recursive(function(n)
+      {
+        n.internal_set_tree(t);
+      });
   };
 
   self.node = function(i)
@@ -109,6 +152,26 @@ tree_node: function(caption)
   }
 },
 
+
+// options:
+// item_height (positive integer), default: g_line_height+6
+//   height in pixel of an item
+//
+// indent (positive integer), default: 19
+//   width in pixels of the indent between a parent and a child node
+//
+// margin (positive integer), default: 5
+//   size in pixels of the margin around the tree
+//
+// toggle_padding (positive integer), default: 0
+//   width in pixels between the start of an item and the toggle image
+//
+// caption_padding (positive integer), default: 5
+//   width in pixels between the toggle image and the caption
+//
+// multiple (true/false), default: false
+//   whether multiple items can be selected
+//
 inherit_tree: function(self, opts)
 {
   ui.inherit_container(self, merge(opts,
@@ -120,6 +183,7 @@ inherit_tree: function(self, opts)
   var hovered_ = undefined;
   var scroller_ = new ui.scroller({empty: true});
   var origin_ = new point(0, 0);
+  var focus_ = undefined;
 
   var init = function()
   {
@@ -128,8 +192,11 @@ inherit_tree: function(self, opts)
       indent: 19,
       margin: 5,
       toggle_padding: 0,
-      caption_padding: 5
+      caption_padding: 5,
+      multiple: false
     });
+
+    root_.internal_set_tree(self);
 
     minus_ = load_image("minus.png", "-", mem_fun('redraw', self));
     plus_ = load_image("plus.png", "+", mem_fun('redraw', self));
@@ -165,8 +232,12 @@ inherit_tree: function(self, opts)
 
   self.tree__best_dimension = function()
   {
-    //todo
-    return new dimension(100, 100);
+    var d = tree_dimension();
+
+    if (scroller_.vbar().visible())
+      d.w += scroller_.vbar().best_dimension().w;
+
+    return d;
   };
 
   // scrolls the tree
@@ -179,11 +250,21 @@ inherit_tree: function(self, opts)
     return true;
   }
 
+  self.internal_on_node_toggled = function()
+  {
+    set_scrollbars();
+  };
+
   self.tree__on_bounds_changed = function()
   {
     scroller_.bounds(new rectangle(
       1, 1, self.width() - 2, self.height() - 2));
 
+    set_scrollbars();
+  };
+
+  var set_scrollbars = function()
+  {
     var td = tree_dimension();
 
     if (td.h > self.height())
@@ -191,26 +272,42 @@ inherit_tree: function(self, opts)
       scroller_.vbar().limits(0, td.h - self.height());
       scroller_.vbar().tick_size(self.option("item_height"));
     }
+    else
+    {
+      scroller_.vbar().limits(0, 0);
+    }
   };
 
   var tree_dimension = function()
   {
-    var w = 0;
-    var h = 0;
+    var d = new dimension(0, 0);
+    
+    tree_dimension_impl(root_, d, 0);
 
-    self.each_node(function(n, indent)
-      {
-        var iw = indent * self.option("indent");
-        w = Math.max(
-          w,
-          text_dimension(n.caption(), self.font()).w + iw);
+    d.w += self.option("margin") * 2;
+    d.h += self.option("margin") * 2;
 
-        h += self.option("item_height");
-      });
+    return d;
+  };
 
-    return new dimension(
-      w + self.option("margin") * 2,
-      h + self.option("margin") * 2);
+  var tree_dimension_impl = function(node, d, indent)
+  {
+    var iw =
+      indent * self.option("indent") +
+      self.option("toggle_padding") + minus_.width() +
+      self.option("caption_padding") +
+      text_dimension(node.caption(), self.font()).w;
+
+    d.w = Math.max(d.w, iw);
+    d.h += self.option("item_height");
+
+    if (node.expanded())
+    {
+      node.each_node(function(n)
+        {
+          tree_dimension_impl(n, d, indent + 1);
+        });
+    }
   };
 
   var on_vscroll = function(v)
@@ -273,13 +370,24 @@ inherit_tree: function(self, opts)
       p.x, p.y + self.option("item_height")/2 - g_line_height/2,
       text_dimension(node.caption(), self.font()).w, g_line_height);
     
+    var sr = new rectangle(
+      p.x - 2, p.y, tr.w + 4, self.option("item_height"));
+
     if (node.selected())
     {
-      var sr = new rectangle(
-        p.x - 2, p.y, tr.w + 4, self.option("item_height"));
-
       fill_rect(context, ui.theme.selected_text_background(), sr);
       tc = ui.theme.selected_text_color();
+    }
+
+    if (focus_ == node && self.option("multiple"))
+    {
+      var fc = undefined;
+      if (node.selected())
+        fc = color_inverse(ui.theme.selected_text_background());
+      else
+        fc = new color().black();
+
+      draw_dotted_rect(context, fc, sr);
     }
 
     draw_text(context, node.caption(), tc, tr, self.font());
@@ -392,9 +500,14 @@ inherit_tree: function(self, opts)
     self.each_node(function(n)
       {
         if (n == s)
+        {
           n.selected(true);
+          focus_ = n;
+        }
         else
+        {
           n.selected(false);
+        }
       });
   };
 
@@ -418,7 +531,24 @@ inherit_tree: function(self, opts)
       ht.node.toggle();
       self.redraw();
     }
-    else if (ht.node != undefined)
+    
+    if (ht.node == undefined)
+      return;
+
+    if (!self.option("multiple"))
+    {
+      self.select_only(ht.node);
+      return;
+    }
+
+    var rp = self.get_root_panel();
+
+    if (rp.key_state(ui.key_codes.ctrl))
+    {
+      ht.node.selected(!ht.node.selected());
+      focus_ = ht.node;
+    }
+    else
     {
       self.select_only(ht.node);
     }
@@ -524,6 +654,13 @@ inherit_tree: function(self, opts)
 
     return undefined;
   };
+
+  // debug: returns this control's name
+  //
+  self.typename = function()
+  {
+    return "tree";
+  }
 
 
   self.best_dimension       = self.tree__best_dimension;
