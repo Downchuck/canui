@@ -469,9 +469,16 @@ list: function(opts)
   //
   self.add_item = function(captions)
   {
-    assert(captions.length == cols_.length);
-
-    items_.push(new ui.list_item(captions));
+    if (typeof(captions) == "string")
+    {
+      assert(cols_.length == 1)
+      items_.push(new ui.list_item([captions]));
+    }
+    else
+    {
+      assert(captions.length == cols_.length);
+      items_.push(new ui.list_item(captions));
+    }
 
     if (!frozen_)
       update();

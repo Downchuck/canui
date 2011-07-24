@@ -41,11 +41,108 @@ function dump()
   w.document.write("</pre></body></html>");
 }
 
+function dump_next_impl(n, v)
+{
+  var t = g_rp.find_id("tree");
+
+  var i = 0;
+  while (n != undefined)
+  {
+    console.log(n.caption());
+
+    if (v)
+      n = t.next_visible_node(n);
+    else
+      n = t.next_node(n);
+
+    ++i;
+    if (i > 100)
+    {
+      console.log("problem");
+      break;
+    }
+  }
+}
+
+function dump_next_visible()
+{
+  dump_next_impl(g_rp.find_id("tree").selection(), true);
+}
+
+function dump_next()
+{
+  dump_next_impl(g_rp.find_id("tree").selection(), false);
+}
+
+function dump_previous_impl(n, v)
+{
+  var t = g_rp.find_id("tree");
+
+  var i = 0;
+  while (n != undefined)
+  {
+    console.log(n.caption());
+
+    if (v)
+      n = t.previous_visible_node(n);
+    else
+      n = t.previous_node(n);
+
+    ++i;
+    if (i > 100)
+    {
+      console.log("problem");
+      break;
+    }
+  }
+}
+
+function dump_previous_visible()
+{
+  dump_previous_impl(g_rp.find_id("tree").selection(), true);
+}
+
+function dump_previous()
+{
+  dump_previous_impl(g_rp.find_id("tree").selection(), false);
+}
+
 $(function()
 {
   set_image_dir("../src/images");
 
   g_rp = ui.create_root_panel("rp");
+
+  var t = g_rp.find_id("tree");
+
+  for (var i=0; i<2; ++i)
+  {
+    var n = new ui.tree_node("" + i);
+    for (var j=0; j<2; ++j)
+    {
+      var nn = new ui.tree_node("" + i + "." + j);
+      for (var k=0; k<3; ++k)
+      {
+        var nnn = new ui.tree_node("" + i + "." + j + "." + k);
+        for (var m=0; m<2; ++m)
+          nnn.add(new ui.tree_node("" + i + "." + j + "." + k + "." + m));
+
+        nn.add(nnn);
+      }
+
+      n.add(nn);
+    }
+          
+    t.root().add(n);
+  }
+
+  t.root().expand_all();
+
+
+  var l = g_rp.find_id("list");
+  l.add_column("meh");
+  for (var i=0; i<100; ++i)
+    l.add_item("item " + i);
 });
 </script>
 
@@ -59,8 +156,16 @@ created.
 
 <div id="rp" data-layout="new ui.border_layout({margin: 5, padding: 3})" width="500" height="400">
   <div id="d" data-type="dialog" data-layout="new ui.border_layout()" data-layoutinfo="floating" width="400" height="350">
-    <div data-type="tree" data-layoutinfo="ui.sides.left" data-options="{multiple: true}"></div>
-    <div data-type="tree" data-layoutinfo="ui.sides.right" data-options="{multiple: false}"></div>
+    <div data-type="panel" data-layout="new ui.border_layout()" data-layoutinfo="ui.sides.center">
+      <div id="tree" data-type="tree" data-layoutinfo="ui.sides.left" data-options="{multiple: true}"></div>
+      <div id="list" data-type="list" data-layoutinfo="ui.sides.right" data-options="{multiple: true}"></div>
+    </div>
+    <div data-type="panel" data-layout="new ui.horizontal_layout()" data-layoutinfo="ui.sides.bottom">
+      <!--<div data-type="button" onclick="dump_next_visible">dump next visible</div>
+      <div data-type="button" onclick="dump_next">dump next</div>
+      <div data-type="button" onclick="dump_previous_visible">dump previous visible</div>
+      <div data-type="button" onclick="dump_previous">dump previous</div>-->
+    </div>
   </div>
 </div>
 

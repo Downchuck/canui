@@ -16,6 +16,7 @@ tree_parts:
 tree_node: function(caption)
 {
   var self = this;
+  self.internal_is_a_node = true;
 
   var tree_ = undefined;
   var parent_ = undefined;
@@ -28,6 +29,11 @@ tree_node: function(caption)
   {
     assert(parent_ == undefined);
     parent_ = p;
+  }
+
+  self.parent = function()
+  {
+    return parent_;
   }
   
   self.caption = function(c)
@@ -106,6 +112,8 @@ tree_node: function(caption)
 
   self.add = function(n)
   {
+    assert(n.internal_is_a_node);
+
     children_.push(n);
     n.internal_set_parent(self);
 
@@ -128,27 +136,91 @@ tree_node: function(caption)
     return children_[i];
   };
 
+  self.index_of = function(n)
+  {
+    assert(n.internal_is_a_node);
+
+    for (var i=0; i<children_.length; ++i)
+    {
+      if (children_[i] == n)
+        return i;
+    }
+
+    return -1;
+  };
+
   self.node_count = function()
   {
     return children_.length;
   }
 
+  // calls f(n) where 'n' is a child node; f() is guaranteed to be
+  // called in the order the children were added. If f() returns
+  // anything else than undefined, the loop will terminate early
+  // and that value will be returned.
+  //
+  // note that f() won't be called on this node.
+  //
   self.each_node = function(f)
   {
     for (var i in children_)
-      f(children_[i]);
+    {
+      var r = f(children_[i]);
+      if (r != undefined)
+        return r;
+    }
+
+    return undefined;
   };
 
-  self.each_node_recursive = function(f, indent)
+  // calls f(n, indent) where 'n' is a child node and 'indent' is the
+  // depth of the node relative to the starting node; f() is
+  // guaranteed to be called in hierarchical order, that is, for a
+  // tree
+  //
+  //   n1
+  //     n1.1
+  //     n1.2
+  //   n2
+  //   n3
+  //     n3.1
+  //
+  // the order will be n1, n1.1, n1.2, n2, n3, n3.1. If f() returns
+  // anything else than undefined, the loop will terminate early and
+  // that value will be returned.
+  //
+  // if 'visible_only' is true, this will the children of any node
+  // that is not expanded
+  //
+  // note that f() won't be called on this node.
+  //
+  self.each_node_recursive = function(f, visible_only)
   {
-    if (indent == undefined)
-      indent = 0;
+    if (visible_only == undefined)
+      visible_only = false;
+
+    return each_node_recursive_impl(f, visible_only, 0);
+  }
+
+  var each_node_recursive_impl = function(f, visible_only, indent)
+  {
+    if (visible_only && expanded_ == false)
+      return undefined;
 
     for (var i in children_)
     {
-      f(children_[i], indent + 1);
-      children_[i].each_node_recursive(f, indent + 1);
+      var r = f(children_[i], indent + 1);
+      if (r != undefined)
+        return r;
+
+      r = children_[i].each_node_recursive(
+        f, visible_only, indent + 1);
+
+      if (r != undefined)
+        return r;
     }
+
+    return undefined;
   }
 },
 
@@ -205,30 +277,12 @@ inherit_tree: function(self, opts)
     
     scroller_.vscroll.add(on_vscroll);
     self.add(scroller_);
-
-    for (var i=0; i<2; ++i)
-    {
-      var n = new ui.tree_node("item" + i);
-      for (var j=0; j<2; ++j)
-      {
-        var nn = new ui.tree_node("child" + j);
-        for (var k=0; k<3; ++k)
-        {
-          var nnn = new ui.tree_node("cc" + k);
-          for (var m=0; m<2; ++m)
-            nnn.add(new ui.tree_node("dd" + m));
-
-          nn.add(nnn);
-        }
-
-        n.add(nn);
-      }
-          
-      root_.add(n);
-    }
-
-    root_.expand_all();
   };
+
+  self.root = function()
+  {
+    return root_;
+  }
 
   self.tree__best_dimension = function()
   {
@@ -489,26 +543,139 @@ inherit_tree: function(self, opts)
     }
   };
 
+  // calls f() on all nodes in the tree, see
+  // node.each_node_recursive()
+  //
   self.tree__each_node = function(f)
   {
-    f(root_, 0);
-    root_.each_node_recursive(f, 0);
+    var r = f(root_, 0);
+    if (r != undefined)
+      return r;
+
+    return root_.each_node_recursive(f);
   };
 
-  self.tree__select_only = function(s)
+  self.tree__select_only = function(ns)
   {
     self.each_node(function(n)
       {
-        if (n == s)
-        {
-          n.selected(true);
-          focus_ = n;
-        }
-        else
-        {
-          n.selected(false);
-        }
+        n.selected(false);
       });
+
+    for (var i in ns)
+      ns[i].selected(true);
+  };
+
+  self.selection = function()
+  {
+    if (self.option("multiple"))
+    {
+      var s = [];
+      self.each_node(function(n)
+        {
+          if (n.selected())
+            s.push(n);
+        });
+
+      return s;
+    }
+    else
+    {
+      return self.each_node(function(n)
+        {
+          if (n.selected())
+            return n;
+        });
+    }
+  };
+
+  self.next_visible_node = function(n)
+  {
+    return next_node_impl(n, true);
+  }
+
+  self.next_node = function(n)
+  {
+    return next_node_impl(n, false);
+  };
+
+  var next_node_impl = function(n, visible_only)
+  {
+    if (n.node_count() > 0)
+    {
+      if (!visible_only || n.expanded())
+        return n.node(0);
+    }
+
+    for (;;)
+    {
+      var p = n.parent();
+      if (p == undefined)
+        return undefined;
+
+      var ni = p.index_of(n);
+      assert(ni != -1);
+
+      if (ni < (p.node_count() - 1))
+        return p.node(ni + 1);
+
+      n = p;
+    }
+
+    return undefined;
+  };
+
+  self.previous_visible_node = function(n)
+  {
+    return previous_node_impl(n, true);
+  };
+
+  self.previous_node = function(n)
+  {
+    return previous_node_impl(n, false);
+  };
+
+  var previous_node_impl = function(n, visible_only)
+  {
+    var p = n.parent();
+    if (p == undefined)
+      return undefined;
+
+    var ni = p.index_of(n);
+    if (ni > 0)
+      return deepest_child(p.node(ni - 1), visible_only);
+
+    return p;
+  };
+
+  var deepest_child = function(n, visible_only)
+  {
+    if (n.node_count() == 0 || (visible_only && !n.expanded()))
+      return n;
+
+    while (n.node_count() > 0)
+    {
+      if (visible_only && !n.expanded())
+        break;
+
+      n = n.node(n.node_count() - 1);
+    }
+
+    return n;
+  };
+
+  var absolute_index = function(n)
+  {
+    var i = 0;
+    self.each_node(function(c)
+      {
+        if (n == c)
+          return 0;
+
+        ++i;
+      });
+
+    return i;
   };
 
   self.tree__on_mouse_move = function(mp)
@@ -530,6 +697,7 @@ inherit_tree: function(self, opts)
     {
       ht.node.toggle();
       self.redraw();
+      return;
     }
     
     if (ht.node == undefined)
@@ -537,7 +705,8 @@ inherit_tree: function(self, opts)
 
     if (!self.option("multiple"))
     {
-      self.select_only(ht.node);
+      self.select_only([ht.node]);
+      focus_ = ht.node;
       return;
     }
 
@@ -548,9 +717,45 @@ inherit_tree: function(self, opts)
       ht.node.selected(!ht.node.selected());
       focus_ = ht.node;
     }
+    else if (rp.key_state(ui.key_codes.shift))
+    {
+      if (focus_ == ht.node)
+        return;
+
+      var i1 = absolute_index(focus_);
+      var i2 = absolute_index(ht.node);
+
+      var first = undefined, last = undefined;
+      var s = [];
+      
+      if (i1 < i2)
+      {
+        first = focus_;
+        last = ht.node;
+      }
+      else
+      {
+        first = ht.node;
+        last = focus_;
+      }
+
+      var n = first;
+      while (n)
+      {
+        s.push(n);
+
+        if (n == last)
+          break;
+
+        n = self.next_visible_node(n);
+      }
+
+      self.select_only(s);
+    }
     else
     {
-      self.select_only(ht.node);
+      self.select_only([ht.node]);
+      focus_ = ht.node;
     }
   };
 
