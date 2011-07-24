@@ -555,6 +555,12 @@ inherit_tree: function(self, opts)
     return root_.each_node_recursive(f);
   };
 
+  self.select = function(ns)
+  {
+    for (var i in ns)
+      ns[i].selected(true);
+  };
+
   self.tree__select_only = function(ns)
   {
     self.each_node(function(n)
@@ -678,6 +684,39 @@ inherit_tree: function(self, opts)
     return i;
   };
 
+  var node_range = function(n1, n2, visible_only)
+  {
+    var i1 = absolute_index(n1);
+    var i2 = absolute_index(n2);
+
+    var first = undefined, last = undefined;
+      
+    if (i1 < i2)
+    {
+      first = n1;
+      last = n2;
+    }
+    else
+    {
+      first = n2;
+      last = n1;
+    }
+
+    var s = [];
+    var n = first;
+    while (n)
+    {
+      s.push(n);
+
+      if (n == last)
+        break;
+
+      n = self.next_visible_node(n);
+    }
+
+    return s;
+  };
+
   self.tree__on_mouse_move = function(mp)
   {
     self.control__on_mouse_move(mp);
@@ -712,7 +751,13 @@ inherit_tree: function(self, opts)
 
     var rp = self.get_root_panel();
 
-    if (rp.key_state(ui.key_codes.ctrl))
+    if (rp.key_state(ui.key_codes.ctrl) &&
+        rp.key_state(ui.key_codes.shift))
+    {
+      var s = node_range(focus_, ht.node);
+      self.select(s);
+    }
+    else if (rp.key_state(ui.key_codes.ctrl))
     {
       ht.node.selected(!ht.node.selected());
       focus_ = ht.node;
@@ -722,34 +767,7 @@ inherit_tree: function(self, opts)
       if (focus_ == ht.node)
         return;
 
-      var i1 = absolute_index(focus_);
-      var i2 = absolute_index(ht.node);
-
-      var first = undefined, last = undefined;
-      var s = [];
-      
-      if (i1 < i2)
-      {
-        first = focus_;
-        last = ht.node;
-      }
-      else
-      {
-        first = ht.node;
-        last = focus_;
-      }
-
-      var n = first;
-      while (n)
-      {
-        s.push(n);
-
-        if (n == last)
-          break;
-
-        n = self.next_visible_node(n);
-      }
-
+      var s = node_range(focus_, ht.node);
       self.select_only(s);
     }
     else
