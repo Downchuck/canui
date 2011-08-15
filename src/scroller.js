@@ -317,10 +317,6 @@ scrollbar: function(opts)
 // added/removed from the internal panel, but some are missing
 // todo: same thing with dialog
 //
-// todo: can't this use a border_layout instead of moving the
-// children around? the child is already in the internal panel, which
-// is an absolute layout
-//
 // options
 //   hbar (never, always, auto), default: auto
 //     never: never shows the horizontal scrollbar, even if needed
@@ -372,7 +368,6 @@ scroller: function(opts)
     // events will go through to the child
     self.transparent(true);
     panel_.transparent(true);
-
     spacer_.transparent(false);
 
     panel_.option("background", new color().transparent());

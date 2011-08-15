@@ -256,6 +256,15 @@ inherit_tree: function(self, opts)
   var scroller_ = new ui.scroller({empty: true});
   var origin_ = new point(0, 0);
   var focus_ = undefined;
+  var handled_ = false;
+
+  var drag_start_ = undefined;
+  var tentative_drag_ = false;
+  var dragging_ = false;
+  var tentative_delta_ = 5;
+  var rect_ = undefined;
+  var drag_timer_ = undefined;
+  var drag_by_ = {horizontal: 0, vertical: 0};
 
   var init = function()
   {
@@ -736,6 +745,7 @@ inherit_tree: function(self, opts)
     {
       ht.node.toggle();
       self.redraw();
+      handled_ = true;
       return;
     }
     
@@ -746,34 +756,87 @@ inherit_tree: function(self, opts)
     {
       self.select_only([ht.node]);
       focus_ = ht.node;
+      handled_ = true;
       return;
     }
 
+    if (ht.part == ui.tree_parts.caption)
+    {
+      handle_selection(ht.node);
+      handled_ = true;
+    }
+    else
+    {
+      drag_start_ = new point(
+        -origin_.x + mp.x, -origin_.y + mp.y);
+
+      tentative_drag_ = true;
+      self.capture_mouse();
+    }
+  };
+
+  self.tree__on_mouse_left_up = function(mp)
+  {
+    self.control__on_mouse_left_up(mp);
+
+    if (!dragging_)
+    {
+      if (handled_)
+      {
+        handled_ = false;
+        return;
+      }
+    }
+
+    if (dragging_ || tentative_drag_)
+    {
+      self.release_mouse();
+      tentative_drag_ = false;
+      dragging_ = false;
+      rect_ = undefined;
+
+      if (drag_timer_ != undefined)
+      {
+        clearInterval(drag_timer_);
+        drag_timer_ = undefined;
+      }
+    }
+
+
+    var ht = self.hit_test(mp);
+    if (ht.node == undefined)
+      return;
+
+    handle_selection(ht.node);
+  };
+
+  var handle_selection = function(n)
+  {
     var rp = self.get_root_panel();
 
     if (rp.key_state(ui.key_codes.ctrl) &&
         rp.key_state(ui.key_codes.shift))
     {
-      var s = node_range(focus_, ht.node);
+      var s = node_range(focus_, n);
       self.select(s);
     }
     else if (rp.key_state(ui.key_codes.ctrl))
     {
-      ht.node.selected(!ht.node.selected());
-      focus_ = ht.node;
+      n.selected(!n.selected());
+      focus_ = n;
     }
     else if (rp.key_state(ui.key_codes.shift))
     {
-      if (focus_ == ht.node)
+      if (focus_ == n)
         return;
 
-      var s = node_range(focus_, ht.node);
+      var s = node_range(focus_, n);
       self.select_only(s);
     }
     else
     {
-      self.select_only([ht.node]);
-      focus_ = ht.node;
+      self.select_only([n]);
+      focus_ = n;
     }
   };
 
@@ -893,6 +956,7 @@ inherit_tree: function(self, opts)
   self.select_only          = self.tree__select_only;
   self.on_mouse_move        = self.tree__on_mouse_move;
   self.on_mouse_left_down   = self.tree__on_mouse_left_down;
+  self.on_mouse_left_up     = self.tree__on_mouse_left_up;
   self.hit_test             = self.tree__hit_test;
   self.on_double_click      = self.tree__on_double_click;
 

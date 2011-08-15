@@ -1,5 +1,12 @@
 // $Id$
 
+
+
+trying to separate mouse selection stuff from list so it can
+also be used in tree
+
+
+
 namespace("ui", {
 
 // hit test parts
@@ -340,6 +347,172 @@ list_header: function(parent)
   init();
 },
 
+selectable_list: function(self, parent)
+{
+  ui.inherit_container(self,
+    merge(opts, {layout: new ui.absolute_layout()}));
+  
+  var drag_start_ = undefined;
+  var tentative_drag_ = false;
+  var dragging_ = false;
+  var tentative_delta_ = 5;
+  var rect_ = undefined;
+  var drag_timer_ = undefined;
+  var drag_by_ = {horizontal: 0, vertical: 0};
+
+  self.selectable_list__on_mouse_scroll = function(mp, delta)
+  {
+    if (tentative_drag_ || dragging_)
+      self.drag(mp);
+  };
+
+  self.selectable_list__drag_rectangle = function()
+  {
+    return clone(rect_);
+  };
+
+  self.selectable_list__dragging = function()
+  {
+    return dragging_ || tentative_drag_;
+  };
+
+  self.selectable_list__start_drag = function(mp)
+  {
+    drag_start_ = new point(mp.x, mp.y);
+
+    tentative_drag_ = true;
+    self.capture_mouse();
+  };
+  
+  self.selectable_list__stop_drag = function()
+  {
+    if (dragging_ || tentative_drag_)
+    {
+      self.release_mouse();
+      tentative_drag_ = false;
+      dragging_ = false;
+      rect_ = undefined;
+
+      if (drag_timer_ != undefined)
+      {
+        clearInterval(drag_timer_);
+        drag_timer_ = undefined;
+      }
+    }
+  };
+
+  self.selectable_list__drag = function(mp)
+  {
+    var p = new point(
+        -origin_.x + mp.x, -origin_.y + mp.y);
+
+    var dx = p.x - drag_start_.x;
+    var dy = p.y - drag_start_.y;
+
+    if (tentative_drag_)
+    {
+      var d = Math.sqrt(dx*dx + dy*dy);
+      if (d > tentative_delta_)
+      {
+        tentative_drag_ = false;
+        dragging_ = true;
+      }
+    }
+
+    if (dragging_)
+    {
+      rect_ = new rectangle(
+        drag_start_.x, drag_start_.y, dx, dy);
+
+      if (drag_timer_ == undefined)
+        self.on_dragging(rect_);
+
+      check_outside_drag(mp);
+    }
+  };
+
+  // hook
+  //
+  self.selectable_list__on_dragging = function(r)
+  {
+    // noop
+  };
+
+  var check_outside_drag = function(mp)
+  {
+    var r = viewport_bounds();
+
+    var hor = 0;
+    if (mp.x < r.x)
+      hor = mp.x - r.x;
+    else if (mp.x >= (r.x + r.w))
+      hor = mp.x - (r.x + r.w);
+
+    var vert = 0;
+    if (mp.y < r.y)
+      vert = mp.y - r.y;
+    else if (mp.y >= (r.y + r.h))
+      vert = mp.y - (r.y + r.h);
+
+    var inside = (hor == 0 && vert == 0);
+
+    if (inside)
+    {
+      if (drag_timer_ != undefined)
+      {
+        clearInterval(drag_timer_);
+        drag_timer_ = undefined;
+      }
+
+      return;
+    }
+
+    if (inside)
+      return;
+
+    if (hor > 0 && hor < 5)
+      hor = 5;
+    else if (hor < 0 && hor > -5)
+      hor = -5;
+
+    if (vert > 0 && vert < 5)
+      vert = 5;
+    else if (vert < 0 && vert > -5)
+      vert = -5;
+
+    drag_by_ = {horizontal: hor, vertical: vert};
+
+    if (drag_timer_ == undefined)
+      drag_timer_ = setInterval(auto_scroll, 100);
+  };
+  
+  var auto_scroll = function()
+  {
+    var mp = self.get_root_panel().current_mouse_pos();
+    mp = self.absolute_to_local(mp);
+
+    scroller_.scroll_by(drag_by_.horizontal, drag_by_.vertical);
+
+    var vp = viewport_bounds();
+
+    var x = -origin_.x + mp.x;
+    
+    var y = -origin_.y + mp.y;
+    if (drag_by_.vertical < 0)
+      y = -origin_.y + vp.y - 1;
+    else if (drag_by_.vertical > 0)
+      y = -origin_.y + vp.y + vp.h + 1;
+
+    var dx = x - drag_start_.x;
+    var dy = y - drag_start_.y;
+
+    rect_ = new rectangle(
+      drag_start_.x, drag_start_.y, dx, dy);
+
+    self.on_dragging(rect_);
+  };
+},
+
 // scollable list of items and a clickable header
 //
 // the list can be frozen so that columns won't be resized immediately
@@ -409,8 +582,6 @@ list: function(opts)
 
   // scroll bars
   var scroller_ = new ui.scroller({empty: true});
-  //var vert_scroll_ = new ui.scrollbar();
-  //var hor_scroll_ = new ui.scrollbar({orientation: "horizontal"});
 
   // scroll offset
   var origin_ = new point(0, 0);
@@ -420,14 +591,6 @@ list: function(opts)
 
   // focused item
   var focus_ = -1;
-
-  var drag_start_ = undefined;
-  var tentative_drag_ = false;
-  var dragging_ = false;
-  var tentative_delta_ = 5;
-  var rect_ = undefined;
-  var drag_timer_ = undefined;
-  var drag_by_ = {horizontal: 0, vertical: 0};
 
   // an item is selected on list button down when the mouse is over
   // the caption, otherwise on button up; this is set to true on
@@ -958,18 +1121,19 @@ list: function(opts)
 
     draw_items(context, r);
 
-    if (rect_ != undefined)
+    context.restore();
+
+    if (self.dragging())
     {
       var dr = new rectangle(
-        self.position().x + rect_.x + origin_.x + 1,
-        self.position().y + rect_.y + origin_.y + 1,
-        rect_.w, rect_.h);
+        self.position().x + self.drag_rect().x + origin_.x + 1,
+        self.position().y + self.drag_rect().y + origin_.y + 1,
+        self.drag_rect().w, self.drag_rect().h);
 
       fill_rect(context, new color(0.03, 0.14, 0.41, 0.3), dr);
       outline_rect(context, new color(0.03, 0.14, 0.41), dr);
     }
 
-    context.restore();
     self.container__draw(context);
   };
 
@@ -1261,9 +1425,7 @@ list: function(opts)
     if (scroller_.vbar().visible())
     {
       scroller_.scroll_by(0, -delta * self.option("item_height"));
-
-      if (tentative_drag_ || dragging_)
-        check_drag(mp);
+      self.selectbale_list__on_mouse_scroll(mp, delta);
     }
 
     return true;
@@ -1294,13 +1456,7 @@ list: function(opts)
     else
     {
       if (!self.option("track") && self.option("multiple"))
-      {
-        drag_start_ = new point(
-          -origin_.x + mp.x, -origin_.y + mp.y);
-
-        tentative_drag_ = true;
-        self.capture_mouse();
-      }
+        self.start_drag(-origin_.x + mp.x, -origin_.y + mp.y);
     }
 
     return true;
@@ -1313,7 +1469,7 @@ list: function(opts)
     var i = self.find_item(mp);
     assert(i != undefined);
 
-    if (!dragging_)
+    if (!self.dragging())
     {
       if (!selection_handled_)
         handle_click_selection(i);
@@ -1322,19 +1478,7 @@ list: function(opts)
         self.on_item_clicked.fire(items_[i]);
     }
 
-    if (dragging_ || tentative_drag_)
-    {
-      self.release_mouse();
-      tentative_drag_ = false;
-      dragging_ = false;
-      rect_ = undefined;
-
-      if (drag_timer_ != undefined)
-      {
-        clearInterval(drag_timer_);
-        drag_timer_ = undefined;
-      }
-    }
+    self.stop_drag();
 
     selection_handled_ = false;
     self.redraw();
@@ -1342,7 +1486,7 @@ list: function(opts)
     return true;
   }
 
-  var on_dragging = function()
+  self.on_dragging = function()
   {
     var hta = self.hit_test(new point(rect_.x + origin_.x, rect_.y + origin_.y));
     var htb = self.hit_test(new point(rect_.x + origin_.x + rect_.w - 1, rect_.y + origin_.y + rect_.h - 1));
@@ -1403,119 +1547,17 @@ list: function(opts)
       {
         self.select_only([]);
       }
-    }
-    else if (dragging_ || tentative_drag_)
-    {
-      check_drag(mp);
 
-      if (tentative_drag_ || dragging_)
-        return true;
+      return true;
     }
+    else if (self.dragging())
+    {
+      self.drag(mp);
+      return true;
+    }
+
+    return false;
   }
-  
-  var check_drag = function(mp)
-  {       
-    var p = new point(
-        -origin_.x + mp.x, -origin_.y + mp.y);
-
-    var dx = p.x - drag_start_.x;
-    var dy = p.y - drag_start_.y;
-
-    if (tentative_drag_)
-    {
-      var d = Math.sqrt(dx*dx + dy*dy);
-      if (d > tentative_delta_)
-      {
-        tentative_drag_ = false;
-        dragging_ = true;
-      }
-    }
-
-    if (dragging_)
-    {
-      rect_ = new rectangle(
-        drag_start_.x, drag_start_.y, dx, dy);
-
-      if (drag_timer_ == undefined)
-        on_dragging();
-
-      check_outside_drag(mp);
-    }
-  };
-
-  var check_outside_drag = function(mp)
-  {
-    var r = viewport_bounds();
-
-    var hor = 0;
-    if (mp.x < r.x)
-      hor = mp.x - r.x;
-    else if (mp.x >= (r.x + r.w))
-      hor = mp.x - (r.x + r.w);
-
-    var vert = 0;
-    if (mp.y < r.y)
-      vert = mp.y - r.y;
-    else if (mp.y >= (r.y + r.h))
-      vert = mp.y - (r.y + r.h);
-
-    var inside = (hor == 0 && vert == 0);
-
-    if (inside)
-    {
-      if (drag_timer_ != undefined)
-      {
-        clearInterval(drag_timer_);
-        drag_timer_ = undefined;
-      }
-
-      return;
-    }
-
-    if (inside)
-      return;
-
-    if (hor > 0 && hor < 5)
-      hor = 5;
-    else if (hor < 0 && hor > -5)
-      hor = -5;
-
-    if (vert > 0 && vert < 5)
-      vert = 5;
-    else if (vert < 0 && vert > -5)
-      vert = -5;
-
-    drag_by_ = {horizontal: hor, vertical: vert};
-
-    if (drag_timer_ == undefined)
-      drag_timer_ = setInterval(auto_scroll, 100);
-  }
-  
-  var auto_scroll = function()
-  {
-    var mp = self.get_root_panel().current_mouse_pos();
-    mp = self.absolute_to_local(mp);
-
-    scroller_.scroll_by(drag_by_.horizontal, drag_by_.vertical);
-
-    var vp = viewport_bounds();
-
-    var x = -origin_.x + mp.x;
-    
-    var y = -origin_.y + mp.y;
-    if (drag_by_.vertical < 0)
-      y = -origin_.y + vp.y - 1;
-    else if (drag_by_.vertical > 0)
-      y = -origin_.y + vp.y + vp.h + 1;
-
-    var dx = x - drag_start_.x;
-    var dy = y - drag_start_.y;
-
-    rect_ = new rectangle(
-      drag_start_.x, drag_start_.y, dx, dy);
-
-    on_dragging();
-  };
 
   self.on_double_click = function(mp)
   {
