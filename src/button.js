@@ -433,12 +433,12 @@ checkbox: function(opts)
   {
     var f = new color().white();
 
-if(0) {
+if(self.element) {
     if (self.transitioning() && self.is_hovered())
-	self.attr('aria-pressed', 'mixed');
+	self.element.setAttribute('aria-pressed', 'mixed');
     else if (self.pressed())
-	self.attr('aria-pressed', 'true');
-    else self.attr('aria-pressed', 'false');
+	self.element.setAttribute('aria-pressed', 'true');
+    else self.element.setAttribute('aria-pressed', 'false');
 }
 
     if (self.transitioning() && self.is_hovered())
