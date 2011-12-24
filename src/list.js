@@ -2,8 +2,8 @@
 
 
 
-trying to separate mouse selection stuff from list so it can
-also be used in tree
+// trying to separate mouse selection stuff from list so it can
+// also be used in tree
 
 
 
@@ -1123,7 +1123,7 @@ list: function(opts)
 
     context.restore();
 
-    if (self.dragging())
+    if (self.dragging && self.dragging())
     {
       var dr = new rectangle(
         self.position().x + self.drag_rect().x + origin_.x + 1,
@@ -1469,7 +1469,7 @@ list: function(opts)
     var i = self.find_item(mp);
     assert(i != undefined);
 
-    if (!self.dragging())
+    if (self.dragging && !self.dragging())
     {
       if (!selection_handled_)
         handle_click_selection(i);
@@ -1550,7 +1550,7 @@ list: function(opts)
 
       return true;
     }
-    else if (self.dragging())
+    else if (self.dragging && self.dragging())
     {
       self.drag(mp);
       return true;
