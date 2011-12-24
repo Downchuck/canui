@@ -1,0 +1,125 @@
+// $Id$
+
+1 Introduction
+======================================================================
+This document is about listing the controls that are, or will be part
+of canui, as well as their status.
+
+
+2 Working controls
+======================================================================
+These control have enough basic functionality so that they may be
+used. They may lack in options, callbacks or in ways to obtain
+information.
+
+
+button/checkbox/radio
+  Todo: keyboard
+  Bugs: none
+
+
+combobox
+  Todo: none
+  Bugs: non
+
+
+link
+  Todo: none
+  Bugs: non
+
+
+panel
+  Todo: none
+  Bugs: none
+
+
+progress
+  Todo: none
+  Bugs: none
+
+
+status_bar
+  Todo: this is currently just a panel. It will either be
+        removed or reworked completely.
+  Bugs: none
+
+
+tooltip
+  Todo: none
+  Bugs:
+   . tooltip stays stuck when mouse leaves (cancel timer on leave?)
+
+
+separator
+  Todo: none
+  Bugs: none
+
+
+image
+  Todo: none
+  Bugs: none
+
+
+label
+  Todo: none
+  Bugs: none
+
+
+scrollbar
+  Todo: mouse wheel, keyboard
+  Bugs: none
+
+
+scroller
+  Todo: mouse wheel, keyboard
+  Bugs: problems with interaction between h and v while resizing stuff
+
+
+slider
+  Todo: keyboard
+  Bugs: none
+
+
+textbox
+  Todo: dnd, undo/redo, scrolling
+  Bugs: double-click select and moving sometimes unselect original
+        word; multiline selection + replace sometimes corrupts content
+
+dialog
+  Todo: none
+  Bugs: none
+
+
+3 Controls in progress
+======================================================================
+These controls are currently mostly unusable because of lack of
+testing or features, or bugs.
+
+menu
+  Todo: separators, keybindings?, icons, disabled, customize, close on
+        click elsewhere, timers, checkboxes/radios
+  Bugs: submenu items stay selected
+
+
+list
+  Todo: column resize/move, item drag/drop, other views (icon, etc.),
+        icon in column, allow any control (editable list), tooltips
+  Bugs: sorting the list keeps the focus on the same index instead
+        of following the item
+
+
+4 Controls to do
+======================================================================
+  . tree
+  . date/time
+  . toolbar
+  . notebook
+  . up-down
+  . color
+  . file picker?
+  . collapsible panel
+
+
+5 Others
+======================================================================
+. rename the internal_is_a_something to something else
