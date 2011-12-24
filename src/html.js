@@ -78,9 +78,10 @@ create_layout: function(c)
 
 create_ui: function(e)
 {
-  var type = ui.get_data(e, "type");
+  var type = ui.get_data(e, "type") || ui.get_attr(e, "role");
   var u = ui.create_specific_ui(e, type);
-  
+ 
+  u.element = e; 
   u.id(ui.get_attr(e, "id", ""));
 
   var w = ui.get_attr(e, "width", 0);
@@ -151,7 +152,7 @@ parse_impl: function(parent, node)
     if (e.getAttribute == undefined)
       continue;
       
-    var type = ui.get_data(e, "type");
+    var type = ui.get_data(e, "type") || ui.get_attr(e, "role");
     if (type == undefined)
       continue;
     
@@ -172,7 +173,6 @@ parse_impl: function(parent, node)
 
     var u = ui.create_ui(e);
     ui.parse_impl(u, e);
-    
     if (u.internal_is_a_menu && parent.internal_is_a_menu)
     {
       parent.add_menu(u);
@@ -217,6 +217,10 @@ create_root_panel: function(n)
     root = e[0];
   }
 
+  var children = rp.children();
+  for(var i = 0; i < children.length; i++)
+	if(children[i].element)
+	root.appendChild(children[i].element);
   r.parentNode.replaceChild(root, r);
 
   return rp;

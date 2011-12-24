@@ -432,6 +432,15 @@ checkbox: function(opts)
   self.draw = function(context)
   {
     var f = new color().white();
+
+if(0) {
+    if (self.transitioning() && self.is_hovered())
+	self.attr('aria-pressed', 'mixed');
+    else if (self.pressed())
+	self.attr('aria-pressed', 'true');
+    else self.attr('aria-pressed', 'false');
+}
+
     if (self.transitioning() && self.is_hovered())
       f = ui.theme.face_color();
 
